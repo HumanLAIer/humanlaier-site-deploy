@@ -1,0 +1,9 @@
+Human LAIer | public source-backed TikTok LIVE demonstration
+This site includes publicly displayed platform handles, comments and
+short original-media excerpts from an authorized research capture.
+Platform accounts are not verified real-world identities.
+ASR host shout-outs remain unverified candidates only.
+Graph edges indicate same-minute co-participation, not replies.
+Original video time and collector-observed event time are NOT
+independently synchronized. Gift notifications are not sales.
+The site's evidence is static and has no accounts, telemetry, or API.

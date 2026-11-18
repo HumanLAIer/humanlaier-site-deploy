@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#002147">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none';">
+<title>Human LAIer · Signal Recorder | Live Analysis Console</title>
+<link rel="stylesheet" href="ux.css">
+</head>
+<body>
+<a class="skip-link" href="#workspace">Skip to workspace</a>
+<header class="app-header">
+  <div class="header-brand">
+    <img src="assets/human-laier-dark.svg" width="128" height="58" alt="Human LAIer">
+    <div class="header-name"><span>SIGNAL RECORDER</span><small>PUBLIC DEMO / OBSERVED DIRECT HANDLES</small></div>
+  </div>
+  <div class="header-actions">
+    <label class="small-label" for="sessionSelect">CAPTURE</label>
+    <select id="sessionSelect" aria-label="Select archived capture"></select>
+    <span id="syncPill" class="sync-pill" role="status">ESTIMATED SYNC · NOT VERIFIED</span>
+  </div>
+</header>
+<main id="workspace" class="workspace">
+<div role="status" style="border:1px solid #d4bd72;padding:0.8rem 1rem;margin:0.6rem 1rem;background:#fff9e8;color:#362e19;font-size:0.9rem;line-height:1.45">Restored public analysis workspace. Original video clips are temporarily unavailable pending transfer from the private archive. Event graphs, chat, reaction history and transcript evidence remain available. Source-media clock alignment is not verified.</div>
+  <section class="controlbar" aria-label="Workspace configuration">
+    <div class="workspace-heading">
+      <h1>Stream analysis</h1>
+      <span>Watch · understand · investigate</span>
+    </div>
+    <div class="layout-control">
+      <label for="layoutPreset">WORKSPACE</label>
+      <select id="layoutPreset">
+        <option value="review">Stream review</option>
+        <option value="community">Community analysis</option>
+        <option value="timeline">Timeline investigation</option>
+        <option value="custom">Custom</option>
+      </select>
+      <button id="resetLayout" class="subtle-button" type="button" title="Restore the original workspace layout">Reset layout</button>
+    </div>
+  </section>
+  <div id="mobileTabs" class="mobile-tabs" role="tablist" aria-label="Mobile workspace panels">
+    <button type="button" data-mobile-tab="media" role="tab" aria-selected="true">Watch</button>
+    <button type="button" data-mobile-tab="conversation" role="tab" aria-selected="false">Conversation</button>
+    <button type="button" data-mobile-tab="constellation" role="tab" aria-selected="false">Constellation</button>
+    <button type="button" data-mobile-tab="timeline" role="tab" aria-selected="false">Timeline</button>
+  </div>
+  <div id="primaryDock" class="workspace-dock">
+    <article class="dock-panel panel-media" data-panel="media" aria-labelledby="mediaTitle">
+      <header class="panel-head" data-drag-handle="media" draggable="true">
+        <div class="panel-heading"><span class="panel-kicker">01 / WATCH</span><h2 id="mediaTitle">Source media</h2></div>
+        <div class="dock-actions">
+          <span class="drag-hint" title="Drag panel headings to rearrange">⋮⋮</span>
+          <button type="button" data-move="left" data-for="media" aria-label="Move Source media panel left">←</button>
+          <button type="button" data-move="right" data-for="media" aria-label="Move Source media panel right">→</button>
+          <button type="button" data-grow="media" aria-label="Give Source media more workspace width">↔</button>
+        </div>
+      </header>
+      <div class="media-source">
+        <label for="sourceSelect">ARCHIVED EXCERPT</label>
+        <select id="sourceSelect" aria-label="Select archived media excerpt"></select>
+        <label for="sourceTrack">PLAYBACK SOURCE</label>
+        <select id="sourceTrack" aria-label="Choose original video, enhanced audio, or events-only">
+          <option value="video">Original video / audio</option>
+          <option value="audio">Enhanced audio only</option>
+          <option value="events">Collector events only</option>
+        </select>
+      </div>
+      <div class="media-viewport" id="mediaViewport">
+        <video id="videoPlayer" playsinline preload="metadata" aria-label="Original preserved source excerpt" hidden></video>
+        <audio id="audioPlayer" preload="metadata" aria-label="Enhanced source audio (same transport)" hidden></audio>
+        <img id="posterPlayer" alt="Storyboard frames from the preserved media excerpt" hidden>
+        <div id="mediaEmpty" class="media-empty">Select an archived source. Only preserved original media excerpts are available.</div>
+        <span id="sourceLabel" class="source-label">NO SOURCE SELECTED</span>
+      </div>
+      <div class="transport" aria-label="Single playback controller">
+        <div class="transport-row">
+          <button type="button" id="masterPlay" class="primary-button" aria-label="Play selected source">▶</button>
+          <div class="transport-range">
+            <label for="masterSeek">PLAYBACK POSITION</label>
+            <input id="masterSeek" type="range" min="0" max="100" step="0.1" value="0" aria-label="Seek the active source. The analysis cursor follows its estimated mapping.">
+          </div>
+          <span id="masterClock" class="mono-clock" aria-live="off">00:00 / 00:00</span>
+        </div>
+        <div class="transport-row second">
+          <label for="masterSpeed">SPEED</label>
+          <select id="masterSpeed"><option value=".5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option></select>
+          <button type="button" id="muteButton" class="subtle-button">Mute</button>
+          <span class="transport-separator" aria-hidden="true"></span>
+          <span id="estEventClock" class="est-clock">Event estimate: —</span>
+        </div>
+      </div>
+      <details id="alignmentDetails" class="alignment-panel">
+        <summary><span>Alignment controls</span><strong>ESTIMATED · ADJUSTABLE</strong></summary>
+        <p class="fine">Assumption: media elapsed time ≈ collector elapsed time. No verified historical cross-clock anchors. Adjusting this offset changes the projected chat/graph cursor but never edits the source.</p>
+        <div class="offset-controls">
+          <label for="offsetSeconds">MEDIA → EVENT OFFSET</label>
+          <input id="offsetSeconds" type="range" min="-900" max="900" step="1" value="0" aria-label="Adjust provisional media-to-collector offset by seconds">
+          <input id="offsetNumber" type="number" min="-900" max="900" step="1" value="0" aria-label="Provisional offset in seconds">
+          <span>seconds</span>
+        </div>
+        <div class="offset-actions">
+          <button type="button" id="alignToSelection" class="subtle-button">Align current frame to selected event</button>
+          <button type="button" id="resetOffset" class="subtle-button">Zero offset</button>
+        </div>
+        <p id="alignmentNote" class="fine" role="status">Uncalibrated historical assumption; never verified synchronization.</p>
+      </details>
+      <div class="media-footnote" id="mediaFootnote">All sources are actual preserved recordings. No fabricated footage.</div>
+    </article>
+
+    <article class="dock-panel panel-conversation" data-panel="conversation" aria-labelledby="conversationTitle">
+      <header class="panel-head" data-drag-handle="conversation" draggable="true">
+        <div class="panel-heading"><span class="panel-kicker">02 / READ</span><h2 id="conversationTitle">Conversation</h2></div>
+        <div class="dock-actions">
+          <span class="drag-hint">⋮⋮</span>
+          <button type="button" data-move="left" data-for="conversation" aria-label="Move Conversation panel left">←</button>
+          <button type="button" data-move="right" data-for="conversation" aria-label="Move Conversation panel right">→</button>
+          <button type="button" data-grow="conversation" aria-label="Give Conversation more workspace width">↔</button>
+        </div>
+      </header>
+      <div class="conversation-intro">
+        <span class="speech-key"><i aria-hidden="true"></i> Stream speech · left</span>
+        <span class="chat-key"><i aria-hidden="true"></i> Viewer comments · right</span>
+        <span class="reaction-key"><i aria-hidden="true"></i> Reactions & mentions · inline</span>
+      </div>
+      <div class="conversation-tools">
+        <label for="chatScope">TIME WINDOW</label>
+        <select id="chatScope" aria-label="Choose combined conversation time range">
+          <option value="near">Around playhead ±90 seconds</option>
+          <option value="wide">±15 minutes</option>
+          <option value="all">Entire capture and selected transcript</option>
+        </select>
+        <label for="conversationMode">ACTIVITY FEED</label>
+        <select id="conversationMode" aria-label="Include observed reactions with the recorded chat">
+          <option value="all" selected>Comments + reactions + speech</option>
+          <option value="messages">Comments + speech only</option>
+          <option value="activity">Reactions / actions only</option>
+        </select>
+        <label for="chatSearch">SEARCH COMMENTS, REACTIONS AND SPEECH</label>
+        <input id="chatSearch" type="search" placeholder="Find a handle, comment, action or spoken phrase…" aria-label="Search original chat, observed reactions and machine-transcribed speech">
+        <div class="conversation-actions">
+          <button id="clearParticipant" class="subtle-button" type="button" hidden>Clear participant</button>
+          <button id="conversationFollow" class="subtle-button" type="button" aria-pressed="true">Follow playback: on</button>
+        </div>
+      </div>
+      <p id="conversationNote" class="conversation-note">Speech/chat ordering is best-estimate only, not evidence of replies. ASR and speaker attribution are unverified.</p>
+      <div id="conversationList" class="conversation-scroll conversation-thread" tabindex="0" aria-label="Chronological recorded chat and reaction notifications, with independently clocked machine speech"></div>
+      <footer id="conversationFooter" class="pane-foot">Actual comments only · observed platform handles, not verified real-world identities.</footer>
+    </article>
+
+    <article class="dock-panel panel-graph" data-panel="constellation" aria-labelledby="graphTitle">
+      <header class="panel-head" data-drag-handle="constellation" draggable="true">
+        <div class="panel-heading"><span class="panel-kicker">03 / EXPLORE</span><h2 id="graphTitle">Constellation</h2></div>
+        <div class="dock-actions">
+          <span class="drag-hint">⋮⋮</span>
+          <button type="button" data-move="left" data-for="constellation" aria-label="Move Constellation panel left">←</button>
+          <button type="button" data-move="right" data-for="constellation" aria-label="Move Constellation panel right">→</button>
+          <button type="button" data-grow="constellation" aria-label="Give Constellation more workspace width">↔</button>
+        </div>
+      </header>
+      <div class="graph-controls">
+        <div class="segmented" role="group" aria-label="Network perspective">
+          <button type="button" id="graphCommunity" aria-pressed="true">Community</button>
+          <button type="button" id="graphMoment" aria-pressed="false">This moment</button>
+        </div>
+        <div class="graph-zoom" role="group" aria-label="Graph zoom">
+          <button type="button" id="graphZoomIn" aria-label="Zoom in network">+</button>
+          <button type="button" id="graphZoomOut" aria-label="Zoom out network">−</button>
+          <button type="button" id="graphFit" aria-label="Fit network">Fit</button>
+        </div>
+      </div>
+      <div class="graph-filters">
+        <label for="graphScope">PARTICIPATION SCOPE</label>
+        <select id="graphScope" aria-label="Choose which historical captures define the community">
+          <option value="capture" selected>This capture</option>
+          <option value="all">All archived captures</option>
+        </select>
+        <label for="linkDensity">LINK DENSITY</label>
+        <select id="linkDensity" aria-label="Choose how many of the observed strongest co-activity links to show">
+          <option value="strong" selected>Strongest links</option>
+          <option value="all">All observed links</option>
+        </select>
+      </div>
+      <div class="graph-event-controls">
+        <label for="graphEventKind">EVENT LAYER</label>
+        <select id="graphEventKind" aria-label="Filter constellation participants, event pulses, and activity history by recorded event type">
+          <option value="all">All observed actions</option>
+        </select>
+        <span id="graphEventCoverage" class="graph-event-coverage">Only actually observed events illuminate accounts.</span>
+      </div>
+      <div class="graph-motion-controls">
+        <label for="graphMotion">EVENT ILLUMINATION</label>
+        <select id="graphMotion" aria-label="Choose how recorded interactions illuminate the network">
+          <option value="vivid" selected>Vivid · recorded activity</option>
+          <option value="subtle">Subtle</option>
+          <option value="off">Static · no motion</option>
+        </select>
+        <span id="graphMotionNote">Based on observed events only</span>
+      </div>
+      <div class="network-canvas" id="networkCanvas">
+        <svg id="networkSvg" viewBox="0 0 680 430" role="group" aria-label="Observed participant co-activity plus separately labeled unverified host speech candidates">
+          <title>Observed participant activity, explicit viewer handle mentions, and unverified host speech candidate links</title>
+          <defs>
+            <marker id="participantMentionArrow" viewBox="0 0 10 10" refX="8" refY="5"
+              markerWidth="5" markerHeight="5" orient="auto">
+              <path d="M0 0 L10 5 L0 10 Z" fill="#7ee0c9"></path>
+            </marker>
+            <marker id="asrCandidateArrow" viewBox="0 0 10 10" refX="8" refY="5"
+              markerWidth="5" markerHeight="5" orient="auto">
+              <path d="M0 0 L10 5 L0 10 Z" fill="#edc17b"></path>
+            </marker>
+          </defs>
+          <g id="networkViewport">
+            <g id="networkEdges"></g>
+            <g id="networkParticipantLinks"></g>
+            <g id="networkHostLinks"></g>
+            <g id="networkPulseLayer" aria-hidden="true"></g>
+            <g id="networkNodes"></g>
+            <g id="networkHostNode"></g>
+            <g id="networkRoomNode"></g>
+          </g>
+        </svg>
+        <div class="network-legend">
+          <span><i class="swatch a"></i> Active near cursor</span>
+          <span><i class="swatch b"></i> Other commenter</span>
+          <span><i class="swatch c"></i> Gift event</span>
+          <span><i class="swatch d"></i> Likes</span>
+          <span><i class="swatch e"></i> Follow / share</span>
+          <span><i class="swatch h"></i> Host (role)</span>
+          <span><i class="swatch peer"></i> Exact @mention</span>
+          <span><i class="swatch inferred"></i> Possible nickname call-out</span>
+          <span><i class="swatch dashed"></i> ASR candidate · not verified</span>
+        </div>
+      </div>
+      <div class="activity-now" id="activityNow" aria-live="off">
+        <span class="activity-now-label">DELIBERATE ACTIONS</span>
+        <span id="activityEventTicker">Recorded interactions illuminate the graph as playback advances.</span>
+      </div>
+      <div class="activity-now room-ticker" id="roomActivityNow" aria-live="off" hidden>
+        <span class="activity-now-label">ROOM / PLATFORM</span>
+        <span id="roomActivityTicker">Room-wide events have no synthetic participant identities.</span>
+      </div>
+      <div class="graph-bottom">
+        <label for="graphSearch">FIND PARTICIPANT</label>
+        <input type="search" id="graphSearch" placeholder="Search participant handle…" aria-label="Search observed participant handle">
+        <div class="graph-statline" id="graphStatline">Loading observed network...</div>
+        <div id="graphInspector" class="graph-inspector" aria-live="polite">Select a node to inspect its recorded contributions.</div>
+      </div>
+      <footer id="graphProvenance" class="pane-foot">Solid links = same-minute co-activity. Mint dotted arrows = explicit in-chat @handles. Violet dashes = possible bare-name call-outs. Gold dashes = unverified ASR host names. Neither implies a verified reply.</footer>
+    </article>
+    <div id="dockGripA" class="resize-grip" role="separator" tabindex="0" aria-orientation="vertical" aria-label="Resize the first and second workspace panels" aria-valuemin="20" aria-valuemax="80" aria-valuenow="50" title="Drag to adjust panel widths; arrow keys also work"><span aria-hidden="true"></span></div>
+    <div id="dockGripB" class="resize-grip" role="separator" tabindex="0" aria-orientation="vertical" aria-label="Resize the second and third workspace panels" aria-valuemin="20" aria-valuemax="80" aria-valuenow="50" title="Drag to adjust panel widths; arrow keys also work"><span aria-hidden="true"></span></div>
+  </div>
+  <div class="dock-height-bar">
+    <button id="dockHeightDown" type="button" aria-label="Reduce video, conversation and constellation heights">−</button>
+    <div id="dockHeightGrip" role="separator" tabindex="0" aria-orientation="horizontal" aria-label="Drag or press arrow keys to resize workspace panel heights" aria-valuemin="280" aria-valuemax="780" aria-valuenow="430" title="Drag vertically to resize all three analysis panels"><span aria-hidden="true"></span><span class="dock-height-label">DRAG TO RESIZE PANEL HEIGHT</span></div>
+    <button id="dockHeightUp" type="button" aria-label="Increase video, conversation and constellation heights">+</button>
+  </div>
+
+  <section id="timelinePanel" class="timeline-panel" aria-labelledby="timelineTitle">
+    <header class="timeline-head">
+      <div><span class="panel-kicker">04 / INVESTIGATE</span><h2 id="timelineTitle">Stream signals</h2></div>
+      <div class="timeline-actions">
+        <span id="cursorStatus" class="cursor-status">ESTIMATED EVENT POSITION</span>
+        <button type="button" id="zoomAll">Full capture</button>
+        <button type="button" id="zoomNear">Zoom 4×</button>
+        <button type="button" id="followCursor" aria-pressed="true">Follow cursor: on</button>
+      </div>
+    </header>
+    <div class="timeline-body">
+      <div id="laneLabels" class="lane-labels"><div class="lane-label heading">CAPTURE CLOCK<br><small>30-SECOND BINS</small></div></div>
+      <div id="waveScroll" class="wave-scroll" tabindex="0" aria-label="Scroll horizontally through collector event traces">
+        <div id="waveStage" class="wave-stage">
+          <canvas id="signals" width="1450" height="356" role="img" aria-label="Observed chat, participants, likes, gifts and heuristic text flag trends"></canvas>
+          <div id="playhead" class="playhead" aria-hidden="true"></div>
+        </div>
+      </div>
+    </div>
+    <div id="eventRail" class="event-chips" tabindex="0" aria-label="Recorded peak time windows"></div>
+    <section class="replay-evidence-section" aria-labelledby="actionEventsTitle">
+      <div class="evidence-heading">
+        <h3 id="actionEventsTitle">OBSERVED PARTICIPANT ACTIONS / REACTIONS</h3>
+        <span id="actionEventSummary" role="status">Loading recorded reactions...</span>
+      </div>
+      <div class="evidence-controls">
+        <label for="actionKind">ACTION</label>
+        <select id="actionKind" aria-label="Filter observed participant action types"></select>
+        <label for="actionScope">TIME</label>
+        <select id="actionScope" aria-label="Filter participant actions around collector playhead">
+          <option value="near">±90 seconds</option>
+          <option value="wide">±15 minutes</option>
+          <option value="all">Entire capture (nearest 160 shown)</option>
+        </select>
+      </div>
+      <div id="actionEventList" class="evidence-event-list" tabindex="0"
+        aria-label="Source-backed participant actions; select a record to seek the collector timeline"></div>
+      <p class="evidence-disclaimer">Only directly observed, deliberate interactions can identify a participant. Gift progress is not a completed gift. Likes reflect reported batch units, not unique viewers.</p>
+    </section>
+    <section class="replay-evidence-section room-evidence" aria-labelledby="roomEventsTitle" hidden>
+      <div class="evidence-heading">
+        <h3 id="roomEventsTitle">ROOM / PLATFORM SIGNALS · NOT ATTRIBUTED TO VIEWERS</h3>
+        <span id="roomEventSummary" role="status">Loading observed room signals...</span>
+      </div>
+      <div class="evidence-controls">
+        <label for="roomEventKind">ROOM EVENT</label>
+        <select id="roomEventKind" aria-label="Filter room and platform signal types"></select>
+        <label for="roomEventScope">TIME</label>
+        <select id="roomEventScope" aria-label="Filter room signals around collector playhead">
+          <option value="near">±90 seconds</option>
+          <option value="wide">±15 minutes</option>
+          <option value="all">Entire capture (nearest 160 shown)</option>
+        </select>
+      </div>
+      <div id="roomEventList" class="evidence-event-list" tabindex="0"
+        aria-label="Source-backed room-wide signals; these do not establish participant identities"></div>
+      <p class="evidence-disclaimer">Includes passive joins, counts, polls, moderation, captions, battles and shopping notifications where emitted. A platform shopping signal is not a verified sale or payment.</p>
+    </section>
+    <section class="replay-evidence-section shoutout-evidence" aria-labelledby="hostShoutoutTitle">
+      <div class="evidence-heading">
+        <h3 id="hostShoutoutTitle">SPOKEN HOST SHOUT-OUTS · ASR CANDIDATES</h3>
+        <span id="hostShoutoutSummary" role="status">Checking speech for observed account names...</span>
+      </div>
+      <div class="evidence-controls">
+        <label for="hostShoutoutScope">SOURCE</label>
+        <select id="hostShoutoutScope" aria-label="Filter speech-derived shout-out candidates by recording">
+          <option value="all">All transcribed excerpts</option>
+          <option value="source">Selected media excerpt</option>
+        </select>
+      </div>
+      <div id="hostShoutoutList" class="evidence-event-list shoutout-list" tabindex="0"
+        aria-label="Unverified spoken account mentions matched to observed public handles; seek the original media to review"></div>
+      <p class="evidence-disclaimer">Derived from locally generated speech recognition, not a TikTok event. A spoken name is linked to an observed handle only when the alias is unambiguous. Speaker attribution, exact wording and media/chat synchronization are <strong>unverified</strong>. Select a candidate to review its original audio/video; this does not establish a reply or social relationship.</p>
+    </section>
+    <section id="mediaStitchSection" class="media-stitch-section" aria-labelledby="mediaStitchTitle" hidden>
+      <div class="media-stitch-heading">
+        <h3 id="mediaStitchTitle">RECORDER CLOCKS · THREE GENERATIONS</h3>
+        <span id="mediaStitchStatus">PROVISIONAL — FFmpeg progress, not verified broadcast UTC</span>
+      </div>
+      <div id="mediaStitchTracks" class="media-stitch-tracks" aria-label="Estimated coverage and recorder-recovery boundaries"></div>
+      <div id="mediaStitchDetails" class="media-stitch-details" aria-live="off"></div>
+      <p class="media-stitch-disclaimer">These bars map observed FFmpeg process progress to collector time. The source-to-viewer delay is unknown; segment boundaries and possible gaps require visual review. The calibration offset remains available.</p>
+    </section>
+    <section id="syncReviewSection" class="sync-review-section" aria-labelledby="syncReviewTitle" hidden>
+      <h3 id="syncReviewTitle">AUDIOVISUAL ALIGNMENT CANDIDATES</h3>
+      <p id="syncCandidateSummary">No independently reviewed audiovisual anchors yet.</p>
+      <div id="syncCandidateList" class="sync-candidate-list"></div>
+    </section>
+    <footer class="timeline-footer" id="timelineFooter">Click a chart moment to inspect recorded activity. Available media does not necessarily cover the selected time.</footer>
+  </section>
+  <details class="research-details">
+    <summary>Evidence inventory, methodology and limitations</summary>
+    <div class="research-grid">
+      <div><h3>Recorded evidence</h3><p id="inventoryStats">Loading archive...</p></div>
+      <div><h3>Estimated clock mapping</h3><p>The source media is provisionally positioned against collector elapsed time and an analyst-controlled offset. This is exploratory synchronization only: zero verified cross-clock anchors.</p></div>
+      <div><h3>What this does not establish</h3><p>Platform handles are not verified real-world identities. This public edition contains only the exported deliberate-account events, not room-level logs. Shout-outs are unverified speech candidates, and video/chat synchronization and causal influence have not been established.</p></div>
+    </div>
+  </details>
+</main>
+<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+<script src="data.js"></script>
+<script src="bridge.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

@@ -390,3 +390,8 @@ select{max-width:100%}
  border-left:3px dashed #9974c0;background:#faf6fd}
 .conversation-intro .reaction-key{color:#3e6268}
 .conversation-intro .reaction-key i{background:#217e88}
+
+/* Curated public demo: temporary original-video recovery disclosure */
+.media-recovery-notice{border:1px solid #d4bd72;padding:0.8rem 1rem;margin:0.6rem 1rem;background:#fff9e8;color:#362e19;font-size:0.9rem;line-height:1.45;max-width:calc(100% - 2rem)}
+.media-recovery-thumbs{display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.65rem}
+.media-recovery-thumbs img{width:clamp(95px,18vw,160px);height:90px;object-fit:cover;border-radius:3px}

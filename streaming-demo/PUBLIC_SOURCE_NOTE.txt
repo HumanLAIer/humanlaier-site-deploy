@@ -1,9 +1,15 @@
 Human LAIer | public source-backed TikTok LIVE demonstration
-This site includes publicly displayed platform handles, comments and
-short original-media excerpts from an authorized research capture.
+This is a static public edition from an approved November 15, 2026 capture.
+Recorded comments, public platform handles, reaction events and activity
+bins come from the deliberately reviewed public export, not live ingestion.
+Authentic JPG source stills are shown while the separately approved MP4
+files are unavailable; the website MUST NOT imply video playback exists.
 Platform accounts are not verified real-world identities.
-ASR host shout-outs remain unverified candidates only.
-Graph edges indicate same-minute co-participation, not replies.
-Original video time and collector-observed event time are NOT
-independently synchronized. Gift notifications are not sales.
-The site's evidence is static and has no accounts, telemetry, or API.
+The guided moments refer to original collector-clock event observations.
+ASR host shout-outs remain unverified, independently timed candidates.
+Graph edges indicate same-minute participation, not causal influence/replies.
+Original source-video time and collector event time are NOT independently
+synchronized. Gift notifications and shopping signals are not sales.
+This site has no accounts, telemetry or external inference/API requests.
+Private R2 recordings, historical HMAC actors and raw platform numeric IDs
+are excluded from public hosting. Do not add them to this repository.

@@ -26,14 +26,25 @@
     }
     const labels = Object.create(null);
     for (const p of s.people) {
-      if (!p || !/^account-[0-9]{4,}$/.test(p.id) ||
-          !/^@[A-Za-z0-9_.]{1,36}$/.test(p.handle)) {
+      const isObservedPublicHandle = p && typeof p.handle === 'string' &&
+        /^@[A-Za-z0-9_.]{1,36}$/.test(p.handle);
+      // The November 17-18 curated export uses the ORIGINAL public TikTok
+      // handle as its stable graph key; no invented Viewer 001 aliases.
+      // Retain compatibility with the vetted November 15 site's old opaque
+      // internal keys until it is intentionally retired.
+      if (!isObservedPublicHandle || !(
+          p.id === p.handle || /^account-[0-9]{4,}$/.test(p.id))) {
         return;
       }
       labels[p.id] = p.handle;
+      const prior = communityNodes.get(p.id);
+      // Same observed handle across two real recordings means the same
+      // PLATFORM ACCOUNT label, not an inferred real-world person. Aggregate
+      // observations without creating edges between separate broadcasts.
       communityNodes.set(p.id, [
-        p.id, Number(p.comments)||0, 1, 1,
-        Number(p.gifts)||0, Number(p.activeMinutes)||0
+        p.id, (prior?.[1]||0) + (Number(p.comments)||0), 1, 1,
+        (prior?.[4]||0) + (Number(p.gifts)||0),
+        (prior?.[5]||0) + (Number(p.activeMinutes)||0)
       ]);
     }
     const comments = [];

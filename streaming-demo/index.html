@@ -22,7 +22,10 @@
   </div>
 </header>
 <main id="workspace" class="workspace">
-<div role="status" class="media-recovery-notice">Restored public analysis workspace. Original video clips are temporarily unavailable pending transfer from the private archive. Event graphs, chat, reaction history and transcript evidence remain available. Source-media clock alignment is not verified.<div class="media-recovery-thumbs"><img loading="lazy" src="assets/nov15-g0-part000.jpg" alt="Original source clip 1 preview"><img loading="lazy" src="assets/nov15-g1-part004.jpg" alt="Original source clip 2 preview"><img loading="lazy" src="assets/nov15-g2-part002.jpg" alt="Original source clip 3 preview"></div></div>
+<div class="public-demo-strip" role="note">
+  <strong>Recorded evidence · November 15, 2026</strong>
+  <span>Approved public edition · original footage temporarily unavailable; authentic archived stills and recorded event timelines remain available. Not a live feed.</span>
+</div>
   <section class="controlbar" aria-label="Workspace configuration">
     <div class="workspace-heading">
       <h1>Stream analysis</h1>
@@ -70,7 +73,7 @@
         <video id="videoPlayer" playsinline preload="metadata" aria-label="Original preserved source excerpt" hidden></video>
         <audio id="audioPlayer" preload="metadata" aria-label="Enhanced source audio (same transport)" hidden></audio>
         <img id="posterPlayer" alt="Storyboard frames from the preserved media excerpt" hidden>
-        <div id="mediaEmpty" class="media-empty">Select an archived source. Only preserved original media excerpts are available.</div>
+        <div id="mediaEmpty" class="media-empty">Recorded collector-event playback; no source video is available in the public edition.</div>
         <span id="sourceLabel" class="source-label">NO SOURCE SELECTED</span>
       </div>
       <div class="transport" aria-label="Single playback controller">
@@ -90,6 +93,13 @@
           <span id="estEventClock" class="est-clock">Event estimate: —</span>
         </div>
       </div>
+      <section id="showcaseSection" class="showcase-section" aria-labelledby="showcaseHeading" hidden>
+        <div class="showcase-heading">
+          <strong id="showcaseHeading">Guided moments</strong>
+          <span>Three original collector-clock activity peaks</span>
+        </div>
+        <div id="showcaseList" class="showcase-list" aria-label="Select a real recorded activity highlight"></div>
+      </section>
       <details id="alignmentDetails" class="alignment-panel">
         <summary><span>Alignment controls</span><strong>ESTIMATED · ADJUSTABLE</strong></summary>
         <p class="fine">Assumption: media elapsed time ≈ collector elapsed time. No verified historical cross-clock anchors. Adjusting this offset changes the projected chat/graph cursor but never edits the source.</p>
@@ -105,7 +115,7 @@
         </div>
         <p id="alignmentNote" class="fine" role="status">Uncalibrated historical assumption; never verified synchronization.</p>
       </details>
-      <div class="media-footnote" id="mediaFootnote">All sources are actual preserved recordings. No fabricated footage.</div>
+      <div class="media-footnote" id="mediaFootnote">Approved original-source stills. Events are observed independently; cross-clock synchronization is not verified.</div>
     </article>
 
     <article class="dock-panel panel-conversation" data-panel="conversation" aria-labelledby="conversationTitle">
@@ -124,26 +134,33 @@
         <span class="reaction-key"><i aria-hidden="true"></i> Reactions & mentions · inline</span>
       </div>
       <div class="conversation-tools">
-        <label for="chatScope">TIME WINDOW</label>
-        <select id="chatScope" aria-label="Choose combined conversation time range">
-          <option value="near">Around playhead ±90 seconds</option>
-          <option value="wide">±15 minutes</option>
-          <option value="all">Entire capture and selected transcript</option>
-        </select>
-        <label for="conversationMode">ACTIVITY FEED</label>
-        <select id="conversationMode" aria-label="Include observed reactions with the recorded chat">
-          <option value="all" selected>Comments + reactions + speech</option>
-          <option value="messages">Comments + speech only</option>
-          <option value="activity">Reactions / actions only</option>
-        </select>
-        <label for="chatSearch">SEARCH COMMENTS, REACTIONS AND SPEECH</label>
-        <input id="chatSearch" type="search" placeholder="Find a handle, comment, action or spoken phrase…" aria-label="Search original chat, observed reactions and machine-transcribed speech">
-        <div class="conversation-actions">
-          <button id="clearParticipant" class="subtle-button" type="button" hidden>Clear participant</button>
-          <button id="conversationFollow" class="subtle-button" type="button" aria-pressed="true">Follow playback: on</button>
+        <div class="conversation-search-row">
+          <input id="chatSearch" type="search" placeholder="Search comments, handles, reactions or speech…" aria-label="Search approved recorded comments, actions and machine speech">
+          <button id="conversationFollow" class="subtle-button" type="button" aria-pressed="true">Follow: on</button>
+          <button id="clearParticipant" class="subtle-button" type="button" hidden>Clear person</button>
         </div>
+        <details id="conversationOptions" class="conversation-options">
+          <summary>Filters &amp; activity feed</summary>
+          <div class="conversation-options-content">
+            <label for="chatScope">TIME WINDOW</label>
+            <select id="chatScope" aria-label="Choose combined conversation time range">
+              <option value="near">Around playhead ±90 seconds</option>
+              <option value="wide">±15 minutes</option>
+              <option value="all">Entire capture and selected transcript</option>
+            </select>
+            <label for="conversationMode">ACTIVITY FEED</label>
+            <select id="conversationMode" aria-label="Include observed reactions with the recorded chat">
+              <option value="all" selected>Comments + reactions + speech</option>
+              <option value="messages">Comments + speech only</option>
+              <option value="activity">Reactions / actions only</option>
+            </select>
+          </div>
+        </details>
       </div>
-      <p id="conversationNote" class="conversation-note">Speech/chat ordering is best-estimate only, not evidence of replies. ASR and speaker attribution are unverified.</p>
+      <details id="conversationEvidence" class="conversation-evidence">
+        <summary>Evidence and timing notes</summary>
+        <p id="conversationNote" class="conversation-note">Speech/chat ordering is best-estimate only, not evidence of replies. ASR and speaker attribution are unverified.</p>
+      </details>
       <div id="conversationList" class="conversation-scroll conversation-thread" tabindex="0" aria-label="Chronological recorded chat and reaction notifications, with independently clocked machine speech"></div>
       <footer id="conversationFooter" class="pane-foot">Actual comments only · observed platform handles, not verified real-world identities.</footer>
     </article>

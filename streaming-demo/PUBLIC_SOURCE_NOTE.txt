@@ -1,15 +1,3 @@
-Human LAIer | public source-backed TikTok LIVE demonstration
-This is a static public edition from an approved November 15, 2026 capture.
-Recorded comments, public platform handles, reaction events and activity
-bins come from the deliberately reviewed public export, not live ingestion.
-Three approved original November 15 MP4 excerpts and original stills
-are restored; they are not the latest private recordings.
-Platform accounts are not verified real-world identities.
-The guided moments refer to original collector-clock event observations.
-ASR host shout-outs remain unverified, independently timed candidates.
-Graph edges indicate same-minute participation, not causal influence/replies.
-Original source-video time and collector event time are NOT independently
-synchronized. Gift notifications and shopping signals are not sales.
-This site has no accounts, telemetry or external inference/API requests.
-Private R2 recordings, historical HMAC actors and raw platform numeric IDs
-are excluded from public hosting. Do not add them to this repository.
+Human LAIer: three source-verified 2026-11-17/18 public livestream excerpts.\nViewer labels show ORIGINAL OBSERVED PUBLIC TIKTOK HANDLES, never invented aliases.\nOpaque numeric platform IDs, HMAC identifiers, private archives and private room logs excluded.\nEvent/video alignment is provisional recorder-write observation, not independently verified.\nTrade language is a proposal, not a completed transaction. Regional terminology is a\nsource-linked reference-checked candidate, not a verified personal characteristic.\n
+Audience @mentions link observed source comments to observed public handles.
+Host spoken-name mentions require verified audio review; not automatically assumed.

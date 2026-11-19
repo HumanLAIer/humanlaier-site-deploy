@@ -232,7 +232,7 @@
     const section=$('showcaseSection'),list=$('showcaseList');
     const choices=(D.sessions||[]).flatMap(s=>
       (Array.isArray(s.showcaseMoments)?s.showcaseMoments.slice(0,1):[])
-        .map(moment=>({s,moment}))).slice(0,3);
+        .map(moment=>({s,moment}))).slice(0,4);
     section.hidden=!choices.length;
     list.replaceChildren();
     for(const {s,moment} of choices){

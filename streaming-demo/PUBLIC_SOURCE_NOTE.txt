@@ -1,3 +1,8 @@
 Human LAIer: three source-verified 2026-11-17/18 public livestream excerpts.\nViewer labels show ORIGINAL OBSERVED PUBLIC TIKTOK HANDLES, never invented aliases.\nOpaque numeric platform IDs, HMAC identifiers, private archives and private room logs excluded.\nEvent/video alignment is provisional recorder-write observation, not independently verified.\nTrade language is a proposal, not a completed transaction. Regional terminology is a\nsource-linked reference-checked candidate, not a verified personal characteristic.\n
 Audience @mentions link observed source comments to observed public handles.
 Host spoken-name mentions require verified audio review; not automatically assumed.
+
+CITRUS CASE STUDY (Nov 15): previously published original 46s MP4.
+Original observed @citrus_squeez comment GM LB and two gift events,
+plus separate UNVERIFIED machine-speech candidate good morning citrus.
+No verified host speaker, direct reply, causal relationship or source synchronization.

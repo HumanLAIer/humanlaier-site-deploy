@@ -185,10 +185,11 @@
         'Original still only · event clock is independent of the pictured frame':
         'No matching source footage · exploring actual recorded collector events.';
     }
-    $('muteButton').disabled=track==='events'; else if(atEvent!==null){
+    } else if(atEvent!==null){
       const pos=atEvent-currentAlignment().offset-sourceStart(track);
       const m=activeMedia();m.currentTime=clamp(pos,0,maxDuration());
     }
+    $('muteButton').disabled=track==='events';
     $('masterSpeed').value='1';
     video.playbackRate=1;audio.playbackRate=1;
     updateAlignmentUI();

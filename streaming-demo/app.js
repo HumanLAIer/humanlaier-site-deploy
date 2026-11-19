@@ -230,28 +230,45 @@
   }
   function renderShowcase(){
     const section=$('showcaseSection'),list=$('showcaseList');
-    const moments=Array.isArray(session().showcaseMoments)?
-      session().showcaseMoments.slice(0,3):[];
-    section.hidden=!moments.length;
+    const choices=(D.sessions||[]).flatMap(s=>
+      (Array.isArray(s.showcaseMoments)?s.showcaseMoments.slice(0,1):[])
+        .map(moment=>({s,moment}))).slice(0,3);
+    section.hidden=!choices.length;
     list.replaceChildren();
-    for(const moment of moments){
+    for(const {s,moment} of choices){
       if(!Number.isFinite(moment.anchorSec)||!Number.isFinite(moment.startSec)||
          !Number.isFinite(moment.endSec))continue;
-      const btn=elem('button','showcase-chip');
-      btn.type='button';
-      const title=elem('strong','',moment.title+' · '+fmt(moment.anchorSec));
-      const reason=elem('small','',moment.reason||'Original recorded activity');
-      const status=elem('span','showcase-status','Observed event clock · source video not time-verified');
-      btn.append(title,reason,status);
-      btn.title='Inspect the actual collector-observed activity at this time. No video synchronization is implied.';
-      btn.addEventListener('click',()=>{
-        selectTrack('events',clamp(moment.anchorSec,0,session().duration));
-        $('conversationFollow').setAttribute('aria-pressed','true');
+      const button=elem('button','showcase-chip');
+      button.type='button';
+      button.setAttribute('aria-current',String(s.id===session().id));
+      button.append(
+        elem('strong','',moment.title||'Original observed activity'),
+        elem('small','',moment.reason||'Observed TikTok LIVE activity'),
+        elem('span','showcase-status',
+          'OPEN ORIGINAL VIDEO · ~'+fmt(moment.anchorSec)+' · public handles retained')
+      );
+      button.title='Open recorded video near the source-clock highlight. Event/video synchronization is provisional, NOT independently verified.';
+      button.addEventListener('click',()=>{
+        if(s.id!==session().id)switchSession(s.id);
+        const source=findReview().find(x=>x.sid===s.id&&x.video);
+        if(source){
+          setSource(source.key);
+          const target=clamp(moment.anchorSec,0,Math.max(0,source.videoDurationSec-1));
+          const focus=()=>{
+            if(session().id===s.id&&state.source?.key===source.key&&state.track==='video')
+              seekSource(target);
+          };
+          if(video.readyState>=1)focus();
+          else video.addEventListener('loadedmetadata',focus,{once:true});
+        }else selectTrack('events',clamp(moment.anchorSec,0,session().duration));
+        $('chatScope').value='near';
         state.conversationFollow=true;
+        $('conversationFollow').setAttribute('aria-pressed','true');
         $('conversationFollow').textContent='Follow: on';
         renderChat();
+        renderShowcase();
       });
-      list.append(btn);
+      list.append(button);
     }
   }
   function seekSource(t){

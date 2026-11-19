@@ -173,15 +173,19 @@
     if(!['video','audio','events'].includes(track))track='events';
     state.track=track;$('sourceTrack').value=track;
     video.hidden=track!=='video';audio.hidden=track!=='audio';
-    $('posterPlayer').hidden=!(track==='audio'&&state.source?.storyboard);
+    const still=track==='events'&&!state.source?.video&&!!state.source?.poster;
+    $('posterPlayer').hidden=!(still||(track==='audio'&&state.source?.storyboard));
     $('mediaEmpty').hidden=track!=='events';
     $('sourceLabel').textContent=track==='video'?'ORIGINAL VIDEO · SINGLE TRANSPORT':
-      track==='audio'?'ENHANCED AUDIO · SINGLE TRANSPORT':'EVENT-ONLY REPLAY';
+      track==='audio'?'ENHANCED AUDIO · SINGLE TRANSPORT':
+      still?'ARCHIVED SOURCE STILL · EVENT REPLAY':'EVENT-ONLY REPLAY';
     if(track==='events'){
       state.eventT=clamp(atEvent==null?state.eventT:atEvent,0,session().duration);
-      $('mediaEmpty').textContent=state.source?'No matching media at this collector event position. Event-only mode.':
-       'No preserved playable excerpt for this capture. Collector-only event replay.';
-    } else if(atEvent!==null){
+      $('mediaEmpty').textContent=still?
+        'Original still only · event clock is independent of the pictured frame':
+        'No matching source footage · exploring actual recorded collector events.';
+    }
+    $('muteButton').disabled=track==='events'; else if(atEvent!==null){
       const pos=atEvent-currentAlignment().offset-sourceStart(track);
       const m=activeMedia();m.currentTime=clamp(pos,0,maxDuration());
     }
@@ -201,10 +205,9 @@
       if(r.video){video.src=r.video;video.poster=r.poster||r.storyboard||'';video.load();}
       if(r.audio){audio.src=r.audio;audio.load();}
       $('posterPlayer').src=r.storyboard||r.poster||'';
-      $('mediaFootnote').textContent=r.title+
-        (r.mediaClockStatus==='UNCALIBRATED_INDEPENDENT_SOURCE'?
-          ' · independent original-media excerpt: no event timeline synchronization is established.':
-          ' · media/event origin provisional, not independently synchronized. Select one media track at a time.');
+      $('mediaFootnote').textContent=(!r.video&&!r.audio)?
+        'Approved source still · not synchronized to the collector event clock. Original video transfer remains pending.':
+        r.title+' · recorded source media. Cross-clock alignment is not independently verified.';
     }else{
       $('mediaFootnote').textContent='No source-media excerpt exists for this capture; collector evidence remains available.';
     }
@@ -217,10 +220,39 @@
     const picks=findReview(),sel=$('sourceSelect');sel.replaceChildren();
     if(!picks.length){const option=elem('option','', 'No prepared media for this capture');option.value='';sel.append(option);}
     else for(const r of picks){
-      const option=elem('option','',r.title+(r.video?' · video':' · audio'));
+      const option=elem('option','',r.title+
+        (r.video?' · video':r.audio?' · audio':' · archived still'));
       option.value=r.key;sel.append(option);
     }
+    $('sourceTrack').querySelector('option[value="video"]').disabled=!picks.some(r=>r.video);
+    $('sourceTrack').querySelector('option[value="audio"]').disabled=!picks.some(r=>r.audio);
     state.source=null;setSource(picks.find(r=>r.video)?.key||picks[0]?.key||null);
+  }
+  function renderShowcase(){
+    const section=$('showcaseSection'),list=$('showcaseList');
+    const moments=Array.isArray(session().showcaseMoments)?
+      session().showcaseMoments.slice(0,3):[];
+    section.hidden=!moments.length;
+    list.replaceChildren();
+    for(const moment of moments){
+      if(!Number.isFinite(moment.anchorSec)||!Number.isFinite(moment.startSec)||
+         !Number.isFinite(moment.endSec))continue;
+      const btn=elem('button','showcase-chip');
+      btn.type='button';
+      const title=elem('strong','',moment.title+' · '+fmt(moment.anchorSec));
+      const reason=elem('small','',moment.reason||'Original recorded activity');
+      const status=elem('span','showcase-status','Observed event clock · source video not time-verified');
+      btn.append(title,reason,status);
+      btn.title='Inspect the actual collector-observed activity at this time. No video synchronization is implied.';
+      btn.addEventListener('click',()=>{
+        selectTrack('events',clamp(moment.anchorSec,0,session().duration));
+        $('conversationFollow').setAttribute('aria-pressed','true');
+        state.conversationFollow=true;
+        $('conversationFollow').textContent='Follow: on';
+        renderChat();
+      });
+      list.append(btn);
+    }
   }
   function seekSource(t){
     const duration=maxDuration(),next=clamp(t,0,duration);
@@ -320,7 +352,7 @@
     }else seekEvent(speechCollectorTime(time));
     state.conversationFollow=true;
     $('conversationFollow').setAttribute('aria-pressed','true');
-    $('conversationFollow').textContent='Follow playback: on';
+    $('conversationFollow').textContent='Follow: on';
   }
   function renderConversation(){
     const list=$('conversationList'),oldScroll=list.scrollTop,
@@ -2053,7 +2085,7 @@
     prepareVisualEvents();
     populateEvidenceFilters();
     populateGraphEventFilter();
-    renderSources();setMarkers();renderMediaStitch();drawTimeline();renderGraph();renderChat();
+    renderSources();renderShowcase();setMarkers();renderMediaStitch();drawTimeline();renderGraph();renderChat();
     renderActionTimeline();renderRoomEvents();renderHostShoutouts();
     renderGraphInspector();
     // Start on actual observed chat, but never imply a preview covers it.
@@ -2107,7 +2139,7 @@
     $('conversationFollow').addEventListener('click',()=>{
       state.conversationFollow=!state.conversationFollow;
       $('conversationFollow').setAttribute('aria-pressed',String(state.conversationFollow));
-      $('conversationFollow').textContent='Follow playback: '+(state.conversationFollow?'on':'off');
+      $('conversationFollow').textContent='Follow: '+(state.conversationFollow?'on':'off');
       if(state.conversationFollow)highlightConversation(true);
     });
     const thread=$('conversationList');
@@ -2115,7 +2147,7 @@
       thread.addEventListener(event,()=>{
         state.conversationFollow=false;
         $('conversationFollow').setAttribute('aria-pressed','false');
-        $('conversationFollow').textContent='Follow playback: off';
+        $('conversationFollow').textContent='Follow: off';
       },{passive:true});
     $('graphCommunity').addEventListener('click',()=>{
       state.graphMode='community';$('graphCommunity').setAttribute('aria-pressed','true');

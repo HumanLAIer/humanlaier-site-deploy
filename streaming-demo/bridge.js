@@ -54,10 +54,15 @@
     }
     const sourceMap = new Map();
     for (const m of s.media) {
+      // The approved public export may have authentic poster stills while
+      // separately approved MP4 binaries are unavailable. Never discard the
+      // entire event archive merely because the media transfer is pending.
       if (!m || typeof m.key !== 'string' ||
-          !/^assets\/[a-zA-Z0-9._-]+\.(mp4|mp3)$/i.test(m.video || m.audio || '')) {
-        continue;
-      }
+          !/^[a-zA-Z0-9_-]{2,96}$/.test(m.key) ||
+          (m.video && !/^assets\/[a-zA-Z0-9._-]+\.mp4$/i.test(m.video)) ||
+          (m.audio && !/^assets\/[a-zA-Z0-9._-]+\.mp3$/i.test(m.audio)) ||
+          (m.poster && !/^assets\/[a-zA-Z0-9._-]+\.(jpg|jpeg|png)$/i.test(m.poster)) ||
+          !(m.video || m.audio || m.poster)) continue;
       const preview = {
         key:m.key, sid:s.id,
         title:typeof m.title === 'string'?m.title:'Original media excerpt',
@@ -132,15 +137,34 @@
       note:String(c.description||'Observed collector interval')
     }));
     const bins = (s.bins||[]).filter(r=>Array.isArray(r)&&r.length>=7);
+    // Curate only the three explicitly approved public collector-clock
+    // chapters. Media-clock shout-out candidates do not become event-clock
+    // highlights, and no one infers a reply, completed purchase, or sentiment.
+    const chapters = (s.chapters||[]).filter(c=>
+      c && ['chat','like','gift'].includes(c.kind) &&
+      c.clock==='COLLECTOR' && isFiniteNumber(c.at) &&
+      c.at>=0 && c.at<=s.duration).slice(0,3);
+    const showcaseMoments = chapters.map((c,i)=>({
+      rank:i+1, kind:c.kind,
+      title:String(c.label||'Recorded activity'),
+      reason:String(c.description||'Observed collector activity'),
+      startSec:Math.max(0,Math.round(c.at)-30),
+      endSec:Math.min(s.duration,Math.round(c.at)+90),
+      anchorSec:c.at,
+      evidenceClock:'COLLECTOR_OBSERVATION_ONLY',
+      mediaAlignment:'NOT_INDEPENDENTLY_VERIFIED'
+    }));
     const converted = {
       id:s.id,label:s.label,startUTC:s.startUTC,
       duration:s.duration,identityScheme:'direct_tiktok_account_fields_v1',
       accountLabels:labels,
       stats, bins, comments, interactions,roomEvents:[],
-      markers, derivedSpeechEvents:shoutouts,
+      markers, showcaseMoments, derivedSpeechEvents:shoutouts,
       speechDerivedStatus:'ASR_SHOUTOUT_CANDIDATES_NEED_AUDIO_REVIEW',
-      sourceMediaInventory:{segments:0,bytes:0,playablePreviews:sourceMap.size,
-        syncStatus:'PROVISIONAL_NOT_VERIFIED'},
+      sourceMediaInventory:{segments:0,bytes:0,
+        playablePreviews:[...sourceMap.values()].filter(x=>x.video||x.audio).length,
+        approvedPosterStills:[...sourceMap.values()].filter(x=>x.poster).length,
+        syncStatus:'NOT_INDEPENDENTLY_VERIFIED'},
       mediaCoveragePct:null,
       clockEvidence:{eventMediaAlignment:'NOT_VERIFIED',eventWallclock:'SOURCE_OBSERVED'}
     };

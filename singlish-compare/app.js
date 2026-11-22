@@ -1,297 +1,294 @@
-/* Human LAIer / Signal Lab: static, source-backed two-model comparison.
-   Transcript content is never fabricated. Follow is synchronized to VERIFIED
-   15-second excerpt boundaries, never to unmeasured word timestamps. */
+/* Human LAIer Signal Lab / 002 — three-model, source-backed 180s replay.
+ * Strict source contract: 12 identical contiguous audio blocks per model.
+ * Follow is block-level (15s), not fabricated word timestamps.
+ * Engagement is observed on a provisional FFmpeg process clock ONLY.
+ */
 (() => {
   "use strict";
   const $ = id => document.getElementById(id);
-  const player = $("sourceAudio");
-  const seekSlider = $("seekSlider");
-  const playButton = $("playButton");
-  const waveform = $("waveform");
-  const status = $("playerStatus");
-  const momentParent = $("moments");
-  const clipSeconds = 15;
-  let dataset = null;
-  let activeIndex = -1;
-  let motionReduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const rowNodes = {small: [], coats: []};
-  const textNodes = {small: [], coats: []};
-  const momentNodes = [];
-  const color = {played: "#66e0d1", waiting: "#335668", cursor: "#f4f6f3"};
+  const audio = $("sourceAudio");
+  const play = $("playButton");
+  const seek = $("seekSlider");
+  const canvas = $("waveform");
+  const follow = $("autoFollow");
+  const differ = $("showDiff");
+  const models = [
+    {key:"production", report:"production-base.en", label:"Production faster-whisper base.en"},
+    {key:"singlish", report:"singlish-small", label:"Singlish2English-small"},
+    {key:"coats", report:"coats-large-v2", label:"Coats Whisper large-v2 NSC"}
+  ];
+  const tracks = {production:[],singlish:[],coats:[]};
+  const phrases = {production:[],singlish:[],coats:[]};
+  const slots = [];
+  let data = null;
+  let index = -1;
+  let selectedModel = "production";
+  const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  const fmt = seconds => {
-    const t = Math.max(0, Math.floor(Number(seconds) || 0));
-    return String(Math.floor(t / 60)).padStart(2, "0") + ":" +
-      String(t % 60).padStart(2, "0");
-  };
-  const node = (tag, cls, value) => {
-    const item = document.createElement(tag);
-    if (cls) item.className = cls;
-    if (value !== undefined && value !== null) item.textContent = String(value);
-    return item;
-  };
-  const normalizedWords = str => new Set(
-    (String(str).toLowerCase().match(/[\p{L}\p{N}]+(?:['’][\p{L}\p{N}]+)*/gu) || [])
-  );
-  function showTranscriptText(element, ownText, otherText) {
-    element.replaceChildren();
-    if (!ownText.trim()) {
-      element.classList.add("empty");
-      element.textContent = "No speech returned for this excerpt.";
+  function fmt(t) {
+    const sec = Math.max(0,Math.floor(Number(t)||0));
+    return String(Math.floor(sec/60)).padStart(2,"0")+":"+String(sec%60).padStart(2,"0");
+  }
+  function create(tag,className,content) {
+    const el = document.createElement(tag);
+    if (className) el.className=className;
+    if (content !== undefined && content !== null) el.textContent=String(content);
+    return el;
+  }
+  function wordSet(value) {
+    return new Set((String(value).toLocaleLowerCase().match(/[\p{L}\p{N}]+(?:['’][\p{L}\p{N}]+)*/gu)||[]));
+  }
+  function renderText(target, text, otherTexts) {
+    target.replaceChildren();
+    const actual=String(text);
+    if (!actual.trim()) {
+      target.classList.add("empty");
+      target.textContent="No words returned in this block.";
       return;
     }
-    element.classList.remove("empty");
-    if (!$("showDiff").checked) {
-      element.textContent = ownText;
+    target.classList.remove("empty");
+    if (!differ.checked) {
+      target.textContent=actual;
       return;
     }
-    const comparison = normalizedWords(otherText);
-    const tokens = ownText.match(/\s+|[^\s]+/gu) || [ownText];
+    const alternatives = otherTexts.map(wordSet);
+    const tokens=actual.match(/\s+|[^\s]+/gu)||[actual];
     for (const token of tokens) {
-      const normal = token.toLowerCase().replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, "");
-      if (normal && !comparison.has(normal)) {
-        element.appendChild(node("mark", "word-diff", token));
+      const norm=token.toLocaleLowerCase().replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu,"");
+      if (norm && alternatives.every(set=>!set.has(norm))) {
+        target.appendChild(create("mark","word-diff",token));
       } else {
-        element.appendChild(document.createTextNode(token));
+        target.appendChild(document.createTextNode(token));
       }
     }
   }
-  function buildMoment(clip) {
-    const button = node("button", "moment");
-    button.type = "button";
-    button.setAttribute("aria-label", "Play excerpt " + (clip.index + 1) + " at " + fmt(clip.timelineStart));
-    const top = node("span", "moment-top");
-    top.append(node("span", "", "EXCERPT 0" + (clip.index + 1)), node("span", "", fmt(clip.timelineStart) + "—" + fmt(clip.timelineEnd)));
-    button.append(top, node("span", "moment-text", "Original segment / " + fmt(clip.sourcePartOffsetSeconds)),
-      node("span", "moment-detail", "15 SEC · AUDIO + BOTH MODELS"));
-    button.addEventListener("click", () => jumpTo(clip.timelineStart, true));
-    momentParent.appendChild(button);
-    momentNodes.push(button);
+  function repaintText() {
+    if (!data) return;
+    for (const clip of data.clips) for (const m of models) {
+      renderText(phrases[m.key][clip.index], clip[m.key],
+        models.filter(other=>other.key!==m.key).map(other=>clip[other.key]));
+    }
   }
-  function buildRow(model, clip) {
-    const key = model === "small" ? "singlish" : "coats";
-    const other = model === "small" ? "coats" : "singlish";
-    const pane = $(model + "Scroll");
-    const row = node("article", "transcript-chunk");
-    row.tabIndex = 0;
-    row.setAttribute("role", "button");
-    row.setAttribute("aria-label", "Seek to excerpt " + (clip.index + 1) + " for " + (model === "small" ? "Singlish2English" : "Coats"));
-    row.dataset.index = String(clip.index);
-    const top = node("div", "chunk-meta");
-    top.append(node("span", "chunk-num", "0" + (clip.index + 1) + " / " + fmt(clip.timelineStart) + " — " + fmt(clip.timelineEnd)),
-      node("span", "", "SOURCE AUDIO"));
-    const phrase = node("p", "chunk-text");
-    showTranscriptText(phrase, clip[key], clip[other]);
-    const source = node("div", "chunk-source", "ORIGINAL SEGMENT OFFSET " + fmt(clip.sourcePartOffsetSeconds) +
-      " · " + clip.sourcePart.replace(".ts", "").replace("part_", "PART "));
-    row.append(top, phrase, source, node("div", "chunk-progress"));
-    row.addEventListener("click", () => jumpTo(clip.timelineStart, true));
-    row.addEventListener("keydown", event => {
-      if (event.key === "Enter" || event.key === " ") {
-        event.preventDefault();
-        jumpTo(clip.timelineStart, true);
-      }
-    });
+  function makeTranscript(m,clip) {
+    const pane=$(m.key+"Scroll");
+    const row=create("article","transcript-chunk");
+    row.tabIndex=0;
+    row.dataset.index=String(clip.index);
+    row.setAttribute("role","button");
+    row.setAttribute("aria-label","Replay from "+fmt(clip.start)+": "+m.label);
+    const header=create("div","chunk-meta");
+    header.append(create("span","chunk-num",String(clip.index+1).padStart(2,"0")+" / "+fmt(clip.start)+"—"+fmt(clip.end)),
+      create("span","","SOURCE BLOCK"));
+    const words=create("p","chunk-text");
+    const src=create("div","chunk-source","ORIGINAL PART 27 · +"+fmt(clip.sourcePartOffset));
+    row.append(header,words,src,create("div","chunk-progress"));
+    const clicked=()=>jump(clip.start,true);
+    row.addEventListener("click",clicked);
+    row.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();clicked();}});
     pane.appendChild(row);
-    rowNodes[model].push(row);
-    textNodes[model].push(phrase);
+    tracks[m.key].push(row);
+    phrases[m.key].push(words);
   }
-  function repaintDifferences() {
-    if (!dataset) return;
-    for (const clip of dataset.clips) {
-      showTranscriptText(textNodes.small[clip.index], clip.singlish, clip.coats);
-      showTranscriptText(textNodes.coats[clip.index], clip.coats, clip.singlish);
+  function makeActivity(clip,scale) {
+    const b=create("button","activity-slot");
+    b.type="button";
+    b.setAttribute("aria-label","Seek to "+fmt(clip.start)+"; approximate observed "+clip.engagement.comments+" comments, "+
+      clip.engagement.likes+" like events and "+clip.engagement.gifts+" gifts");
+    const bars=create("span","activity-bars");
+    for (const [kind,name] of [["comments","comments"],["likes","likes"],["gifts","gifts"]]) {
+      const bar=create("i",name);
+      const n=Number(clip.engagement[kind])||0;
+      bar.style.height=(n?Math.max(5,Math.round(70*n/scale)):2)+"%";
+      bar.title=n+" "+kind+" observed";
+      bars.appendChild(bar);
     }
+    b.append(create("span","activity-number",String(clip.engagement.comments)),
+      bars,create("span","",fmt(clip.start)));
+    b.addEventListener("click",()=>jump(clip.start,true));
+    $("activityTrack").appendChild(b);
+    slots.push(b);
   }
-  function followPane(model, index) {
-    const row = rowNodes[model][index];
-    const pane = $(model + "Scroll");
-    if (!pane || !row) return;
-    pane.scrollTo({top: Math.max(0, row.offsetTop - 18),
-      behavior: motionReduced ? "instant" : "smooth"});
+  function redraw() {
+    if (!data || !canvas.getContext) return;
+    const rect=canvas.getBoundingClientRect();
+    if (!rect.width||!rect.height) return;
+    const scale=Math.min(window.devicePixelRatio||1,3);
+    const w=rect.width,h=rect.height;
+    const rw=Math.round(w*scale),rh=Math.round(h*scale);
+    if (canvas.width!==rw||canvas.height!==rh) {canvas.width=rw;canvas.height=rh;}
+    const ctx=canvas.getContext("2d");
+    ctx.setTransform(scale,0,0,scale,0,0);
+    ctx.clearRect(0,0,w,h);
+    const wave=data.waveform;
+    const max=Math.max(.01,...wave);
+    const pitch=w/wave.length;
+    const time=Math.max(0,Math.min(180,audio.currentTime||0));
+    for (let i=0;i<wave.length;i++) {
+      const amp=Math.min(1,Math.max(.11,Math.sqrt(Math.max(0,wave[i])/max)));
+      const bh=Math.max(4,amp*(h-11));
+      ctx.fillStyle=i<time?"#66e0d1":"#335668";
+      ctx.fillRect(i*pitch,(h-bh)/2,Math.max(1,pitch-1),bh);
+    }
+    ctx.strokeStyle="#ffffff42";ctx.lineWidth=1;ctx.setLineDash([3,5]);
+    for(let i=1;i<12;i++){
+      const x=w*i/12;
+      ctx.beginPath();ctx.moveTo(x,3);ctx.lineTo(x,h-3);ctx.stroke();
+    }
+    ctx.setLineDash([]);ctx.strokeStyle="#fffef9";ctx.lineWidth=2;
+    const x=w*time/180;
+    ctx.beginPath();ctx.moveTo(x,2);ctx.lineTo(x,h-2);ctx.stroke();
   }
-  function updatePlayback() {
-    if (!dataset) return;
-    const duration = dataset.durationSeconds;
-    const current = Number.isFinite(player.currentTime) ? Math.max(0, Math.min(duration, player.currentTime)) : 0;
-    $("playerClock").textContent = fmt(current) + " / " + fmt(duration);
-    seekSlider.value = String(current);
-    seekSlider.style.setProperty("--seek-percent", (current / duration * 100) + "%");
-    const segment = Math.max(0, Math.min(dataset.clips.length - 1, Math.floor(Math.min(duration - .0001, current) / clipSeconds)));
-    if (segment !== activeIndex) {
-      activeIndex = segment;
-      for (const model of ["small", "coats"]) {
-        rowNodes[model].forEach((r, i) => {
-          r.classList.toggle("active", i === segment);
-          r.classList.toggle("completed", i < segment);
-          r.setAttribute("aria-current", i === segment ? "true" : "false");
+  function scrollModel(key,i) {
+    const pane=$(key+"Scroll"),row=tracks[key][i];
+    if (!pane||!row) return;
+    pane.scrollTo({top:Math.max(0,row.offsetTop-18),behavior:reduceMotion?"instant":"smooth"});
+  }
+  function showPlayback() {
+    if (!data) return;
+    const now=Math.max(0,Math.min(180,audio.currentTime||0));
+    const n=Math.max(0,Math.min(11,Math.floor(Math.min(now,179.999)/15)));
+    $("playerClock").textContent=fmt(now)+" / 03:00";
+    seek.value=String(now);
+    if (index!==n) {
+      index=n;
+      for (const m of models) {
+        tracks[m.key].forEach((row,k)=>{
+          row.classList.toggle("active",k===n);
+          row.classList.toggle("completed",k<n);
+          row.setAttribute("aria-current",k===n?"true":"false");
         });
-        if ($("autoFollow").checked) followPane(model, segment);
+        if (follow.checked && (window.innerWidth>1000 || m.key===selectedModel)) scrollModel(m.key,n);
       }
-      momentNodes.forEach((m, i) => {
-        m.classList.toggle("active", i === segment);
-        m.setAttribute("aria-current", i === segment ? "true" : "false");
+      slots.forEach((slot,k)=>{
+        slot.classList.toggle("active",k===n);
+        slot.setAttribute("aria-current",k===n?"true":"false");
       });
-      status.textContent = "Listening to excerpt " + (segment + 1) + " of " + dataset.clips.length +
-        " · original segment at " + fmt(dataset.clips[segment].sourcePartOffsetSeconds);
+      const c=data.clips[n];
+      $("playerStatus").textContent="Block "+(n+1)+"/12 · original source +"+fmt(c.sourcePartOffset)+
+        " · "+c.engagement.comments+" observed comments (clock provisional)";
     }
-    const segmentProgress = Math.max(0, Math.min(1, (current - segment * clipSeconds) / clipSeconds));
-    for (const model of ["small", "coats"]) {
-      rowNodes[model][segment].style.setProperty("--clip-progress", String(segmentProgress));
-    }
-    paintWave(current);
+    const progress=Math.max(0,Math.min(1,(now-n*15)/15));
+    for (const m of models) tracks[m.key][n].style.setProperty("--clip-progress",String(progress));
+    redraw();
   }
-  function paintWave(time) {
-    if (!dataset || !waveform.getContext) return;
-    const rect = waveform.getBoundingClientRect();
-    if (!rect.width || !rect.height) return;
-    const dpr = Math.min(window.devicePixelRatio || 1, 3);
-    const width = rect.width;
-    const height = rect.height;
-    const w = Math.round(width * dpr);
-    const h = Math.round(height * dpr);
-    if (waveform.width !== w || waveform.height !== h) {
-      waveform.width = w;
-      waveform.height = h;
-    }
-    const ctx = waveform.getContext("2d");
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.clearRect(0, 0, width, height);
-    const data = dataset.waveform || [];
-    const max = Math.max(.025, ...data);
-    const usable = height - 13;
-    const pitch = width / Math.max(1, data.length);
-    const barWidth = Math.max(1, pitch - 1.4);
-    for (let i = 0; i < data.length; i++) {
-      const amp = Math.min(1, Math.max(.1, Math.sqrt(data[i] / max)));
-      const bar = Math.max(4, amp * usable);
-      ctx.fillStyle = (i / data.length) * dataset.durationSeconds <= time ? color.played : color.waiting;
-      ctx.fillRect(i * pitch, (height - bar) / 2, barWidth, bar);
-    }
-    for (let i = 1; i < 4; i++) {
-      const x = width * (i / 4);
-      ctx.strokeStyle = "#ffffff40";
-      ctx.setLineDash([3, 5]);
-      ctx.beginPath();ctx.moveTo(x, 3);ctx.lineTo(x, height - 2);ctx.stroke();
-    }
-    ctx.setLineDash([]);
-    ctx.strokeStyle = color.cursor;
-    ctx.lineWidth = 2;
-    const x = width * Math.max(0, Math.min(1, time / dataset.durationSeconds));
-    ctx.beginPath();ctx.moveTo(x, 2);ctx.lineTo(x, height - 2);ctx.stroke();
+  function jump(seconds,doPlay) {
+    if (!data) return;
+    const value=Math.min(179.96,Math.max(0,Number(seconds)||0));
+    try {audio.currentTime=value;} catch {}
+    showPlayback();
+    if (doPlay) start();
   }
-  function jumpTo(seconds, play) {
-    if (!dataset) return;
-    const target = Math.max(0, Math.min(dataset.durationSeconds - .08, Number(seconds) || 0));
-    try { player.currentTime = target; } catch (e) { /* wait for media metadata */ }
-    updatePlayback();
-    if (play) startPlayback();
+  function buttonState() {
+    const running=!audio.paused&&!audio.ended;
+    $("playGlyph").textContent=running?"❚❚":"▶";
+    play.setAttribute("aria-label",running?"Pause source recording":"Play source recording");
   }
-  function updatePlayIcon() {
-    const playing = !player.paused && !player.ended;
-    $("playGlyph").textContent = playing ? "❚❚" : "▶";
-    playButton.setAttribute("aria-label", playing ? "Pause recording" : "Play recording");
+  async function start() {
+    try {await audio.play();}
+    catch { $("playerStatus").textContent="Browser playback did not start. Try the play control again."; }
+    buttonState();
   }
-  async function startPlayback() {
+  function setModel(key) {
+    selectedModel=key;
+    document.querySelectorAll(".model-tabs button").forEach(btn=>{
+      btn.setAttribute("aria-pressed",btn.dataset.model===key?"true":"false");
+    });
+    document.querySelectorAll(".transcript-panel").forEach(panel=>{
+      panel.setAttribute("data-selected",panel.dataset.model===key?"true":"false");
+    });
+    if (index>=0&&follow.checked) scrollModel(key,index);
+  }
+  function validate(x) {
+    if (!x || x.schema!=="hl-public-singlish-production-180-v1"||
+      x.status!=="UNREVIEWED_THREE_MODEL_TRANSCRIPTS"||
+      x.sourceSession!=="20261117T142835_038897Z_huatzaitcg"||
+      x.sourcePart!=="part_000027.ts"||x.sourcePartOffsetSeconds!==110||
+      x.durationSeconds!==180||x.clipDurationSeconds!==15||x.clipCount!==12||
+      x.samplesAreContiguous!==true||x.humanGoldAvailable!==false||
+      x.wordTimestampsVerified!==false||x.eventMediaSyncIndependentlyVerified!==false||
+      x.audioFile!=="high-engagement-180.mp3"||
+      !Array.isArray(x.waveform)||x.waveform.length!==180||
+      !Array.isArray(x.clips)||x.clips.length!==12||
+      !x.engagement||!x.modelMetrics) throw Error("Unexpected or incomplete comparison source");
+    for(let i=0;i<12;i++){
+      const c=x.clips[i];
+      if(c.id!=="clip"+String(i).padStart(2,"0")||c.index!==i||
+        c.start!==i*15||c.end!==(i+1)*15||
+        c.sourcePartOffset!==110+i*15||
+        typeof c.production!=="string"||typeof c.singlish!=="string"||typeof c.coats!=="string"||
+        !c.engagement||typeof c.engagement.comments!=="number")
+        throw Error("Comparison clip contract mismatch");
+    }
+    for(const m of models) {
+      const v=x.modelMetrics[m.report];
+      if(!v||typeof v.revision!=="string"||v.revision.length!==40||
+        !Number.isFinite(v.inferSeconds)||v.inferSeconds<=0||
+        !Number.isFinite(v.peakRssMib)||v.peakRssMib<=0||v.wer!==null)
+        throw Error("Model comparison contract mismatch");
+    }
+  }
+  function load(x) {
+    validate(x);
+    data=x;
+    const engagement=x.engagement;
+    $("metricComments").textContent=engagement.comments.toLocaleString();
+    $("metricAccounts").textContent=engagement.uniqueActors.toLocaleString();
+    const total=Number(engagement.comments||0)+Number(engagement.likes||0)+Number(engagement.gifts||0)+
+       Number(engagement.shares||0)+Number(engagement.follows||0)+Number(engagement.giftProgress||0);
+    $("metricActions").textContent=total.toLocaleString();
+    $("metricGifts").textContent=engagement.gifts+" / "+engagement.shares;
+    const maxTime=Math.max(...models.map(m=>x.modelMetrics[m.report].inferSeconds));
+    for (const m of models) {
+      const report=x.modelMetrics[m.report];
+      $(m.key+"Time").textContent=report.inferSeconds.toFixed(2)+"s";
+      $(m.key+"Revision").textContent="revision "+report.revision.slice(0,10);
+      $(m.key+"Bar").style.width=(100*report.inferSeconds/maxTime)+"%";
+    }
+    $("provenance").textContent="SOURCE "+x.sourceSession+
+      " / "+x.sourcePart+" +01:50 / SHA-256 "+x.sourcePartSha256.slice(0,24)+"… "+
+      " / PRODUCTION "+x.modelMetrics["production-base.en"].revision.slice(0,12)+
+      " / SINGLISH "+x.modelMetrics["singlish-small"].revision.slice(0,12)+
+      " / COATS "+x.modelMetrics["coats-large-v2"].revision.slice(0,12);
+    const maxActivity=Math.max(1,...x.clips.map(c=>Math.max(c.engagement.comments,c.engagement.likes,c.engagement.gifts)));
+    for(const c of x.clips) {
+      makeActivity(c,maxActivity);
+      for(const m of models) makeTranscript(m,c);
+    }
+    repaintText();
+    audio.src=x.audioFile;
+    audio.load();
+    seek.max="180";seek.disabled=false;play.disabled=false;
+    $("playerStatus").textContent="Ready · 03:00 original audio · 3 model transcripts";
+    setModel("production");
+    showPlayback();
+  }
+  function setup() {
+    play.addEventListener("click",()=>audio.paused?start():audio.pause());
+    seek.addEventListener("input",()=>jump(Number(seek.value),false));
+    $("speedSelect").addEventListener("change",e=>audio.playbackRate=Number(e.target.value)||1);
+    follow.addEventListener("change",()=>{if(follow.checked&&index>=0){
+      if(window.innerWidth>1000){for(const m of models)scrollModel(m.key,index);}
+      else scrollModel(selectedModel,index);
+    }});
+    differ.addEventListener("change",repaintText);
+    document.querySelectorAll(".model-tabs button").forEach(b=>b.addEventListener("click",()=>setModel(b.dataset.model)));
+    for (const event of ["timeupdate","seeked","durationchange"]) audio.addEventListener(event,showPlayback);
+    for (const event of ["play","pause","ended"]) audio.addEventListener(event,buttonState);
+    audio.addEventListener("error",()=>{$("playerStatus").textContent="Audio failed to load; original transcript blocks remain readable.";});
+    window.addEventListener("resize",redraw);
+    setModel("production");
+  }
+  async function init(){
+    setup();
     try {
-      await player.play();
-    } catch (error) {
-      status.textContent = "Playback could not start. Use the play control or check audio loading.";
-    }
-    updatePlayIcon();
-  }
-  function wire() {
-    playButton.addEventListener("click", () => {
-      if (player.paused) startPlayback();
-      else player.pause();
-    });
-    seekSlider.addEventListener("input", () => jumpTo(Number(seekSlider.value), false));
-    $("speedSelect").addEventListener("change", event => {
-      player.playbackRate = Number(event.target.value) || 1;
-    });
-    $("autoFollow").addEventListener("change", event => {
-      if (event.target.checked && activeIndex >= 0) {
-        followPane("small", activeIndex);
-        followPane("coats", activeIndex);
-      }
-    });
-    $("showDiff").addEventListener("change", repaintDifferences);
-    player.addEventListener("timeupdate", updatePlayback);
-    player.addEventListener("seeked", updatePlayback);
-    player.addEventListener("durationchange", updatePlayback);
-    player.addEventListener("play", updatePlayIcon);
-    player.addEventListener("pause", updatePlayIcon);
-    player.addEventListener("ended", updatePlayIcon);
-    player.addEventListener("error", () => {
-      status.textContent = "Original audio could not load. The transcripts remain independently viewable.";
-    });
-    window.addEventListener("resize", () => {if (dataset) paintWave(player.currentTime || 0);});
-  }
-  function loadData(data) {
-    if (data.schema !== "hl-public-singlish-head-to-head-v1" ||
-        data.sourceSession !== "20261120T182048_569395Z_huatzaitcg" ||
-        data.status !== "UNREVIEWED_MODEL_TRANSCRIPTS" ||
-        data.wordTimestampsVerified !== false ||
-        data.durationSeconds !== 60 ||
-        !Array.isArray(data.clips) || data.clips.length !== 4 ||
-        !data.modelMetrics || !Array.isArray(data.waveform) ||
-        data.audioFile !== "comparison-audio.mp3") {
-      throw Error("The comparison source is incomplete or has an unexpected revision.");
-    }
-    for (let i = 0; i < 4; i++) {
-      const clip = data.clips[i];
-      if (clip.index !== i || clip.id !== "clip0" + i ||
-          clip.timelineStart !== i * 15 || clip.timelineEnd !== (i+1)*15 ||
-          typeof clip.singlish !== "string" || typeof clip.coats !== "string" ||
-          !Number.isFinite(clip.sourcePartOffsetSeconds)) {
-        throw Error("Clip source boundaries do not match the comparison contract.");
-      }
-    }
-    dataset = data;
-    const small = data.modelMetrics["singlish-small"];
-    const coats = data.modelMetrics["coats-large-v2"];
-    if (!small || !coats || small.inferenceSeconds <= 0 || coats.inferenceSeconds <= 0) {
-      throw Error("The model timing comparison is unavailable.");
-    }
-    $("heroRatio").replaceChildren(document.createTextNode((coats.inferenceSeconds / small.inferenceSeconds).toFixed(1)),
-      node("span", "", "×"));
-    $("metricInference").textContent = small.inferenceSeconds.toFixed(1) + " / " + coats.inferenceSeconds.toFixed(1);
-    $("smallTime").textContent = small.inferenceSeconds.toFixed(2) + "s";
-    $("coatsTime").textContent = coats.inferenceSeconds.toFixed(2) + "s";
-    $("smallRevision").textContent = "revision " + small.revision.slice(0,9);
-    $("coatsRevision").textContent = "revision " + coats.revision.slice(0,9);
-    const maximum = Math.max(small.inferenceSeconds, coats.inferenceSeconds);
-    $("smallBar").style.width = (100 * small.inferenceSeconds / maximum) + "%";
-    $("coatsBar").style.width = (100 * coats.inferenceSeconds / maximum) + "%";
-    $("provenance").textContent = "SOURCE SESSION " + data.sourceSession +
-      " · SOURCE PART SHA-256 " + data.sourcePartSha256.slice(0,20) + "… " +
-      " · DATASET MANIFEST " + data.manifestSha256.slice(0,20) + "… " +
-      " · MODEL REVISIONS " + small.revision.slice(0,12) + " / " + coats.revision.slice(0,12);
-    for (const clip of data.clips) {
-      buildMoment(clip);
-      buildRow("small", clip);
-      buildRow("coats", clip);
-    }
-    player.src = data.audioFile;
-    player.load();
-    seekSlider.max = String(data.durationSeconds);
-    seekSlider.disabled = false;
-    playButton.disabled = false;
-    status.textContent = "Ready · four source clips / 60 seconds";
-    updatePlayback();
-  }
-  async function init() {
-    wire();
-    try {
-      const response = await fetch("comparison.json", {cache: "no-store"});
-      if (!response.ok) throw Error("Could not read comparison data (" + response.status + ").");
-      const data = await response.json();
-      loadData(data);
-    } catch (error) {
-      status.textContent = "Comparison temporarily unavailable: " + String(error.message || error);
-      $("smallScroll").appendChild(node("p", "chunk-text", "Transcript data could not be loaded."));
-      $("coatsScroll").appendChild(node("p", "chunk-text", "Transcript data could not be loaded."));
-      console.error("Human LAIer comparison source error", error);
+      const response=await fetch("comparison.json",{cache:"no-store"});
+      if(!response.ok)throw Error("Comparison data HTTP "+response.status);
+      load(await response.json());
+    }catch(error){
+      const message=String(error&&error.message||error);
+      $("playerStatus").textContent="Source comparison unavailable: "+message;
+      for(const m of models) $(m.key+"Scroll").appendChild(create("p","chunk-text","Real model transcript data could not be loaded."));
+      console.error("Human LAIer source comparison:",error);
     }
   }
   init();

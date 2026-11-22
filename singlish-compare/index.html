@@ -1,134 +1,119 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#071d2d">
-  <meta name="robots" content="noindex,nofollow">
-  <meta name="description" content="A source-backed, side-by-side public comparison of Singlish2English-small and Coats ASR on the same Singaporean livestream excerpts.">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; media-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
-  <title>Singlish ASR Lab | Human LAIer</title>
-  <link rel="stylesheet" href="styles.css">
-  <script defer src="app.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#071d2d">
+<meta name="description" content="Source-backed three-minute livestream audio and synchronized comparative transcripts from Human LAIer's production Whisper model, Singlish2English-small and Coats Whisper.">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; media-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<title>Three Minutes. Three Models. | Human LAIer Signal Lab</title>
+<link rel="stylesheet" href="styles.css">
+<script defer src="app.js"></script>
 </head>
 <body>
-  <a class="skip-link" href="#comparison">Skip to the transcript comparison</a>
-  <header class="site-header">
-    <div class="container header-inner">
-      <a class="brand-lockup" href="https://humanlaier.com/" aria-label="Human LAIer home">
-        <img src="../streaming-demo/assets/human-laier-dark.svg" alt="Human LAIer" width="108" height="49">
-        <span class="brand-rule" aria-hidden="true"></span>
-        <span class="lab-name">SIGNAL LAB <span class="lab-index">/ 001</span></span>
-      </a>
-      <div class="header-right">
-        <span class="study-tag"><span class="pulse-dot" aria-hidden="true"></span> SOURCE-RECORDED EXPERIMENT</span>
-        <a class="header-link" href="https://humanlaier.com/">Human LAIer <span aria-hidden="true">↗</span></a>
+<a class="skip-link" href="#player">Skip to the livestream comparison</a>
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand-lockup" href="https://humanlaier.com/" aria-label="Human LAIer home">
+      <img src="../streaming-demo/assets/human-laier-dark.svg" width="108" height="49" alt="Human LAIer">
+      <span class="brand-rule" aria-hidden="true"></span>
+      <span class="lab-name">SIGNAL LAB <span class="lab-index">/ 002</span></span>
+    </a>
+    <div class="header-right"><span class="study-tag"><span class="pulse-dot"></span> SOURCE-BACKED MODEL EXPERIMENT</span><a class="header-link" href="../streaming-demo/">Original streaming demo ↗</a></div>
+  </div>
+</header>
+<main>
+  <section class="hero hero-extended">
+    <div class="container hero-grid">
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="line" aria-hidden="true"></span> THREE-MINUTE FIELD TEST · NOVEMBER 17, 2026</p>
+        <h1>When the room<br><em>erupts, who's listening?</em></h1>
+        <p class="hero-lede">One continuous, activity-selected stretch of a real Singapore livestream. Three speech-recognition models hear the <strong>exact same 180 seconds</strong>. Listen, compare the original outputs, and see where the interpretations diverge.</p>
+        <div class="hero-meta"><span>ORIGINAL MEDIA · @HUATZAITCG</span><span>THREE CPU MODELS</span><span>NO HUMAN-GOLD VERDICT</span></div>
+      </div>
+      <aside class="hero-poster" aria-label="Source livestream context">
+        <img src="../streaming-demo/assets/nov17-participation.jpg" alt="Still from the same November 17 livestream; the still is not claimed to be the exact frame at the audio start">
+        <div class="poster-overlay"><span class="poster-top">ARCHIVED STREAM · 17 NOV 2026</span><strong>03<span>:</span>00</strong><span class="poster-bottom">REAL SOURCE AUDIO <span>·</span> CONTIGUOUS</span></div>
+      </aside>
+    </div>
+  </section>
+
+  <div class="container"><section class="metrics high-metrics" aria-label="Engagement in the selected window">
+    <div class="metric"><span class="metric-label">OBSERVED COMMENTS</span><strong id="metricComments">193</strong><span class="metric-foot">collector activity / approximate window</span></div>
+    <div class="metric"><span class="metric-label">PARTICIPATING ACCOUNTS</span><strong id="metricAccounts">64</strong><span class="metric-foot">distinct, public audience actors</span></div>
+    <div class="metric"><span class="metric-label">DELIBERATE ACTIONS</span><strong id="metricActions">253</strong><span class="metric-foot">comments, likes, gifts, shares + more</span></div>
+    <div class="metric"><span class="metric-label">GIFT / SHARE EVENTS</span><strong id="metricGifts">5 <i>/</i> 2</strong><span class="metric-foot">events, not transactions or purchases</span></div>
+  </section></div>
+
+  <section class="workspace container" id="player">
+    <div class="section-intro"><div><p class="section-label">01 / SOURCE AUDIO</p><h2>The same three minutes.</h2></div>
+    <p>Play one recording to advance all three transcripts. Seek, slow down, or jump between twelve original 15-second blocks.</p></div>
+    <div class="player-card">
+      <div class="player-topline"><span class="media-status"><span class="live-lamp"></span> ORIGINAL NOV 17 STREAM · ONE CONTIGUOUS 180s EXCERPT</span><span class="sync-note">TRANSCRIPTS FOLLOW EVERY 15s · NO WORD TIMESTAMPS</span></div>
+      <div class="player-grid player-grid-extended">
+        <button id="playButton" class="play-btn" type="button" aria-label="Play recording" disabled><span id="playGlyph" aria-hidden="true">▶</span></button>
+        <div class="sound-area">
+          <div class="track-head"><span>HUATZAITCG / CAPTURED SPEECH</span><span class="clock" id="playerClock">00:00 / 03:00</span></div>
+          <div class="wave-wrap"><canvas id="waveform" role="img" aria-label="Amplitude waveform and audio playback position"></canvas><input type="range" id="seekSlider" min="0" max="180" step="0.05" value="0" aria-label="Seek audio time" disabled></div>
+        </div>
+        <div class="player-opts"><label for="speedSelect">SPEED</label><select id="speedSelect"><option value="0.75">0.75×</option><option value="1" selected>1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option></select></div>
+      </div>
+      <audio id="sourceAudio" preload="metadata" aria-label="Three-minute original livestream audio"></audio>
+      <div class="player-foot"><span id="playerStatus" role="status">Loading original audio and model outputs…</span><span>Media source: part 27 · offset +01:50</span></div>
+    </div>
+
+    <div class="activity-title"><span class="toolbar-left"><span class="toolbar-square"></span> AUDIENCE ACTIVITY <span class="toolbar-muted">/ COLLECTOR CLOCK, PROVISIONAL</span></span><span class="activity-legend"><i class="legend-comment"></i>Comments <i class="legend-like"></i>Likes <i class="legend-gift"></i>Gifts</span></div>
+    <div class="activity-track" id="activityTrack" role="group" aria-label="Approximate observed audience activity per 15-second interval"></div>
+    <div class="activity-footnote">Activity windows are projected from recorder-process observations; <strong>the event/video offset is not independently calibrated.</strong> These counts do not establish that a comment responded to any particular spoken word.</div>
+
+    <div class="section-intro transcript-intro"><div><p class="section-label">02 / THREE INTERPRETATIONS</p><h2>Hear the differences.</h2></div><p>Raw model outputs, without editorial corrections. Select any line to replay that block from the source.</p></div>
+    <div class="transcript-toolbar">
+      <span class="toolbar-left"><span class="toolbar-square"></span> TRANSCRIPTS <span class="toolbar-muted">/ SOURCE-ALIGNED 15-SECOND BLOCKS</span></span>
+      <div class="tool-controls">
+        <label class="toggle"><input id="autoFollow" type="checkbox" checked><span class="switch" aria-hidden="true"></span><span>Auto-follow</span></label>
+        <label class="toggle"><input id="showDiff" type="checkbox"><span class="switch" aria-hidden="true"></span><span>Show disagreements</span></label>
       </div>
     </div>
-  </header>
-  <main>
-    <section class="hero">
-      <div class="container hero-grid">
-        <div class="hero-copy">
-          <p class="eyebrow"><span class="line" aria-hidden="true"></span> SINGAPORE ENGLISH · SPEECH RECOGNITION</p>
-          <h1>Same audio.<br><em>Two interpretations.</em></h1>
-          <p class="hero-lede">Hear a real card-break livestream while <strong>Singlish2English-small</strong> and <strong>Coats Whisper large-v2</strong> render their transcripts side by side. Follow the source, hear the ambiguities, and judge the words for yourself.</p>
-          <div class="hero-meta"><span>20 NOV 2026 / ORIGINAL TIKTOK SOURCE</span><span>60 SEC / FOUR EXCERPTS</span><span>UNREVIEWED ASR</span></div>
-        </div>
-        <aside class="hero-finding" aria-label="Benchmark status">
-          <span class="finding-kicker">FIRST CONTROLLED HEAD-TO-HEAD</span>
-          <div class="finding-big" id="heroRatio">3.7<span>×</span></div>
-          <strong>Faster inference</strong>
-          <p>The small model was faster on this one CPU run. <em>Speed is not accuracy.</em> Neither output has been scored against a human transcript.</p>
-          <div class="finding-footer"><span class="small-dot" aria-hidden="true"></span><span>NO QUALITY WINNER DECLARED</span></div>
-        </aside>
-      </div>
-    </section>
-    <div class="container">
-      <section class="metrics" aria-label="Experiment at a glance">
-        <div class="metric"><span class="metric-label">COMPARED AUDIO</span><strong>01:00</strong><span class="metric-foot">identical input per model</span></div>
-        <div class="metric"><span class="metric-label">SOURCE EXCERPTS</span><strong>04</strong><span class="metric-foot">noncontiguous × 15 seconds</span></div>
-        <div class="metric"><span class="metric-label">INFERENCE</span><strong id="metricInference">14.3 <i>/</i> 52.8</strong><span class="metric-foot">small / Coats · seconds</span></div>
-        <div class="metric"><span class="metric-label">TRANSCRIPT ACCURACY</span><strong>—</strong><span class="metric-foot">awaiting human reference</span></div>
+    <div class="model-tabs" role="group" aria-label="Choose model transcript on a narrow screen">
+      <button type="button" data-model="production" aria-pressed="true">Production</button>
+      <button type="button" data-model="singlish" aria-pressed="false">Singlish-small</button>
+      <button type="button" data-model="coats" aria-pressed="false">Coats</button>
+    </div>
+    <div class="comparison-grid comparison-three">
+      <section class="transcript-panel panel-production" data-model="production" aria-labelledby="productionTitle">
+        <header class="panel-header"><div class="panel-id"><span class="model-number">01 / BASELINE</span><span class="model-chip">CURRENT PRODUCTION ENGINE</span></div>
+          <h3 id="productionTitle">faster-whisper<br><span>base.en</span></h3><p>CPU · beam 2 · VAD enabled · <span id="productionRevision">revision loading</span></p>
+          <div class="panel-speed"><span>180s CPU INFERENCE</span><strong id="productionTime">—</strong></div><div class="speed-track"><span id="productionBar"></span></div></header>
+        <div id="productionScroll" class="panel-scroll" tabindex="0" role="region" aria-label="Production Whisper transcript, following audio"></div>
+        <footer class="panel-footer"><span class="status-dot"></span> BASELINE · NOT HUMAN-GOLD TRUTH</footer>
+      </section>
+      <section class="transcript-panel panel-small" data-model="singlish" aria-labelledby="smallTitle">
+        <header class="panel-header"><div class="panel-id"><span class="model-number">02 / CHALLENGER A</span><span class="model-chip">SMALL SINGLISH MODEL</span></div>
+          <h3 id="smallTitle">Singlish2English<br><span>small</span></h3><p>Fine-tuned Whisper-small · beam 1 · <span id="singlishRevision">revision loading</span></p>
+          <div class="panel-speed"><span>180s CPU INFERENCE</span><strong id="singlishTime">—</strong></div><div class="speed-track"><span id="singlishBar"></span></div></header>
+        <div id="singlishScroll" class="panel-scroll" tabindex="0" role="region" aria-label="Singlish2English transcript, following audio"></div>
+        <footer class="panel-footer"><span class="status-dot"></span> CHALLENGER · NOT HUMAN-CORRECTED</footer>
+      </section>
+      <section class="transcript-panel panel-coats" data-model="coats" aria-labelledby="coatsTitle">
+        <header class="panel-header"><div class="panel-id"><span class="model-number">03 / CHALLENGER B</span><span class="model-chip">LARGE SINGLISH MODEL</span></div>
+          <h3 id="coatsTitle">Coats Whisper<br><span>large-v2 NSC</span></h3><p>NSC-adapted Whisper · beam 1 · <span id="coatsRevision">revision loading</span></p>
+          <div class="panel-speed"><span>180s CPU INFERENCE</span><strong id="coatsTime">—</strong></div><div class="speed-track"><span id="coatsBar"></span></div></header>
+        <div id="coatsScroll" class="panel-scroll" tabindex="0" role="region" aria-label="Coats Whisper transcript, following audio"></div>
+        <footer class="panel-footer"><span class="status-dot"></span> CHALLENGER · NOT HUMAN-CORRECTED</footer>
       </section>
     </div>
+    <p class="meaning-note"><strong>Interpretation rule:</strong> All three models received the same 12 source-derived 15-second PCM blocks, played here as one contiguous three-minute audio track. Text follows playback at <strong>block boundaries only</strong>. Differences indicate disagreement, not error; a production-model transcript is not ground truth. No model has an independently measured word-error rate on this passage.</p>
+  </section>
 
-    <section class="workspace container" id="comparison">
-      <div class="section-intro">
-        <div>
-          <p class="section-label">01 / LISTEN AND COMPARE</p>
-          <h2>One timeline. Two readings.</h2>
-        </div>
-        <p>Press play. Both transcript panels advance with the same source audio. Select any excerpt to replay that moment.</p>
-      </div>
-
-      <div class="player-card">
-        <div class="player-topline">
-          <span class="media-status"><span class="live-lamp" aria-hidden="true"></span> ORIGINAL SOURCE AUDIO · FOUR CLIPS SPLICED FOR THIS TEST</span>
-          <span class="sync-note">EXCERPT-LEVEL FOLLOW · NOT WORD-ALIGNED</span>
-        </div>
-        <div class="player-grid">
-          <button id="playButton" class="play-btn" aria-label="Play recording" type="button" disabled><span id="playGlyph" aria-hidden="true">▶</span></button>
-          <div class="sound-area">
-            <div class="track-head"><span>RECORDED AUDIO / HUATZAITCG</span><span id="playerClock" class="clock" aria-live="off">00:00 / 01:00</span></div>
-            <div class="wave-wrap">
-              <canvas id="waveform" role="img" aria-label="Recorded source-audio waveform and playback position"></canvas>
-              <input id="seekSlider" type="range" min="0" max="60" step="0.05" value="0" aria-label="Seek audio to time" disabled>
-            </div>
-          </div>
-          <div class="player-opts"><label for="speedSelect">SPEED</label><select id="speedSelect" aria-label="Playback speed"><option value="0.75">0.75×</option><option value="1" selected>1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option></select></div>
-        </div>
-        <audio id="sourceAudio" preload="metadata" aria-label="One-minute comparison source audio"></audio>
-        <div class="player-foot"><span id="playerStatus" role="status">Loading original-source excerpts…</span><span>Original positions listed beneath each excerpt</span></div>
-      </div>
-      <div id="moments" class="moments" role="group" aria-label="Jump to a source excerpt"></div>
-
-      <div class="transcript-toolbar">
-        <span class="toolbar-left"><span class="toolbar-square" aria-hidden="true"></span> TRANSCRIPT COMPARISON <span class="toolbar-muted">/ 4 EXCERPTS</span></span>
-        <div class="tool-controls">
-          <label class="toggle"><input id="autoFollow" type="checkbox" checked><span class="switch" aria-hidden="true"></span><span>Auto-follow</span></label>
-          <label class="toggle"><input id="showDiff" type="checkbox"><span class="switch" aria-hidden="true"></span><span>Show word differences</span></label>
-        </div>
-      </div>
-
-      <div class="comparison-grid">
-        <section class="transcript-panel panel-small" aria-labelledby="smallTitle">
-          <header class="panel-header">
-            <div class="panel-id"><span class="model-number">A / 01</span><span class="model-chip">SMALL MODEL</span></div>
-            <h3 id="smallTitle">Singlish2English <span>small</span></h3>
-            <p>Fine-tuned Whisper-small · <span id="smallRevision">source revision pending</span></p>
-            <div class="panel-speed"><span>CPU INFERENCE</span><strong id="smallTime">14.30s</strong></div>
-            <div class="speed-track"><span id="smallBar"></span></div>
-          </header>
-          <div id="smallScroll" class="panel-scroll" tabindex="0" role="region" aria-label="Singlish2English transcript, auto-following source audio"></div>
-          <footer class="panel-footer"><span class="status-dot" aria-hidden="true"></span> MODEL OUTPUT / NOT HUMAN-CORRECTED</footer>
-        </section>
-
-        <section class="transcript-panel panel-coats" aria-labelledby="coatsTitle">
-          <header class="panel-header">
-            <div class="panel-id"><span class="model-number">B / 02</span><span class="model-chip">LARGE MODEL</span></div>
-            <h3 id="coatsTitle">Coats Whisper <span>large-v2</span></h3>
-            <p>NSC-adapted Whisper · <span id="coatsRevision">source revision pending</span></p>
-            <div class="panel-speed"><span>CPU INFERENCE</span><strong id="coatsTime">52.76s</strong></div>
-            <div class="speed-track"><span id="coatsBar"></span></div>
-          </header>
-          <div id="coatsScroll" class="panel-scroll" tabindex="0" role="region" aria-label="Coats Whisper transcript, auto-following source audio"></div>
-          <footer class="panel-footer"><span class="status-dot" aria-hidden="true"></span> MODEL OUTPUT / NOT HUMAN-CORRECTED</footer>
-        </section>
-      </div>
-      <div class="meaning-note" role="note"><strong>Reading the alignment:</strong> each transcript block corresponds to one verified 15-second source-audio excerpt. Blocks advance with playback; <em>words inside a block do not have verified timestamps</em>. If word differences are highlighted, that only shows disagreement between models—not which model is right.</div>
-    </section>
-
-    <section class="method">
-      <div class="container method-grid">
-        <div><p class="section-label">02 / METHODOLOGY</p><h2>Evidence over<br><em>impressions.</em></h2></div>
-        <div class="method-copy"><p>The audio is 60 seconds assembled in order from <strong>four noncontiguous 15-second excerpts</strong> of one preserved November 20, 2026 stream segment. Each model received identical source-derived, 16 kHz mono WAV inputs. The page contains the exact, unedited model transcript strings produced during the completed CPU comparison.</p>
-          <p><strong>Limits:</strong> no human-gold reference, word error rate, confidence calibration, speaker verification, or word-level synchronization is available yet. Model runtime numbers are from one run, exclude independently verified provider billing, and should not be treated as general performance claims.</p>
-          <p id="provenance" class="provenance">Loading SHA-verified research source information…</p>
-        </div>
-      </div>
-    </section>
-  </main>
-  <footer class="site-footer"><div class="container footer-inner"><span>HUMAN LAIer <i>·</i> SIGNAL LAB</span><span>Source-backed experiments. No manufactured certainty.</span><a href="https://humanlaier.com/">humanlaier.com ↗</a></div></footer>
+  <section class="method"><div class="container method-grid">
+    <div><p class="section-label">03 / REPRODUCIBILITY</p><h2>A real recording.<br><em>Three hypotheses.</em></h2></div>
+    <div class="method-copy"><p>We ranked recorded 180-second windows by observed deliberate audience activity: comments, unique accounts, gifts, likes, follows and shares. This November 17 passage ranked highest in the audited set and preserves one uninterrupted three-minute slice of the original video segment's audio.</p>
+      <p>The <strong>production baseline</strong> uses faster-whisper <code>base.en</code> with beam search and voice activity detection; the two challengers are Singlish2English-small and Coats Whisper large-v2 NSC. Model-loading time is reported separately from inference. Different decoding settings reflect their current implementations, so this is an operational comparison, not a perfectly normalized model contest.</p>
+      <p><strong>Evidence limits:</strong> the November 17 capture predates sealed original-media manifest publication. The experiment binds to the actual stored video-segment bytes by R2 object version and newly computed SHA-256. Source-media/event synchronization remains provisional and does not prove causality. Outputs have not been checked against a human reference; gross provider charges are not independently reconciled.</p>
+      <p id="provenance" class="provenance">Checking research source and model revisions…</p>
+    </div>
+  </div></section>
+</main>
+<footer class="site-footer"><div class="container footer-inner"><span>HUMAN LAIer <i>·</i> SIGNAL LAB</span><span>Evidence over certainty. Source over storytelling.</span><a href="https://humanlaier.com/">humanlaier.com ↗</a></div></footer>
 </body>
 </html>

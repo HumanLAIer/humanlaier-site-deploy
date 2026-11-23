@@ -66,7 +66,7 @@ const checks={};
 for(const asset of ['index.html','streaming-demo/index.html',
   'streaming-demo/app.js','streaming-demo/featured-bootstrap.js',
   'streaming-demo/nine-tickers/comparison.json',
-  'streaming-lab/index.html','streaming-lab/lab.js',
+  'streaming-lab/index.html','streaming-lab/lab.js','streaming-lab/lab.css',
   'streaming-demo/nine-tickers/video-manifest.json',
   'streaming-demo/nine-tickers/commercial-180.mp4',
   'streaming-demo/nine-tickers/commercial-180.mp3']){

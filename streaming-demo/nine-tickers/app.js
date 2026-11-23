@@ -69,7 +69,7 @@
     }
     return {...compareWords(source,reference),mode:"changed"};
   }
-  const S={ready:false,data:null,videoManifest:null,block:0,lastTime:-1,pan:true,rows:new Map(),buttons:[],frame:0};
+  const S={ready:false,data:null,videoManifest:null,block:0,lastTime:-1,pan:true,rows:new Map(),buttons:[],frame:0,seekIntent:null};
   const video=$("video");
   const el=(tag,cls,t)=>{
     const x=document.createElement(tag);
@@ -324,7 +324,7 @@
   function renderFrame(){
     S.frame=0;
     if(!S.ready)return;
-    syncClock(video.currentTime);
+    syncClock(S.seekIntent!==null?S.seekIntent:video.currentTime);
     if(!video.paused&&!video.ended&&!S.frame){
       S.frame=requestAnimationFrame(renderFrame);
     }
@@ -334,12 +334,17 @@
   }
   function stopFrames(){
     if(S.frame){cancelAnimationFrame(S.frame);S.frame=0}
-    syncClock(video.currentTime);
+    syncClock(S.seekIntent!==null?S.seekIntent:video.currentTime);
   }
   function seekSeconds(t){
     if(!S.ready)return;
-    video.currentTime=Math.max(0,Math.min(179.95,t));
-    syncClock(video.currentTime);
+    // HTTP media range/decoder seeks can be asynchronous. Hold the intended
+    // clock position until seeked, rather than momentarily snapping the
+    // transcript crawl back to the previous media position.
+    const dest=Math.max(0,Math.min(179.95,t));
+    S.seekIntent=dest;
+    video.currentTime=dest;
+    syncClock(dest);
     video.play().catch(()=>set("audioStatus","Press play to hear the source video."));
   }
   function seekBlock(n){seekSeconds(Math.max(0,n)*15)}
@@ -354,8 +359,11 @@
     window.addEventListener("resize",()=>{if(S.ready)measureTimelines()});
     if(document.fonts&&document.fonts.ready)
       document.fonts.ready.then(()=>{if(S.ready)measureTimelines()});
-    video.addEventListener("timeupdate",()=>syncClock(video.currentTime));
-    video.addEventListener("seeked",()=>syncClock(video.currentTime));
+    video.addEventListener("timeupdate",()=>syncClock(S.seekIntent!==null?S.seekIntent:video.currentTime));
+    video.addEventListener("seeked",()=>{
+      S.seekIntent=null;
+      syncClock(video.currentTime);
+    });
     video.addEventListener("play",()=>{
       set("audioStatus","PLAYING · CONTINUOUS SOURCE-SYNCED TICKERS");
       startFrames();

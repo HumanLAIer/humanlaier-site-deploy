@@ -13,7 +13,7 @@ const source=JSON.parse(read("streaming-demo/nine-tickers/comparison.json"));
 const originalHtml=read("streaming-demo/nine-tickers/index.html");
 assert(html.includes('src="../streaming-demo/nine-tickers/"'),"Must reuse nine-ticker study unchanged");
 assert(html.includes("frame-src 'self'")&&html.includes('id="sourceFrame"'));
-assert(html.includes('id="reviewPanel" hidden'),"Review drawer must be initially closed");
+assert(/id="reviewPanel"[^>]*\bhidden\b/.test(html),"Review drawer must be initially closed");
 assert(html.includes('id="probeForm"')&&html.includes('id="candidateList"'));
 assert(html.includes('name="robots" content="noindex,nofollow,noarchive,nosnippet"'));
 assert(html.includes('id="closeReview"')&&html.includes('id="phaseSelect"'));

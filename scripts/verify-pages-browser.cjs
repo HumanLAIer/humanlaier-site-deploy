@@ -101,6 +101,9 @@ async function sourceChat(browser){
    assert.equal(await page.locator('#videoPlayer').evaluate(v=>v.muted),true);
    const optionValues=await page.locator('#featuredModel option').evaluateAll(els=>els.map(el=>el.value));
    if(optionValues.length>1){
+     const details=page.locator('#conversationOptions');
+     if(!await details.evaluate(el=>el.open))
+       await details.locator('summary').click();
      await page.locator('#featuredModel').selectOption(optionValues[1]);
      const updated=await page.locator('.message-row.speech .message-text').first().textContent();
      const actual=await page.evaluate(id=>window.HL_FEATURED_SOURCE.transcriptBlocks[0].texts[id]||

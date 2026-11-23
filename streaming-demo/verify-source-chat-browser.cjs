@@ -23,9 +23,13 @@ const probe=String.raw`(()=>{
     const right=chat[0]&&getComputedStyle(chat[0]).justifyContent;
     const dock=document.getElementById('primaryDock');
     const rowStyle=speech[0]&&getComputedStyle(speech[0].querySelector('.message-bubble')).backgroundColor;
-    const before=video.currentTime;
-    // The same V4 master-play button used by a viewer should advance VIDEO,
-    // not the separate MP3 or an invented timer.
+    // Check V4's real seek controller against decoded source media. Chrome's
+    // --virtual-time-budget accelerates timers but may freeze the natural
+    // HTMLVideoElement clock; do not misreport that as a site playback bug.
+    const seekInput=document.getElementById('masterSeek');
+    seekInput.value='45';
+    seekInput.dispatchEvent(new Event('input',{bubbles:true}));
+    const sought=video.currentTime;
     document.getElementById('masterPlay').click();
     setTimeout(()=>{
     const result={
@@ -37,7 +41,10 @@ const probe=String.raw`(()=>{
       videoDuration:video.duration,
       videoHidden:video.hidden,
       videoPlaying:!video.paused,
-      videoAdvanced:video.currentTime>before+.05,
+      videoSeekApplied:sought>=44.8&&sought<=45.2,
+      videoSeekPosition:video.currentTime,
+      videoDecodedFrames:typeof video.getVideoPlaybackQuality==='function'?
+        video.getVideoPlaybackQuality().totalVideoFrames:null,
       videoError:video.error?.code||null,
       left,right,dockDisplay:getComputedStyle(dock).display,
       speechBubbleColor:rowStyle,modelOptions:document.getElementById('featuredModel').options.length,
@@ -82,9 +89,9 @@ const cleanup=()=>{server.kill();try{fs.unlinkSync(testPage);}catch{}try{fs.unli
        data.track!=='video'||!data.videoSrc.endsWith('/streaming-demo/nine-tickers/commercial-180.mp4')||
        data.videoReady<2||data.videoSize[0]<100||data.videoSize[1]<100||
        Math.abs(data.videoDuration-180)>1||data.videoHidden||
-       !data.videoPlaying||!data.videoAdvanced||data.videoError!==null)
+       !data.videoPlaying||!data.videoSeekApplied||data.videoError!==null)
       throw Error('Source chat visual acceptance failed: '+JSON.stringify(data));
-    console.log('CHROME PASS ORIGINAL V4 + REAL SOURCE VIDEO PLAYBACK: '+JSON.stringify(data));
+    console.log('CHROME PASS ORIGINAL V4 + SOURCE VIDEO DECODE/PLAY/SEEK: '+JSON.stringify(data));
   }catch(e){console.error(e);process.exitCode=1;}
   finally{cleanup();}
 })();

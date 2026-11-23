@@ -79,5 +79,34 @@ window.HL_SOURCE_ADAPTER=(()=>{
       coverageSeconds:covered
     };
   }
-  return Object.freeze({normalize});
+  // The approved 180s video is the SAME SHA-traced source and starts at
+  // the identical 30-second transport-stream offset. Keep video validation
+  // separate from ASR parsing: transcript revisions must not disable media.
+  function attachVideo(featured,manifest){
+    if(!featured||featured.schema!=='hl-featured-source-chat-v2'||
+       featured.source?.sessionId!==SESSION)
+      throw Error('Missing normalized source-audio evidence');
+    if(!manifest)return featured; // Verified original audio remains playable.
+    if(manifest.schema!=='hl-commercial-video-source-v1'||
+       manifest.status!=='VERIFIED_SOURCE_VIDEO_WITH_AUDIO'||
+       manifest.sessionId!==SESSION||manifest.sourcePart!=='part_000019.ts'||
+       manifest.sourcePartSha256!==PART_SHA||
+       manifest.sourcePartOffsetSeconds!==30||
+       manifest.expectedDurationSeconds!==featured.source.durationSeconds||
+       !finite(manifest.encodedDurationSeconds)||
+       Math.abs(manifest.encodedDurationSeconds-featured.source.durationSeconds)>1||
+       manifest.filename!=='commercial-180.mp4'||
+       manifest.poster!=='commercial-preview.jpg'||
+       manifest.mp4Sha256!=='9fdbdff777391886cfc39b220a053f3e10a49dd72454fe14d7443aacc0176f92'||
+       manifest.posterSha256!=='52393168432bc269d55335907a607a17fad02d40d9ed57da32b213a284096584'||
+       manifest.originalAudioIncluded!==true||
+       manifest.mediaEventSyncVerified!==false)
+      throw Error('Video source provenance mismatch; cannot pair this video with transcript');
+    return {...featured,source:{...featured.source,
+      videoFile:'nine-tickers/'+manifest.filename,
+      poster:'nine-tickers/'+manifest.poster,
+      videoDurationSeconds:manifest.encodedDurationSeconds,
+      videoSha256:manifest.mp4Sha256}};
+  }
+  return Object.freeze({normalize,attachVideo});
 })();

@@ -13,13 +13,44 @@ const probe=String.raw`(()=>{
     const list=document.getElementById('conversationList');
     const speech=[...list.querySelectorAll('.message-row.speech')];
     const chat=[...list.querySelectorAll('.message-row.chat')];
-    if(!speech.length && tries++<80){setTimeout(check,100);return;}
+    const video=document.getElementById('videoPlayer');
+    // Wait until actual source video has decoded a frame, not merely until a
+    // <video> tag or source URL exists.
+    if((!speech.length||video.readyState<2) && tries++<180){
+      setTimeout(check,100);return;
+    }
     const left=speech[0]&&getComputedStyle(speech[0]).justifyContent;
     const right=chat[0]&&getComputedStyle(chat[0]).justifyContent;
     const dock=document.getElementById('primaryDock');
     const rowStyle=speech[0]&&getComputedStyle(speech[0].querySelector('.message-bubble')).backgroundColor;
+    // Check V4's real seek controller against decoded source media. Chrome's
+    // --virtual-time-budget accelerates timers but may freeze the natural
+    // HTMLVideoElement clock; do not misreport that as a site playback bug.
+    const readyAtStart=video.readyState;
+    const decodedAtStart=typeof video.getVideoPlaybackQuality==='function'?
+      video.getVideoPlaybackQuality().totalVideoFrames:null;
+    const seekInput=document.getElementById('masterSeek');
+    seekInput.value='45';
+    seekInput.dispatchEvent(new Event('input',{bubbles:true}));
+    const sought=video.currentTime;
+    document.getElementById('masterPlay').click();
+    setTimeout(()=>{
     const result={
       speech:speech.length,viewers:chat.length,sourceSelected:document.getElementById('sessionSelect').value,
+      track:document.getElementById('sourceTrack').value,
+      videoSrc:video.currentSrc,
+      videoReady:video.readyState,
+      videoReadyAtStart:readyAtStart,
+      videoDecodedAtStart:decodedAtStart,
+      videoSize:[video.videoWidth,video.videoHeight],
+      videoDuration:video.duration,
+      videoHidden:video.hidden,
+      videoPlaying:!video.paused,
+      videoSeekApplied:sought>=44.8&&sought<=45.2,
+      videoSeekPosition:video.currentTime,
+      videoDecodedFrames:typeof video.getVideoPlaybackQuality==='function'?
+        video.getVideoPlaybackQuality().totalVideoFrames:null,
+      videoError:video.error?.code||null,
       left,right,dockDisplay:getComputedStyle(dock).display,
       speechBubbleColor:rowStyle,modelOptions:document.getElementById('featuredModel').options.length,
       extraPanel:!!document.getElementById('featuredTranscript'),
@@ -29,6 +60,7 @@ const probe=String.raw`(()=>{
     const elem=document.createElement('pre');elem.id='__source_chat_qa_result';
     elem.textContent=JSON.stringify(result);
     document.body.appendChild(elem);
+    },3500);
   }
   check();
 })();`;
@@ -37,16 +69,17 @@ const testPage=path.join(root,checkFile+'.html');
 const testScript=path.join(root,checkFile+'.js');
 fs.writeFileSync(testPage,html.replace('</body>','<script src="'+checkFile+'.js"></script></body>'));
 fs.writeFileSync(testScript,probe);
-const server=cp.spawn('python3',['-m','http.server','18764','--bind','127.0.0.1'],{stdio:'ignore'});
+const server=cp.spawn(process.execPath,[path.join(root,'verify-range-server.cjs')],{stdio:'ignore'});
 const cleanup=()=>{server.kill();try{fs.unlinkSync(testPage);}catch{}try{fs.unlinkSync(testScript);}catch{}};
 (async()=>{
   try{
     await new Promise(resolve=>setTimeout(resolve,900));
     const result=cp.spawnSync(chrome.stdout.trim(),[
       '--headless=new','--no-sandbox','--disable-gpu','--disable-dev-shm-usage',
-      '--hide-scrollbars','--window-size=1450,1000','--virtual-time-budget=10000',
+      '--autoplay-policy=no-user-gesture-required',
+      '--hide-scrollbars','--window-size=1450,1000','--virtual-time-budget=22000',
       '--dump-dom','http://127.0.0.1:18764/streaming-demo/'+checkFile+'.html'
-    ],{encoding:'utf8',timeout:45000,maxBuffer:16*1024*1024});
+    ],{encoding:'utf8',timeout:75000,maxBuffer:16*1024*1024});
     if(result.error||result.status!==0)
       throw Error('Chrome failed: '+(result.error||result.stderr).toString().slice(-1500));
     const match=result.stdout.match(/<pre id="__source_chat_qa_result">([^<]+)<\/pre>/);
@@ -57,9 +90,13 @@ const cleanup=()=>{server.kill();try{fs.unlinkSync(testPage);}catch{}try{fs.unli
        data.sourceSelected!=='source-nov17-original-audio-180'||
        data.left!=='flex-start'||data.right!=='flex-end'||
        data.dockDisplay!=='grid'||data.modelOptions!==9||data.extraPanel||
-       !data.nonemptySpeech||!data.sourceTimeLabel.includes('ORIGINAL SOURCE AUDIO'))
+       !data.nonemptySpeech||!data.sourceTimeLabel.includes('ORIGINAL SOURCE VIDEO')||
+       data.track!=='video'||!data.videoSrc.endsWith('/streaming-demo/nine-tickers/commercial-180.mp4')||
+       data.videoReadyAtStart<2||data.videoSize[0]<100||data.videoSize[1]<100||
+       Math.abs(data.videoDuration-180)>1||data.videoHidden||
+       !data.videoPlaying||!data.videoSeekApplied||data.videoError!==null)
       throw Error('Source chat visual acceptance failed: '+JSON.stringify(data));
-    console.log('CHROME PASS ORIGINAL V4: '+JSON.stringify(data));
+    console.log('CHROME PASS ORIGINAL V4 + SOURCE VIDEO DECODE/PLAY/SEEK: '+JSON.stringify(data));
   }catch(e){console.error(e);process.exitCode=1;}
   finally{cleanup();}
 })();

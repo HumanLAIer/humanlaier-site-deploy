@@ -67,7 +67,7 @@ async function main(){
       assert(x.tickers.top>=x.screen.bottom-1,"all tickers below video");
       assert(x.rowRects[0].top>=x.tickers.top,"ticker rows begin inside lower half");
       assert(x.rowRects.at(-1).bottom<=x.foot.top+1,"ninth row fully above footer");
-      assert(x.rowRects.every(y=>y.height>=19&&y.height<=45),"dense uniform ticker strips");
+      assert(x.rowRects.every(y=>y.height>=19&&y.height<=29),"CNBC-size <=29px ticker strips");
       assert(x.font>=12&&x.font<=14,"roughly ten-point ticker text");
       assert(x.htmlScrollHeight<=size.height+1,"NO PAGE VERTICAL SCROLL");
       assert(x.bodyScrollHeight<=size.height+1,"NO BODY VERTICAL SCROLL");

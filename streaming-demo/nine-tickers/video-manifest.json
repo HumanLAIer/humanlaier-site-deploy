@@ -18,5 +18,60 @@
   "sourceResearchRun": 45242204569,
   "codec": "H.264/AAC",
   "transcode": "480-pixel width, 18fps; exact original part from SHA-verified public stream",
-  "note": "This is a real source-video excerpt, re-encoded for browser playback. No new transcript inference."
+  "note": "This is a real source-video excerpt, re-encoded for browser playback. No new transcript inference.",
+  "storageMode": "sha256-checked-mp4-browser-assembly",
+  "parts": [
+    {
+      "file": "media/video-00.bin",
+      "bytes": 1170273
+    },
+    {
+      "file": "media/video-01.bin",
+      "bytes": 1170273
+    },
+    {
+      "file": "media/video-02.bin",
+      "bytes": 1170273
+    },
+    {
+      "file": "media/video-03.bin",
+      "bytes": 1170273
+    },
+    {
+      "file": "media/video-04.bin",
+      "bytes": 1170273
+    },
+    {
+      "file": "media/video-05.bin",
+      "bytes": 1170273
+    },
+    {
+      "file": "media/video-06.bin",
+      "bytes": 1170273
+    },
+    {
+      "file": "media/video-07.bin",
+      "bytes": 1170273
+    },
+    {
+      "file": "media/video-08.bin",
+      "bytes": 1170273
+    },
+    {
+      "file": "media/video-09.bin",
+      "bytes": 1170273
+    },
+    {
+      "file": "media/video-10.bin",
+      "bytes": 1170273
+    },
+    {
+      "file": "media/video-11.bin",
+      "bytes": 1170259
+    }
+  ],
+  "sourceOriginalUnmodified": true,
+  "sourceClipCount": 12,
+  "wordLevelAlignmentVerified": false,
+  "modelInferenceCalls": 0
 }

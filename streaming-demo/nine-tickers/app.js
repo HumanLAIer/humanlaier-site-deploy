@@ -197,6 +197,10 @@
   function ready(d){
     validate(d);S.data=d;S.loaded=true;
     buildNav();
+    set($("metricComments"),d.engagement.comments.toLocaleString());
+    set($("metricAccounts"),d.engagement.uniqueActors.toLocaleString());
+    set($("metricEvents"),Number(d.engagement.deliberateEvents||0).toLocaleString());
+    set($("metricBuyer"),Number(d.engagement.buyerIntentComments||0).toLocaleString());
     audio.src=d.source.audioFile;audio.load();
     play.disabled=false;seek.disabled=false;
     set($("audioStatus"),"Nine real decodings · immutable source · no human reference");

@@ -46,6 +46,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Verify source contract and evolving transcript adapter
         run: node streaming-demo/verify-featured-chat.cjs
+      - name: Ensure every recorded event survives in activity-backed Constellation
+        run: node scripts/verify-recorded-activity.cjs
       - uses: actions/setup-node@v4
         with:
           node-version: '22'

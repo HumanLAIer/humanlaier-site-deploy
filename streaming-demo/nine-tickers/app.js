@@ -197,6 +197,12 @@
     $("tickerMotion").addEventListener("change",e=>{S.pan=e.target.checked;pan(audio.currentTime)});
     $("zekromJump").textContent="Jump to card-price discussion ↗";
     $("zekromJump").addEventListener("click",()=>go(10));
+    document.querySelectorAll("[data-shootout-block]").forEach(button=>{
+      button.addEventListener("click",()=>{
+        const n=Number(button.dataset.shootoutBlock);
+        if(Number.isSafeInteger(n)&&n>=0&&n<12)go(n);
+      });
+    });
     document.querySelectorAll("[data-evidence-second]").forEach(button=>{
       button.addEventListener("click",()=>{
         if(!S.loaded)return;

@@ -102,7 +102,6 @@ async function main(){
       }
       const time=await video.evaluate(v=>({duration:v.duration,readyState:v.readyState}));
       assert(time.duration>178&&time.duration<182,"actual playable 180s media metadata");
-      const shot=".private/nine-layout-qa/"+size.width+"x"+size.height+".png";
       console.log("NINE_LAYOUT_PASS "+JSON.stringify({
         viewport:size,rows:x.rowRects.length,tickerRowPx:+x.rowRects[0].height.toFixed(1),
         fontPx:x.font,videoPx:{w:x.video.width,h:x.video.height},

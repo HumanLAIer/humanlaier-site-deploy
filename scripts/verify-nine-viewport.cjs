@@ -115,6 +115,14 @@ async function main(){
       // Click a real source block and verify that comparison highlights are
       // generated on *unmodified* speech. No synthetic words or WER scoring.
       await page.locator(".block-btn").nth(10).click();
+      console.log("NINE_SEEK_DIAGNOSTIC "+JSON.stringify(await page.evaluate(()=>({
+        cue:document.querySelector("#cueText")?.textContent,
+        currentTime:document.querySelector("#video")?.currentTime,
+        seeking:document.querySelector("#video")?.seeking,
+        paused:document.querySelector("#video")?.paused,
+        activeBlock:document.querySelector(".block-btn.active")?.textContent,
+        sourceTapeCount:document.querySelectorAll(".ticker-chunk").length,
+      }))));
       await page.waitForFunction(()=>{
         const el=document.querySelector("#cueText");
         return el&&el.textContent.startsWith("11 /");
@@ -138,6 +146,7 @@ async function main(){
         video.pause();
         window.__sourceTapeNodes=Array.from(document.querySelectorAll(".ticker-line"));
         video.currentTime=14.8;
+        video.dispatchEvent(new Event("seeked"));
         video.dispatchEvent(new Event("timeupdate"));
       });
       const beforePos=await page.evaluate(()=>({
@@ -148,6 +157,7 @@ async function main(){
       await page.evaluate(()=>{
         const video=document.querySelector("#video");
         video.currentTime=15.2;
+        video.dispatchEvent(new Event("seeked"));
         video.dispatchEvent(new Event("timeupdate"));
       });
       const afterPos=await page.evaluate(()=>({

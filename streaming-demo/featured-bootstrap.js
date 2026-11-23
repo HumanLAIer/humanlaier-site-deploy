@@ -9,7 +9,7 @@
     if(launched)return;
     launched=true;
     const script=document.createElement('script');
-    script.src='app.js?v=chatroom-20261123-2';
+    script.src='app.js?v=video-20261123-1';
     script.onerror=()=>console.error('Signal Recorder V4 script unavailable');
     document.body.append(script);
   }

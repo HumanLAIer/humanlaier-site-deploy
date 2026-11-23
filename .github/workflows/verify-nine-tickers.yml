@@ -92,7 +92,16 @@ jobs:
           assert.equal(v.poster,"commercial-preview.jpg");
           assert.equal(v.originalAudioIncluded,true);
           assert.equal(v.mediaEventSyncVerified,false);
-          const mp4=read(v.filename),poster=read(v.poster);
+          assert.equal(v.storageMode,"sha256-checked-mp4-browser-assembly");
+          assert.equal(v.parts.length,12);
+          const segments=v.parts.map((part,i)=>{
+            assert.equal(part.file,"media/video-"+String(i).padStart(2,"0")+".bin");
+            const buf=read(part.file);
+            assert.equal(buf.length,part.bytes);
+            assert.equal(buf.length,i===11?1170259:1170273);
+            return buf;
+          });
+          const mp4=Buffer.concat(segments),poster=read(v.poster);
           assert.equal(mp4.length,14043262);
           assert.equal(mp4.length,v.mp4Bytes);
           assert.equal(hash(mp4),"9fdbdff777391886cfc39b220a053f3e10a49dd72454fe14d7443aacc0176f92");
@@ -101,7 +110,7 @@ jobs:
           assert.equal(poster.length,v.posterBytes);
           assert.equal(hash(poster),v.posterSha256);
           assert(poster[0]===255&&poster[1]===216,"JPEG poster bytes");
-          assert(!fs.existsSync(dir+".video-parts"),"no temporary source transfer segments published");
+          assert(!fs.existsSync(dir+"commercial-180.mp4"),"no duplicate unsplit video stored");
           console.log("NINE_SOURCE_VIDEO_AAC_ASR_SHA_PASS "+JSON.stringify({
             videoBytes:mp4.length,models:3,decodings:9,clips:12,comments:22,
             videoSha256:v.mp4Sha256,mediaEventClockCalibrated:false,

@@ -83,7 +83,8 @@
          ||l.id!==l.model+"--"+l.phase||ids.has(l.id)
          ||typeof l.revision!=="string"||l.revision.length!==40
          ||!sha(l.promptSha256)||!Number.isFinite(l.inferenceSeconds)
-         ||l.inferenceSeconds<0||l.verifiedSourceWav!==true||l.wer!==null)
+         ||l.inferenceSeconds<0||!Number.isFinite(l.peakRssMib)
+         ||l.peakRssMib<=0||l.verifiedSourceWav!==true||l.wer!==null)
           throw Error("Not all nine independent ASR configurations verified");
       ids.add(l.id);
     }
@@ -147,7 +148,7 @@
       highlight(v.line,clip.texts[id],v.phase.id!=="control");
       v.badge.classList.remove("is-muted");
       set(v.badge,result.inferenceSeconds.toFixed(1)+"s / 180s");
-      set(v.smaller,result.revision.slice(0,10)+" · "+v.phase.label);
+      set(v.smaller,Math.round(result.peakRssMib).toLocaleString()+" MiB RSS · "+result.revision.slice(0,7));
       v.line.style.transform="translateX(0px)";
       v.row.classList.toggle("active",Boolean(clip.texts[id]));
     }

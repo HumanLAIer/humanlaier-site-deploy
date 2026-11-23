@@ -22,7 +22,10 @@
       {text:"Umbreon",language:"en",source:"English species label"},
       {text:"ブラッキー",language:"ja",source:"Japanese localized species name"},
       {text:"月亮伊布",language:"zh-cn",source:"Chinese localized species name"},
-      {text:"Bracky",language:"submitted",source:"User-supplied spelling; not verified as official"}]},
+      {text:"Bracky",language:"submitted",source:"User-supplied spelling; not verified as official"},
+      {text:"mombreon",language:"observed-asr",source:"Published Base focused model, source clip 04; unverified acoustically"},
+      {text:"momebrion",language:"observed-asr",source:"Published Singlish compact model, source clip 04; unverified acoustically"},
+      {text:"um bombion",language:"observed-asr",source:"Published Coats unprompted model, source clip 04; unverified acoustically"}]},
     {id:"pokeapi:species:644",label:"Zekrom",names:[
       {text:"Zekrom",language:"en",source:"English species label"}]},
     {id:"pokeapi:species:384",label:"Rayquaza",names:[
@@ -131,6 +134,8 @@
       line.append(node("div",why+" · "+hit.alias.source,"secondary"));
       if(hit.alias.language==="submitted")
         line.append(node("div","This spelling has not been authenticated as an official localized name.","warning"));
+      if(hit.alias.language==="observed-asr")
+        line.append(node("div","Observed ASR output is not a verified spoken entity.","warning"));
       output.append(line);
     }
     output.append(node("div","No acoustic verification, calibrated probability or exact card-printing claim.","secondary"));
@@ -139,7 +144,21 @@
     const list=$("candidateList");
     list.replaceChildren();
     const items=Array.isArray(clip.domainCandidateReview)?clip.domainCandidateReview:[];
-    if(!items.length){
+    // Source-verified textual disagreement from block 04. Not a verdict:
+    // three Whisper-family renderings are not independent human evidence.
+    if(clip.index===3 &&
+      /mombreon\s+please/i.test(clip.texts["production-base.en--focused"]) &&
+      /momebrion\s+please/i.test(clip.texts["singlish-small--compact"]) &&
+      /um bombion\s+please/i.test(clip.texts["coats-large-v2--control"])){
+      const card=node("article",undefined,"candidate candidate-feature");
+      card.append(node("strong","Umbreon? · pokeapi:species:197"));
+      card.append(node("span","LISTEN TO VERIFY","review-badge"));
+      card.append(node("span","Cross-model ASR disagreement · English species hypothesis","kind"));
+      card.append(node("span","","kind"));
+      card.append(node("span","Base focused: “mombreon” · Singlish compact: “momebrion” · Coats raw: “um bombion” · Coats focused: omitted. Different spellings are retrieval clues, NOT an independently heard Umbreon or a card sale.","why"));
+      list.append(card);
+    }
+    if(!items.length && list.childElementCount===0){
       list.append(node("div","No published candidate-review entry in this block. That does not establish silence or an absent product.","empty"));
       return;
     }

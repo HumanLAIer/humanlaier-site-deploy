@@ -12,7 +12,7 @@ permissions:
   contents: read
 jobs:
   live-site-check:
-    if: github.event_name != 'pull_request'
+    if: github.repository == 'HumanLAIer/humanlaier-site-deploy'
     runs-on: ubuntu-24.04
     timeout-minutes: 12
     steps:

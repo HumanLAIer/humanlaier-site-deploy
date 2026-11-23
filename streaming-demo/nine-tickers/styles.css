@@ -8,7 +8,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{ou
 a{color:inherit}
 .skip{position:fixed;top:-70px;left:10px;background:var(--mint);color:#051522;padding:5px 8px;z-index:20}
 .skip:focus{top:8px}
-.studio{height:100vh;height:100dvh;width:100%;overflow:hidden;display:grid;grid-template-rows:34px minmax(0,1fr) 28px minmax(250px,39dvh) 25px;background:var(--dark)}
+.studio{height:100vh;height:100dvh;width:100%;overflow:hidden;display:grid;grid-template-rows:34px minmax(0,1fr) 28px clamp(248px,34dvh,280px) 25px;background:var(--dark)}
 .mast{display:flex;align-items:center;gap:13px;padding:0 12px;background:#082332;border-bottom:1px solid var(--line);min-width:0;overflow:hidden;white-space:nowrap}
 .mark{display:flex;align-items:center;flex:0 0 70px;opacity:.95}
 .mark img{display:block;max-width:65px;max-height:29px;object-fit:contain}

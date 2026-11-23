@@ -120,7 +120,7 @@ jobs:
       - name: Install headless browser for full-layout measurement
         run: |
           npm install --no-save --ignore-scripts 'playwright@1.56.1'
-          npx playwright install --with-deps chromium
+          npx playwright install --with-deps chrome
       - name: Check 1280x720 and 1366x768 video+9 ticker visibility and playback
         run: |
           mkdir -p .private/nine-layout-qa

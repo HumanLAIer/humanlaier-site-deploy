@@ -247,6 +247,8 @@
     $('posterPlayer').hidden=!(still||(track==='audio'&&state.source?.storyboard));
     $('mediaEmpty').hidden=track!=='events';
     $('featuredAudioSlate').hidden=!(isFeatured()&&track==='audio');
+    $('mediaViewport').classList.toggle('featured-audio-active',isFeatured()&&track==='audio');
+    $('sourceTrack').querySelector('option[value="audio"]').textContent=isFeatured()?'Original recorded audio':'Enhanced audio only';
     $('sourceLabel').textContent=isFeatured()&&track==='audio'? 'ORIGINAL SOURCE AUDIO · 180s · ASR UNREVIEWED':
       track==='video'?'ORIGINAL VIDEO · SINGLE TRANSPORT':
       track==='audio'?'ENHANCED AUDIO · SINGLE TRANSPORT':

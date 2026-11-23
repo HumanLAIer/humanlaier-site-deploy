@@ -1,248 +1,250 @@
 "use strict";
-(()=>{
-  const $=id=>document.getElementById(id);
-  const MODELS=[
-    {id:"production-base.en",name:"faster-whisper",short:"BASE.EN"},
-    {id:"singlish-small",name:"Singlish2English",short:"SINGLISH"},
-    {id:"coats-large-v2",name:"Coats Whisper",short:"COATS"}
+(() => {
+  const $ = id => document.getElementById(id);
+  const MODELS = [
+    {id:"production-base.en", code:"BASE", label:"Base Whisper"},
+    {id:"singlish-small", code:"SING", label:"Singlish2English"},
+    {id:"coats-large-v2", code:"COATS", label:"Coats Whisper"}
   ];
-  const PHASES=[
-    {id:"control",container:"rawTickers",label:"NO PROMPT"},
-    {id:"compact",container:"diffTickers",label:"TCG GLOSSARY"},
-    {id:"focused",container:"domainTickers",label:"FOCUSED PROMPT"}
+  const PHASES = [
+    {id:"control", box:"rawTickers", code:"RAW", meaning:"No vocabulary prompt"},
+    {id:"compact", box:"diffTickers", code:"TCG", meaning:"Compact TCG glossary"},
+    {id:"focused", box:"domainTickers", code:"CTX", meaning:"Focused domain prompt"}
   ];
+  const SRC="58e8dd7b568a65203d9a5c204f72f1a3538da58951c7a3f178844547c5fc91de";
+  const PACK="dacb6b79f22ad3b7c16ecabe5ffb2c61af38c17e21381f21b850fb739e61d2a0";
   const TERMS=/(pok[eé]mon|sylveon|umbreon|leafeon|espeon|glaceon|rayquaza|charizard|pikachu|eevee|booster|etb|elite trainer box|vm[a-z]?x|packs?|psa(?:\s*10)?|cards?|slabs?|bids?|claims?|shipping|price|dollars?|sgd|market value|how much)/gi;
-  const SOURCE_SHA="58e8dd7b568a65203d9a5c204f72f1a3538da58951c7a3f178844547c5fc91de";
-  const PACK_SHA="dacb6b79f22ad3b7c16ecabe5ffb2c61af38c17e21381f21b850fb739e61d2a0";
-  const S={data:null,loaded:false,block:0,pan:true,rows:new Map(),buttons:[],last:-1};
-  const audio=$("audio"),seek=$("seek"),play=$("play");
-  const make=(tag,cls,value)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(value!==undefined)e.textContent=value;return e};
-  const set=(node,value)=>node.textContent=value;
-  const tick=t=>{const n=Math.max(0,Number(t)||0);return String(Math.floor(n/60)).padStart(2,"0")+":"+String(Math.floor(n%60)).padStart(2,"0")};
-  const sha=v=>typeof v==="string"&&/^[a-f0-9]{64}$/.test(v);
-  function highlight(node,text,enable){
-    node.replaceChildren();
-    if(!text){node.append(make("span","muted","[Model returned no speech for this block]"));return}
-    if(!enable){node.append(document.createTextNode(text));return}
-    TERMS.lastIndex=0;let from=0,match;
-    while((match=TERMS.exec(text))!==null){
-      if(match.index>from)node.append(document.createTextNode(text.slice(from,match.index)));
-      node.append(make("span","term",match[0]));
-      from=TERMS.lastIndex;
-      if(!match[0].length)break;
-    }
-    if(from<text.length)node.append(document.createTextNode(text.slice(from)));
-  }
+  const S={ready:false,data:null,videoManifest:null,block:0,lastTime:-1,pan:true,rows:new Map(),buttons:[]};
+  const video=$("video");
+  const el=(tag,cls,t)=>{
+    const x=document.createElement(tag);
+    if(cls)x.className=cls;
+    if(t!==undefined)x.textContent=t;
+    return x;
+  };
+  const set=(id,t)=>$(id).textContent=String(t);
+  const hex=x=>typeof x==="string"&&/^[a-f0-9]{64}$/.test(x);
+  const time=t=>{
+    const v=Math.max(0,Math.floor(Number(t)||0));
+    return String(Math.floor(v/60)).padStart(2,"0")+":"+String(v%60).padStart(2,"0");
+  };
   function skeleton(){
-    let number=0;
+    let count=0;
     for(const phase of PHASES){
-      const slot=$(phase.container);slot.replaceChildren();
+      const box=$(phase.box);
+      box.replaceChildren();
       for(const model of MODELS){
-        number++;
-        const id=model.id+"--"+phase.id;
-        const row=make("div","ticker-row");
-        const label=make("div","ticker-model");
-        label.append(make("span","model-index",String(number).padStart(2,"0")));
-        const title=make("div","model-title");
-        title.append(make("strong","",model.name),make("small","",phase.label));
-        label.append(title);
-        const button=make("button","ticker-surface");
-        button.type="button";button.setAttribute("aria-label","Replay source block for "+model.name+" "+phase.label);
-        button.addEventListener("click",()=>go(S.block));
-        const viewport=make("span","ticker-viewport");
-        const line=make("span","ticker-line","AWAITING SOURCE-MATCHED ASR");
-        viewport.append(line);button.append(viewport);
-        const meta=make("div","ticker-meta");
-        const badge=make("span","ticker-badge is-muted","NOT VERIFIED");
-        const smaller=make("span","ticker-secondary","No invented transcript");
-        meta.append(badge,smaller);
-        row.append(label,button,meta);slot.append(row);
-        S.rows.set(id,{line,viewport,meta,badge,smaller,row,model,phase});
+        count++;
+        const key=model.id+"--"+phase.id;
+        const row=el("div","ticker-row");
+        const label=el("div","ticker-model");
+        const no=el("span","model-index",String(count).padStart(2,"0"));
+        const name=el("span","model-title");
+        name.append(el("strong","",model.code),el("small","",phase.code));
+        label.append(no,name);
+        const button=el("button","ticker-surface");
+        button.type="button";
+        button.title=model.label+" · "+phase.meaning+" · click to replay this 15-second source block";
+        button.setAttribute("aria-label","Replay "+model.label+" "+phase.meaning+" source block");
+        button.addEventListener("click",()=>seekBlock(S.block));
+        const viewport=el("span","ticker-viewport");
+        const line=el("span","ticker-line","[Awaiting verified model output]");
+        viewport.append(line);
+        button.append(viewport);
+        const stats=el("div","ticker-meta");
+        const number=el("span","ticker-badge","—");
+        stats.append(number);
+        row.append(label,button,stats);
+        box.append(row);
+        S.rows.set(key,{line,viewport,number,row,model,phase});
       }
     }
   }
-  function validate(d){
+  function checkData(d){
     if(!d||d.schema!=="hl-commercial-nine-public-v1"
-       ||d.status!=="SOURCE_MATCHED_PUBLIC_UNREVIEWED_NINE_DECODES"
-       ||!d.source||d.source.sessionId!=="20261117T142835_038897Z_huatzaitcg"
-       ||d.source.sourcePart!=="part_000019.ts"
-       ||d.source.sourcePartSha256!==SOURCE_SHA
-       ||d.source.sourcePartOffsetSeconds!==30||d.source.durationSeconds!==180
-       ||d.source.audioFile!=="commercial-180.mp3"||!sha(d.source.audioSha256)
-       ||d.source.mediaEventSyncVerified!==false
-       ||!d.provenance||d.provenance.humanGoldAvailable!==false
-       ||d.provenance.actualSalesVerified!==false
-       ||d.provenance.wordTimingsVerified!==false
-       ||d.domainPackSha256!==PACK_SHA||d.domainCandidatesAreReviewOnly!==true
-       ||!Array.isArray(d.lanes)||d.lanes.length!==9
-       ||!Array.isArray(d.clips)||d.clips.length!==12
-       ||!d.engagement||!Number.isFinite(d.engagement.comments)
-       ||!Number.isFinite(d.engagement.uniqueActors))throw Error("Published research contract unavailable");
-    const ids=new Set();
+      ||d.status!=="SOURCE_MATCHED_PUBLIC_UNREVIEWED_NINE_DECODES"
+      ||!d.source||d.source.sessionId!=="20261117T142835_038897Z_huatzaitcg"
+      ||d.source.sourcePart!=="part_000019.ts"
+      ||d.source.sourcePartOffsetSeconds!==30
+      ||d.source.sourcePartSha256!==SRC||d.source.durationSeconds!==180
+      ||!d.provenance||d.provenance.humanGoldAvailable!==false
+      ||d.provenance.actualSalesVerified!==false
+      ||d.source.mediaEventSyncVerified!==false
+      ||d.domainPackSha256!==PACK||d.domainCandidatesAreReviewOnly!==true
+      ||!Array.isArray(d.clips)||d.clips.length!==12
+      ||!Array.isArray(d.lanes)||d.lanes.length!==9)
+      throw Error("Source-matched nine-model study unavailable");
+    const laneKeys=new Set();
     for(const l of d.lanes){
-      if(!MODELS.some(m=>m.id===l.model)
-         ||!PHASES.some(p=>p.id===l.phase)
-         ||l.id!==l.model+"--"+l.phase||ids.has(l.id)
-         ||typeof l.revision!=="string"||l.revision.length!==40
-         ||!sha(l.promptSha256)||!Number.isFinite(l.inferenceSeconds)
-         ||l.inferenceSeconds<0||!Number.isFinite(l.peakRssMib)
-         ||l.peakRssMib<=0||l.verifiedSourceWav!==true||l.wer!==null)
-          throw Error("Not all nine independent ASR configurations verified");
-      ids.add(l.id);
+      if(l.id!==l.model+"--"+l.phase
+        ||!MODELS.some(m=>m.id===l.model)
+        ||!PHASES.some(p=>p.id===l.phase)
+        ||laneKeys.has(l.id)
+        ||l.verifiedSourceWav!==true
+        ||typeof l.inferenceSeconds!=="number"||!Number.isFinite(l.inferenceSeconds)
+        ||!hex(l.promptSha256)||l.wer!==null)
+        throw Error("Missing verified ASR decoding");
+      laneKeys.add(l.id);
     }
     for(let i=0;i<12;i++){
       const c=d.clips[i];
-      if(!c||c.index!==i||c.id!=="clip"+String(i).padStart(2,"0")
-         ||c.start!==15*i||c.end!==15*(i+1)
-         ||!sha(c.wavSha256)||!c.texts||Object.keys(c.texts).length!==9
-         ||!Array.isArray(c.domainCandidateReview)||c.domainCandidateReview.length>6
-         ||c.domainCandidateReview.some(r=>r.reviewOnly!==true||r.audioVerifiedByHuman!==false)
-         ||!Array.from(ids).every(id=>typeof c.texts[id]==="string"&&c.texts[id].length<=12000))
-          throw Error("One or more source audio blocks/lanes missing");
+      if(c?.index!==i||c.id!=="clip"+String(i).padStart(2,"0")
+        ||c.start!==i*15||c.end!==(i+1)*15||!hex(c.wavSha256)
+        ||!c.texts||Object.keys(c.texts).length!==9
+        ||Array.from(laneKeys).some(key=>typeof c.texts[key]!=="string"))
+        throw Error("One or more audio-aligned transcript blocks missing");
     }
-    if(d.chatEvidence){
-      if(!Array.isArray(d.chatEvidence)||d.chatEvidence.length>25)throw Error("Chat evidence bounds invalid");
-      for(const c of d.chatEvidence){
-        if(!Number.isFinite(c.estimatedAudioSec)||c.estimatedAudioSec<0
-           ||c.estimatedAudioSec>=180||!sha(c.sourceTextSha256)
-           ||typeof c.text!=="string"||c.text.length>240
-           ||typeof c.actor!=="string"||c.actor.length>100)
-          throw Error("Unverified chat evidence schema");
-      }
-    }
+    if(!d.engagement||!Number.isFinite(d.engagement.comments)
+       ||!Number.isFinite(d.engagement.uniqueActors)
+       ||!Number.isFinite(d.engagement.deliberateEvents)
+       ||!Number.isFinite(d.engagement.buyerIntentComments))
+      throw Error("Observed engagement evidence missing");
+    if(!Array.isArray(d.chatEvidence)||d.chatEvidence.length!==3
+       ||d.chatEvidence.some(c=>!hex(c.sourceTextSha256)
+            ||typeof c.text!=="string"
+            ||typeof c.actor!=="string"
+            ||!Number.isFinite(c.estimatedAudioSec)))
+      throw Error("Unverified buyer question quotes");
   }
-  function buildNav(){
-    const target=$("blockNav");target.replaceChildren();S.buttons=[];
-    const comments=S.data.clips.map(c=>Number(c.engagement?.comments)||0);
-    const high=Math.max(1,...comments);
+  function checkVideo(m,d){
+    if(!m||m.schema!=="hl-commercial-video-source-v1"
+       ||m.status!=="VERIFIED_SOURCE_VIDEO_WITH_AUDIO"
+       ||m.sourcePartSha256!==SRC
+       ||m.sessionId!==d.source.sessionId
+       ||m.sourcePart!==d.source.sourcePart
+       ||m.sourcePartOffsetSeconds!==30
+       ||m.expectedDurationSeconds!==180
+       ||m.encodedDurationSeconds<178.8
+       ||m.encodedDurationSeconds>181
+       ||m.filename!=="commercial-180.mp4"
+       ||m.poster!=="commercial-preview.jpg"
+       ||!hex(m.mp4Sha256)||!hex(m.posterSha256)
+       ||m.originalAudioIncluded!==true
+       ||m.mediaEventSyncVerified!==false)
+       throw Error("Original video source verification failed");
+  }
+  function annotate(line,source,isHighlighted){
+    line.replaceChildren();
+    if(!source){line.append(el("span","muted","[No speech returned]"));return}
+    if(!isHighlighted){line.append(document.createTextNode(source));return}
+    let index=0,match;
+    TERMS.lastIndex=0;
+    while((match=TERMS.exec(source))!==null){
+      if(match.index>index)line.append(document.createTextNode(source.slice(index,match.index)));
+      line.append(el("span","term",match[0]));
+      index=TERMS.lastIndex;
+      if(!match[0].length)break;
+    }
+    if(index<source.length)line.append(document.createTextNode(source.slice(index)));
+  }
+  function buildBlocks(){
+    const box=$("blockNav");
+    box.replaceChildren();S.buttons=[];
     for(let i=0;i<12;i++){
-      const btn=make("button","block-btn");
-      btn.type="button";
-      btn.setAttribute("aria-label","Play source block "+(i+1)+" at "+tick(i*15));
-      btn.title="Block "+(i+1)+" / "+comments[i]+" observed comments, provisional clock";
-      btn.append(make("span","",String(i+1).padStart(2,"0")));
-      const bar=make("i");
-      bar.style.setProperty("--activity-height",(3+17*comments[i]/high)+"px");
-      btn.append(bar);
-      btn.addEventListener("click",()=>go(i));
-      target.append(btn);S.buttons.push(btn);
+      const b=el("button","block-btn",String(i+1).padStart(2,"0"));
+      b.type="button";
+      b.title="Seek source video "+time(i*15)+"–"+time((i+1)*15);
+      b.setAttribute("aria-label","Seek source video block "+(i+1)+" starting "+time(i*15));
+      b.addEventListener("click",()=>seekBlock(i));
+      box.append(b);S.buttons.push(b);
     }
   }
-  function inspector(clip){
-    const chat=(S.data.chatEvidence||[]).filter(item=>item.estimatedAudioSec>=clip.start&&item.estimatedAudioSec<clip.end);
-    const candidates=(clip.domainCandidateReview||[]).slice(0,3);
-    const suggestion=candidates.length
-      ?" Unverified catalogue suggestions: "+candidates.map(x=>x.name).join(", ")+". These are not confirmed by listening."
-      :" No high-specificity catalogue candidate is established for this block.";
-    if(chat.length){
-      set($("inspectorHeading"),"Buyer questions near this moment");
-      set($("inspectorBody"),chat.slice(0,2).map(c=>c.actor+": “"+c.text+"”").join("   ·   ")
-          +" [Collector-media offset estimated; this does not prove the message reacted to the spoken phrase.]"+suggestion);
-      set($("inspectorTag"),chat.length+" OBSERVED COMMENTS");
-    }else{
-      set($("inspectorHeading"),"Three engines, three configurations");
-      set($("inspectorBody"),"This block compares original words under nine measured decoding conditions. Highlighted terms are not verified products or sales."+suggestion);
-      set($("inspectorTag"),"REVIEW UNVERIFIED SPEECH");
+  function renderBlock(index){
+    if(!S.ready)return;
+    S.block=Math.max(0,Math.min(11,index|0));
+    S.lastTime=-1;
+    const clip=S.data.clips[S.block];
+    set("cueText","BLOCK "+String(S.block+1).padStart(2,"0")+" / "+time(clip.start)+"–"+time(clip.end));
+    for(const [id,r] of S.rows){
+      annotate(r.line,clip.texts[id],r.phase.id!=="control");
+      const m=S.data.lanes.find(l=>l.id===id);
+      r.number.textContent=m.inferenceSeconds.toFixed(1)+"s";
+      r.row.title=m.model+" / "+m.phase+" / "+m.revision+" / peak "+Math.round(m.peakRssMib)+" MiB";
+      r.line.style.transform="translateX(0px)";
+    }
+    S.buttons.forEach((b,i)=>{
+      const active=i===S.block;
+      b.classList.toggle("active",active);
+      b.setAttribute("aria-pressed",String(active));
+    });
+  }
+  function panLines(seconds){
+    if(!S.ready)return;
+    const reduced=window.matchMedia("(prefers-reduced-motion:reduce)").matches;
+    const fraction=Math.max(0,Math.min(1,((seconds%15)/15-.14)/.74));
+    for(const v of S.rows.values()){
+      const max=Math.max(0,v.line.scrollWidth-v.viewport.clientWidth+6);
+      v.line.style.transform="translateX(-"+((!reduced&&S.pan?fraction:0)*max).toFixed(1)+"px)";
     }
   }
-  function showBlock(i){
-    if(!S.loaded)return;
-    const n=Math.max(0,Math.min(11,i|0));S.block=n;S.last=-1;
-    const clip=S.data.clips[n];
-    set($("cueText"),"SOURCE BLOCK "+String(n+1).padStart(2,"0")+" · "+tick(clip.start)+"–"+tick(clip.end));
-    set($("blockCounter"),"BLOCK "+String(n+1).padStart(2,"0")+" / 12");
-    for(const [id,v] of S.rows){
-      const result=S.data.lanes.find(l=>l.id===id);
-      highlight(v.line,clip.texts[id],v.phase.id!=="control");
-      v.badge.classList.remove("is-muted");
-      set(v.badge,result.inferenceSeconds.toFixed(1)+"s / 180s");
-      set(v.smaller,Math.round(result.peakRssMib).toLocaleString()+" MiB RSS · "+result.revision.slice(0,7));
-      v.line.style.transform="translateX(0px)";
-      v.row.classList.toggle("active",Boolean(clip.texts[id]));
-    }
-    S.buttons.forEach((b,j)=>{b.classList.toggle("active",j===n);b.setAttribute("aria-pressed",String(j===n))});
-    inspector(clip);
-  }
-  function pan(t){
-    if(!S.loaded)return;
-    const reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const f=Math.max(0,Math.min(1,((t%15)/15-.12)/.76));
-    for(const x of S.rows.values()){
-      const overflow=Math.max(0,x.line.scrollWidth-x.viewport.clientWidth+10);
-      x.line.style.transform="translateX(-"+((S.pan&&!reduce?f:0)*overflow).toFixed(2)+"px)";
-    }
-  }
-  function sync(t){
+  function syncClock(t){
+    if(!S.ready)return;
     const seconds=Math.max(0,Math.min(180,Number(t)||0));
-    set($("currentClock"),tick(seconds));
-    seek.value=String(seconds);
-    const n=Math.min(11,Math.floor(Math.min(179.999,seconds)/15));
-    if(n!==S.block||S.last<0)showBlock(n);
-    S.last=seconds;pan(seconds);
+    set("currentClock",time(seconds));
+    const block=Math.min(11,Math.floor(Math.min(179.999,seconds)/15));
+    if(block!==S.block||S.lastTime<0)renderBlock(block);
+    S.lastTime=seconds;
+    panLines(seconds);
   }
-  function go(n){
-    if(!S.loaded)return;
-    audio.currentTime=Math.min(179.95,Math.max(0,n)*15);
-    sync(audio.currentTime);
-    audio.play().catch(()=>set($("audioStatus"),"Select play to hear the source."));
+  function seekSeconds(t){
+    if(!S.ready)return;
+    video.currentTime=Math.max(0,Math.min(179.95,t));
+    syncClock(video.currentTime);
+    video.play().catch(()=>set("audioStatus","Press play to hear the source video."));
   }
-  function controls(){
-    play.addEventListener("click",()=>{
-      if(!S.loaded)return;
-      if(audio.paused)audio.play().catch(()=>set($("audioStatus"),"Play blocked by browser; try again."));
-      else audio.pause();
+  function seekBlock(n){seekSeconds(Math.max(0,n)*15)}
+  function bindControls(){
+    $("speed").addEventListener("change",e=>{video.playbackRate=Number(e.target.value)||1});
+    $("tickerMotion").addEventListener("change",e=>{S.pan=e.target.checked;panLines(video.currentTime)});
+    video.addEventListener("timeupdate",()=>syncClock(video.currentTime));
+    video.addEventListener("seeked",()=>syncClock(video.currentTime));
+    video.addEventListener("play",()=>set("audioStatus","SOURCE VIDEO · NINE LIVE-SYNCED TRANSCRIPTS"));
+    video.addEventListener("pause",()=>set("audioStatus","PAUSED · ALL NINE TRANSCRIPTS ALIGNED"));
+    video.addEventListener("error",()=>{
+      $("videoError").hidden=false;
+      set("audioStatus","VIDEO UNAVAILABLE · TRANSCRIPT DATA PRESERVED");
     });
-    seek.addEventListener("input",()=>{if(S.loaded){audio.currentTime=Number(seek.value);sync(audio.currentTime)}});
-    $("speed").addEventListener("change",e=>audio.playbackRate=Number(e.target.value)||1);
-    $("tickerMotion").addEventListener("change",e=>{S.pan=e.target.checked;pan(audio.currentTime)});
-    $("zekromJump").textContent="Jump to card-price discussion ↗";
-    $("zekromJump").addEventListener("click",()=>go(10));
-    document.querySelectorAll("[data-shootout-block]").forEach(button=>{
-      button.addEventListener("click",()=>{
-        const n=Number(button.dataset.shootoutBlock);
-        if(Number.isSafeInteger(n)&&n>=0&&n<12)go(n);
-      });
-    });
-    document.querySelectorAll("[data-evidence-second]").forEach(button=>{
-      button.addEventListener("click",()=>{
-        if(!S.loaded)return;
-        const proposed=Number(button.dataset.evidenceSecond);
-        if(!Number.isFinite(proposed)||proposed<0||proposed>=180)return;
-        audio.currentTime=proposed;
-        sync(proposed);
-        audio.play().catch(()=>set($("audioStatus"),"Select play to hear the approximate source moment."));
-      });
-    });
-    audio.addEventListener("timeupdate",()=>sync(audio.currentTime));
-    audio.addEventListener("seeked",()=>sync(audio.currentTime));
-    audio.addEventListener("play",()=>{set($("playGlyph"),"Ⅱ");play.setAttribute("aria-label","Pause original source audio")});
-    audio.addEventListener("pause",()=>{set($("playGlyph"),"▶");play.setAttribute("aria-label","Play original source audio")});
-    audio.addEventListener("error",()=>set($("audioStatus"),"Media not available; transcript tickers can still be reviewed."));
+    document.querySelectorAll("[data-seek-sec]").forEach(b=>b.addEventListener("click",()=>{
+      const t=Number(b.dataset.seekSec);
+      if(Number.isFinite(t)&&0<=t&&t<180)seekSeconds(t);
+    }));
   }
-  function ready(d){
-    validate(d);S.data=d;S.loaded=true;
-    buildNav();
-    set($("metricComments"),d.engagement.comments.toLocaleString());
-    set($("metricAccounts"),d.engagement.uniqueActors.toLocaleString());
-    set($("metricEvents"),Number(d.engagement.deliberateEvents||0).toLocaleString());
-    set($("metricBuyer"),Number(d.engagement.buyerIntentComments||0).toLocaleString());
-    audio.src=d.source.audioFile;audio.load();
-    play.disabled=false;seek.disabled=false;
-    set($("audioStatus"),"Nine real decodings · immutable source · no human reference");
-    set($("provenance"),"SOURCE "+d.source.sessionId+" / "+d.source.sourcePart
-        +" +"+d.source.sourcePartOffsetSeconds+"s / original SHA-256 "+d.source.sourcePartSha256
-        +" / MEDIA↔EVENT CLOCK ESTIMATED, NOT CALIBRATED / NO WER");
-    showBlock(0);sync(0);
-  }
-  skeleton();controls();
-  fetch("comparison.json",{cache:"no-store"})
-    .then(response=>{if(!response.ok)throw Error("No approved nine-lane data");return response.json()})
-    .then(ready)
-    .catch(()=>{
-      S.loaded=false;
-      set($("audioStatus"),"Research build · nine source-matched results not yet published");
-      set($("inspectorBody"),"The real source window has been chosen, but none of the nine tickers will display guessed speech. Exact source verification and model output receipt checks must complete before this comparison becomes playable.");
-      set($("inspectorTag"),"RESULTS PENDING");
-      set($("provenance"),"No synthetic transcription data. Source and result audit required.");
+  function renderEvidence(d){
+    set("metricComments",d.engagement.comments);
+    set("metricAccounts",d.engagement.uniqueActors);
+    set("metricEvents",d.engagement.deliberateEvents);
+    set("metricBuyer",d.engagement.buyerIntentComments);
+    set("audienceStatus",d.engagement.comments+" comments · "+d.engagement.uniqueActors+" accounts · "+d.engagement.deliberateEvents+" actions");
+    const byTime=d.chatEvidence.slice().sort((a,b)=>a.estimatedAudioSec-b.estimatedAudioSec);
+    document.querySelectorAll(".signal").forEach((button,i)=>{
+      const c=byTime[i];
+      if(!c)return;
+      button.dataset.seekSec=String(c.estimatedAudioSec);
+      button.querySelector("strong").textContent=c.text;
+      button.querySelector("small").textContent="~"+time(c.estimatedAudioSec);
+      button.title=c.actor+" · approximate collector/media location · original public chat";
     });
+  }
+  function ready(d,m){
+    checkData(d);checkVideo(m,d);
+    S.data=d;S.videoManifest=m;S.ready=true;
+    buildBlocks();renderEvidence(d);
+    video.src=m.filename;
+    video.poster=m.poster;
+    video.preload="metadata";
+    video.load();
+    $("videoError").hidden=true;
+    set("audioStatus","SOURCE-VERIFIED ORIGINAL VIDEO · 9 DECODINGS");
+    set("provenance","Source SHA-256 "+SRC+" · video SHA-256 "+m.mp4Sha256+" · no human-gold transcription");
+    renderBlock(0);syncClock(0);
+  }
+  skeleton();
+  bindControls();
+  Promise.all([
+    fetch("comparison.json",{cache:"no-store"}).then(r=>{if(!r.ok)throw Error("ASR data missing");return r.json()}),
+    fetch("video-manifest.json",{cache:"no-store"}).then(r=>{if(!r.ok)throw Error("Original video missing");return r.json()})
+  ]).then(([d,m])=>ready(d,m)).catch(()=>{
+    set("audioStatus","VERIFIED ORIGINAL VIDEO OR NINE-DECODING DATA NOT READY");
+    $("videoError").hidden=false;
+  });
 })();

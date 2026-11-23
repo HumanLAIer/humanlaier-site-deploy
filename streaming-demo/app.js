@@ -40,10 +40,13 @@
     });
     D.review.unshift({
       sid:FEATURED_ID,key:'featured-source-nov17-audio',
-      title:'Nov 17 · original source audio · '+Math.round(duration)+' seconds',
-      video:null,audio:FEATURED.source.audioFile,poster:null,storyboard:null,
-      videoStartMediaSec:null,videoDurationSec:null,audioStartMediaSec:0,
-      audioDurationSec:duration,mediaClockStatus:'UNCALIBRATED_INDEPENDENT_SOURCE',
+      title:'Nov 17 · original source media + ASR · '+Math.round(duration)+' seconds',
+      video:FEATURED.source.videoFile||null,audio:FEATURED.source.audioFile,
+      poster:FEATURED.source.poster||null,storyboard:null,
+      videoStartMediaSec:FEATURED.source.videoFile?0:null,
+      videoDurationSec:FEATURED.source.videoDurationSeconds||null,
+      audioStartMediaSec:0,audioDurationSec:duration,
+      mediaClockStatus:'UNCALIBRATED_INDEPENDENT_SOURCE',
       transcript:FEATURED.transcriptBlocks.map(b=>[b.start,b.end,b.texts[FEATURED.defaultModel]??'']),
       transcriptEvidence:'SOURCE_MATCHED_ASR_UNREVIEWED'
     });
@@ -142,7 +145,7 @@
     const info=currentAlignment(); state.alignment=info.status;
     const pill=$('syncPill'),cursor=$('cursorStatus'),detail=$('alignmentDetails');
     pill.className='sync-pill '+(info.status==='verified'?'verified':info.status==='uncalibrated'?'uncalibrated':'');
-    pill.textContent=isFeatured()?'AUDIO ONLY · CHAT SYNC UNVERIFIED':
+    pill.textContent=isFeatured()?(state.track==='video'?'SOURCE VIDEO · CHAT SYNC UNVERIFIED':'SOURCE AUDIO · CHAT SYNC UNVERIFIED'):
       info.status==='verified'?'VERIFIED SYNC · UTC ANCHORS':
       info.status==='estimated'?'ESTIMATED SYNC · NOT VERIFIED':
       info.status==='event-only'?'OBSERVED COLLECTOR CLOCK':'UNCALIBRATED SOURCE';
@@ -219,7 +222,7 @@
   }
   function selectTrack(track,atEvent=null){
     stopMedia();
-    if(isFeatured())track='audio';
+    if(isFeatured()&&track==='events')track=state.source?.video?'video':'audio';
     if(track==='video' && !state.source?.video)track=state.source?.audio?'audio':'events';
     if(track==='audio' && !state.source?.audio)track=state.source?.video?'video':'events';
     if(!['video','audio','events'].includes(track))track='events';
@@ -229,7 +232,8 @@
     $('posterPlayer').hidden=!(still||(track==='audio'&&state.source?.storyboard));
     $('mediaEmpty').hidden=track!=='events'&&!(isFeatured()&&track==='audio');
     $('sourceTrack').querySelector('option[value="audio"]').textContent=isFeatured()?'Original recorded audio':'Enhanced audio only';
-    $('sourceLabel').textContent=isFeatured()&&track==='audio'? 'ORIGINAL SOURCE AUDIO · UNREVIEWED ASR':
+    $('sourceLabel').textContent=isFeatured()&&track==='video'? 'ORIGINAL SOURCE VIDEO · UNREVIEWED ASR':
+      isFeatured()&&track==='audio'? 'ORIGINAL SOURCE AUDIO · UNREVIEWED ASR':
       track==='video'?'ORIGINAL VIDEO · SINGLE TRANSPORT':
       track==='audio'?'ENHANCED AUDIO · SINGLE TRANSPORT':
       still?'ARCHIVED SOURCE STILL · EVENT REPLAY':'EVENT-ONLY REPLAY';
@@ -2292,6 +2296,16 @@
     $('muteButton').addEventListener('click',()=>{
       const m=activeMedia();if(!m)return;
       m.muted=!m.muted;$('muteButton').textContent=m.muted?'Unmute':'Mute';
+    });
+    // The source video is preferred. If it fails to load or decode, keep the
+    // original V4 player and machine transcript usable via the pinned audio.
+    video.addEventListener('error',()=>{
+      if(!isFeatured()||state.track!=='video'||!state.source?.audio||
+         !video.currentSrc.includes('nine-tickers/commercial-180.mp4'))return;
+      const at=mediaElapsed();
+      selectTrack('audio');
+      seekSource(Math.min(at,Math.max(0,maxDuration()-.1)));
+      toast('Original source video unavailable in this browser. Switched to verified source audio; transcript preserved.');
     });
     for(const m of [video,audio]){
       m.controls=false;

@@ -8,8 +8,18 @@ if(chrome.status!==0)throw Error('Expected preinstalled Chrome for visual DOM ac
 const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
 const checkFile='__source-chat-qa';
 const probe=String.raw`(()=>{
-  let tries=0;
+  let tries=0,switched=false;
   function check(){
+    // V4 now starts on the activity-backed recording so its Constellation
+    // is functional. This separate legacy test explicitly selects the
+    // different ASR excerpt before checking its source-matched speech.
+    const select=document.getElementById('sessionSelect');
+    if(!switched && select && [...select.options]
+      .some(o=>o.value==='source-nov17-original-audio-180')){
+      switched=true;
+      select.value='source-nov17-original-audio-180';
+      select.dispatchEvent(new Event('change',{bubbles:true}));
+    }
     const list=document.getElementById('conversationList');
     const speech=[...list.querySelectorAll('.message-row.speech')];
     const chat=[...list.querySelectorAll('.message-row.chat')];

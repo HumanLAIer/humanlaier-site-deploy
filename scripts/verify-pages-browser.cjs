@@ -30,11 +30,91 @@ async function sourceChat(browser){
  const observeResult=observe(page);
  try{
    await page.goto(origin+'/streaming-demo/',{waitUntil:'domcontentloaded',timeout:35000});
+   // The default must demonstrate ORIGINAL individual TikTok events, not
+   // the separate 180s speech-study's aggregate-only engagement counts.
+   await page.waitForFunction(()=>{
+     const selected=document.getElementById('sessionSelect')?.value;
+     const source=window.HL_SHOWCASE_DATA?.sessions?.find(s=>s.id===selected);
+     return source && selected==='nov17-participation' &&
+       document.querySelectorAll('#networkNodes g[data-actor]').length>0 &&
+       Number(document.getElementById('signals').dataset.recordedMarkerCount)>0;
+   },null,{timeout:25000});
+   const evidence=await page.evaluate(()=>{
+     const selected=document.getElementById('sessionSelect').value;
+     const capture=window.HL_SHOWCASE_DATA.sessions.find(s=>s.id===selected);
+     const kinds={};
+     for(const r of capture.events)kinds[r[1]]=(kinds[r[1]]||0)+1;
+     const graph=document.querySelectorAll('#networkNodes g[data-actor]');
+     const markerCanvas=document.getElementById('signals');
+     return {
+       selected,sourceRecords:capture.events.length,sourceAccounts:capture.people.length,
+       kindCounts:kinds,graphNodes:graph.length,
+       graphLinks:document.querySelectorAll('#networkEdges line[data-pair]').length,
+       markerCount:Number(markerCanvas.dataset.recordedMarkerCount),
+       markerKinds:markerCanvas.dataset.recordedMarkerKinds.split(','),
+       observedActions:document.querySelectorAll('#actionEventList button.evidence-event').length,
+       publicComments:document.querySelectorAll('#conversationList .message-row.chat').length,
+       actionScope:document.getElementById('actionScope').value,
+       eventLayerOptions:[...document.getElementById('graphEventKind').options]
+         .map(o=>({kind:o.value,label:o.textContent})),
+       video:document.getElementById('videoPlayer').currentSrc,
+       videoHidden:document.getElementById('videoPlayer').hidden,
+       statline:document.getElementById('graphStatline').textContent,
+       layout:getComputedStyle(document.getElementById('primaryDock')).display
+     };
+   });
+   assert.equal(evidence.selected,'nov17-participation');
+   assert(evidence.sourceRecords>=140&&evidence.sourceAccounts>=42);
+   assert.equal(evidence.graphNodes,evidence.sourceAccounts,
+     'Every observed public account must have a node, not just aggregate counts');
+   assert(evidence.graphLinks>0,'Real co-activity links must render in the Constellation');
+   assert.equal(evidence.markerCount,evidence.sourceRecords,
+     'Every individually observed comment/action has a collector-clock marker');
+   for(const [kind,n] of Object.entries(evidence.kindCounts)){
+     assert(n>0);
+     assert(evidence.markerKinds.includes(kind),'Missing visible collector marker '+kind);
+     assert(evidence.eventLayerOptions.some(o=>o.kind===kind&&o.label.includes(String(n))),
+       'Missing graph filter with accurate original event count: '+kind);
+   }
+   assert.equal(evidence.observedActions,
+     evidence.sourceRecords-evidence.kindCounts.comment,'All 53 original action records must be selectable');
+   assert.equal(evidence.publicComments,evidence.kindCounts.comment);
+   assert.equal(evidence.actionScope,'all');
+   assert(evidence.statline.includes('observed accounts')&&evidence.video.includes('nov17-participation.mp4')&&
+     !evidence.videoHidden&&evidence.layout==='grid');
+   // All source event kinds remain selectable for inspection and true
+   // incident playback, rather than being represented by aggregate labels.
+   await page.locator('#graphEventKind').selectOption('gift');
+   await page.waitForFunction(()=>document.querySelectorAll('#networkNodes g[data-actor]').length>=1,
+     null,{timeout:10000});
+   await page.locator('#graphEventKind').selectOption('all');
+   await page.locator('#actionKind').selectOption('gift');
+   await page.locator('#actionEventList button.evidence-event').first().click();
+   await page.waitForFunction(()=>document.querySelectorAll('#networkNodes g[data-pulse-kind="gift"]').length>=1,
+     null,{timeout:10000});
+   await page.locator('#actionKind').selectOption('all');
+   await page.locator('#networkNodes g[data-actor]').first().click();
+   assert((await page.locator('#graphInspector').textContent()).includes('observed account'),
+     'Clicking a real participant must open its original action history');
+   await page.waitForFunction(()=>{
+     const v=document.getElementById('videoPlayer');
+     return v.readyState>=2&&v.duration>118&&v.duration<122;
+   },null,{timeout:35000});
+   await page.locator('#masterPlay').click();
+   await page.waitForFunction(()=>!document.getElementById('videoPlayer').paused&&
+     document.getElementById('videoPlayer').currentTime>0.45,null,{timeout:14000});
+   await page.locator('#masterPlay').click();
+   assert.equal(await page.locator('#videoPlayer').evaluate(v=>v.paused),true);
+   console.log('SOURCE_ACTIVITY_CONSTELLATION_BROWSER_PASS '+JSON.stringify(evidence));
+   // Retain the DIFFERENT original 180s source for its 12 speech blocks;
+   // do not splice its ASR or aggregate comments into the 120s event capture.
+   await page.locator('#sessionSelect').selectOption('source-nov17-original-audio-180');
    await page.waitForFunction(()=>{
      const source=window.HL_FEATURED_SOURCE;
-     return source && source.transcriptBlocks.length>0 &&
+     return source && document.getElementById('sessionSelect').value==='source-nov17-original-audio-180' &&
        document.querySelectorAll('.message-row.speech').length===source.transcriptBlocks.length &&
-       document.querySelectorAll('.message-row.chat').length===source.chatExcerpts.length;
+       document.querySelectorAll('.message-row.chat').length===source.chatExcerpts.length &&
+       document.querySelectorAll('#networkNodes g[data-actor]').length===0;
    },null,{timeout:25000});
    const state=await page.evaluate(()=>{
      const source=window.HL_FEATURED_SOURCE;
@@ -129,6 +209,10 @@ async function videoFallback(browser){
  try{
    await page.route('**/nine-tickers/commercial-180.mp4',route=>route.abort('failed'));
    await page.goto(origin+'/streaming-demo/',{waitUntil:'domcontentloaded',timeout:35000});
+   await page.waitForFunction(()=>!!window.HL_FEATURED_SOURCE &&
+     [...document.getElementById('sessionSelect').options]
+       .some(o=>o.value==='source-nov17-original-audio-180'),null,{timeout:25000});
+   await page.locator('#sessionSelect').selectOption('source-nov17-original-audio-180');
    await page.waitForFunction(()=>{
      const src=document.getElementById('audioPlayer').currentSrc;
      return document.getElementById('sourceTrack').value==='audio'&&
@@ -148,7 +232,9 @@ async function mobile(browser){
  const page=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
  try{
    await page.goto(origin+'/streaming-demo/',{waitUntil:'domcontentloaded',timeout:35000});
-   await page.waitForFunction(()=>document.querySelectorAll('.message-row.speech').length>0,
+   await page.waitForFunction(()=>document.getElementById('sessionSelect')?.value==='nov17-participation' &&
+       document.querySelectorAll('.message-row.chat').length>0 &&
+       document.querySelectorAll('#networkNodes g[data-actor]').length>0,
      null,{timeout:20000});
    await page.locator('[data-mobile-tab="conversation"]').click();
    const metrics=await page.evaluate(()=>{
@@ -156,13 +242,21 @@ async function mobile(browser){
      const r=t.getBoundingClientRect();
      return {visible:getComputedStyle(t).display!=='none'&&r.width>0,
        viewport:innerWidth,htmlWidth:document.documentElement.scrollWidth,
-       speech:document.querySelectorAll('.message-row.speech').length,
+       comments:document.querySelectorAll('.message-row.chat').length,
+       graphNodes:document.querySelectorAll('#networkNodes g[data-actor]').length,
        left:r.left,right:r.right};
    });
-   assert(metrics.visible&&metrics.speech>0,'Mobile chat is visible on its native tab');
+   assert(metrics.visible&&metrics.comments>0,'Original activity chat visible on mobile native tab');
+   assert(metrics.graphNodes>0,'Original activity constellation must have real nodes on mobile');
    assert(metrics.htmlWidth<=metrics.viewport+3,'No mobile page horizontal overflow');
    assert(metrics.left>=-2&&metrics.right<=metrics.viewport+3,'Conversation stays within viewport');
-   console.log('V4_MOBILE_CHAT_PASS '+JSON.stringify(metrics));
+   await page.locator('[data-mobile-tab="constellation"]').click();
+   const graphVisible=await page.locator('#networkSvg').evaluate(el=>{
+     const r=el.getBoundingClientRect();
+     return r.width>100&&r.height>100&&getComputedStyle(el).visibility!=='hidden';
+   });
+   assert(graphVisible,'Constellation remains usable on its original mobile tab');
+   console.log('V4_MOBILE_CHAT_AND_CONSTELLATION_PASS '+JSON.stringify(metrics));
  }finally{await page.close();}
 }
 async function nine(browser){

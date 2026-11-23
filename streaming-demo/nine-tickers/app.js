@@ -182,12 +182,17 @@
   function annotate(line,source,diff){
     line.replaceChildren();
     if(!source){line.append(el("span","muted","[No speech returned]"));return}
+    // Match terms against the unaltered full string first, so multi-word
+    // names and business phrases ("Elite Trainer Box", "how much") stay
+    // highlighted without rewriting or splitting their source words.
+    TERMS.lastIndex=0;
+    const domainRanges=Array.from(source.matchAll(TERMS),
+      m=>[m.index,m.index+m[0].length]);
     let pos=0;
     for(let i=0;i<diff.words.length;i++){
       const token=diff.words[i];
       if(token.start>pos)line.append(document.createTextNode(source.slice(pos,token.start)));
-      TERMS.lastIndex=0;
-      const isDomain=TERMS.test(token.text);
+      const isDomain=domainRanges.some(([a,b])=>token.start>=a&&token.end<=b);
       const changed=diff.changed.has(i);
       if(isDomain||changed){
         const classes=[];
@@ -245,6 +250,9 @@
         px+=Math.max(width,1);
         r.anchors.push(px);
       }
+      // Each row's approximate source "now" point is pinned to the same
+      // fraction of the ticker width for easy side-by-side comparison.
+      r.playheadPx=r.viewport.clientWidth*.24;
     }
     panLines(video.currentTime);
   }
@@ -300,13 +308,14 @@
       // to left, as a genuine broadcast ticker. Reduced-motion / opt-out
       // anchors the current block instead of animating its words.
       const px=(S.pan&&!reduced)?start+(end-start)*progress:start;
-      r.line.style.transform="translate3d(-"+px.toFixed(3)+"px,0,0)";
+      r.line.style.transform="translate3d("+(r.playheadPx-px).toFixed(3)+"px,0,0)";
     }
   }
   function syncClock(t){
     if(!S.ready)return;
     const seconds=Math.max(0,Math.min(180,Number(t)||0));
-    set("currentClock",time(seconds));
+    const label=time(seconds);
+    if($("currentClock").textContent!==label)set("currentClock",label);
     const block=Math.min(11,Math.floor(Math.min(179.999,seconds)/15));
     if(block!==S.block||S.lastTime<0)renderBlock(block);
     S.lastTime=seconds;

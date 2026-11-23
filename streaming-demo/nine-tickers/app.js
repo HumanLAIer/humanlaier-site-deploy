@@ -69,6 +69,38 @@
     }
     return {...compareWords(source,reference),mode:"changed"};
   }
+  // Surface probable decoder degeneration without modifying an evidence source.
+  // Require >=10 repeated phrases spanning >=80% of words to avoid flagging
+  // an ordinary speaker repetition. This is a review warning, not a WER score.
+  function detectDecodeLoop(source){
+    const words=getWords(source);
+    if(words.length<20)return null;
+    let best=null;
+    const keys=words.map(x=>x.key);
+    for(let start=0;start<Math.min(8,words.length);start++){
+      for(let width=1;width<=5;width++){
+        if(start+width*10>words.length)continue;
+        let repeats=1;
+        while(start+(repeats+1)*width<=words.length){
+          const next=start+repeats*width;
+          let equal=true;
+          for(let k=0;k<width;k++)if(keys[start+k]!==keys[next+k]){equal=false;break}
+          if(!equal)break;
+          repeats++;
+        }
+        const fraction=repeats*width/words.length;
+        if(repeats>=10&&fraction>=.8&&(!best||fraction>best.fraction||
+           (fraction===best.fraction&&width>best.width))){
+          best={start,width,repeats,fraction};
+        }
+      }
+    }
+    if(!best)return null;
+    const phrase=source.slice(words[best.start].start,
+                              words[best.start+best.width-1].end);
+    return {phrase,count:best.repeats,coverage:best.fraction,
+            sourceText:source};
+  }
   const S={ready:false,data:null,videoManifest:null,block:0,lastTime:-1,pan:true,rows:new Map(),buttons:[],frame:0,seekIntent:null,seekTimer:0};
   const video=$("video");
   const el=(tag,cls,t)=>{
@@ -109,10 +141,24 @@
         const stats=el("div","ticker-meta");
         const delta=el("span","ticker-change is-empty","—");
         const number=el("span","ticker-badge","—");
-        stats.append(delta,number);
+        const rawToggle=el("button","ticker-raw-toggle","RAW");
+        rawToggle.type="button";
+        rawToggle.hidden=true;
+        rawToggle.setAttribute("aria-label","Show the original uncompressed model output");
+        stats.append(delta,number,rawToggle);
         row.append(label,button,stats);
         box.append(row);
-        S.rows.set(key,{line,viewport,number,delta,row,model,phase,segments:[],diffs:[],anchors:[]});
+        const lane={line,viewport,number,delta,rawToggle,row,model,phase,
+                    segments:[],diffs:[],anchors:[],loops:new Map(),rawLoops:new Set()};
+        S.rows.set(key,lane);
+        rawToggle.addEventListener("click",()=>{
+          if(!S.ready||!lane.loops.has(S.block))return;
+          if(lane.rawLoops.has(S.block))lane.rawLoops.delete(S.block);
+          else lane.rawLoops.add(S.block);
+          renderTapeSegment(lane,S.block);
+          measureTimelines();
+          renderBlock(S.block);
+        });
       }
     }
   }
@@ -204,6 +250,30 @@
     }
     if(pos<source.length)line.append(document.createTextNode(source.slice(pos)));
   }
+  // The default ticker uses an explicit warning summary rather than
+  // endlessly scrolling duplicated tokens. RAW restores the exact model text
+  // for inspection. The model results and comparison.json never change.
+  function renderTapeSegment(r,index){
+    const segment=r.segments[index];
+    const source=S.data.clips[index].texts[r.model.id+"--"+r.phase.id];
+    const loop=r.loops.get(index);
+    segment.classList.toggle("ticker-loop-flag",Boolean(loop));
+    if(loop&&!r.rawLoops.has(index)){
+      segment.replaceChildren(el("span","ticker-loop-summary",
+        "⚠ SUSPECTED ASR LOOP · “"+loop.phrase+"” ×"+loop.count+
+        " · RAW AVAILABLE"));
+      segment.title="Compressed display of a repeated model output, NOT a "+
+        "transcription correction. Original output: "+loop.sourceText;
+      segment.dataset.loopCollapsed="true";
+    }else{
+      annotate(segment,source,r.diffs[index]);
+      segment.title=loop
+        ?"Original unmodified ASR output ("+loop.count+" repetitions of “"+
+         loop.phrase+"”); click FOLD to condense."
+        :"Source block "+(index+1)+" original model text";
+      segment.dataset.loopCollapsed="false";
+    }
+  }
   // Every lane owns one immutable 180-second ribbon of 12 real ASR blocks.
   // We annotate text once. Nothing is replaced when the source crosses 15s.
   function buildTimelines(){
@@ -212,6 +282,7 @@
       r.line.replaceChildren();
       r.segments=[];
       r.diffs=[];
+      r.loops.clear();
       for(let i=0;i<12;i++){
         const clip=S.data.clips[i];
         const original=clip.texts[id];
@@ -225,9 +296,11 @@
         segment.dataset.sourceBlock=String(i+1);
         segment.title="Source block "+(i+1)+" ("+time(i*15)+"–"+time((i+1)*15)+
           "): original "+r.model.label+" "+r.phase.code+" transcript";
-        annotate(segment,original,diff);
         r.segments.push(segment);
         r.diffs.push(diff);
+        const loop=detectDecodeLoop(original);
+        if(loop)r.loops.set(i,loop);
+        renderTapeSegment(r,i);
         r.line.append(segment);
       }
       r.line.dataset.continuousSourceTape="true";
@@ -278,11 +351,28 @@
     for(const r of S.rows.values()){
       const diff=r.diffs[S.block];
       if(!diff)continue;
-      r.delta.textContent=(diff.mode==="unique"?"≠":"+")+diff.added;
-      r.delta.classList.toggle("is-empty",diff.added===0);
-      r.delta.title=diff.mode==="unique"
-        ?diff.added+" tokens absent in both other unprompted engines for this same source block"
-        :diff.added+" newly present words; "+diff.removed+" baseline words absent in this same source block";
+      const loop=r.loops.get(S.block);
+      r.row.classList.toggle("has-decode-loop",Boolean(loop));
+      r.rawToggle.hidden=!loop;
+      r.rawToggle.textContent=r.rawLoops.has(S.block)?"FOLD":"RAW";
+      r.rawToggle.setAttribute("aria-pressed",String(r.rawLoops.has(S.block)));
+      if(loop){
+        r.delta.textContent="⚠×"+loop.count;
+        r.delta.classList.remove("is-empty");
+        r.delta.classList.add("is-decode-loop");
+        r.delta.title="Probable model repetition: “"+loop.phrase+
+                      "” repeated "+loop.count+" times (not an accuracy score)";
+        r.rawToggle.setAttribute("aria-label",
+          (r.rawLoops.has(S.block)?"Condense":"Show")+" the original "+loop.count+
+          "-repeat Singlish ASR transcript in block "+(S.block+1));
+      }else{
+        r.delta.classList.remove("is-decode-loop");
+        r.delta.textContent=(diff.mode==="unique"?"≠":"+")+diff.added;
+        r.delta.classList.toggle("is-empty",diff.added===0);
+        r.delta.title=diff.mode==="unique"
+          ?diff.added+" tokens absent in both other unprompted engines for this same source block"
+          :diff.added+" newly present words; "+diff.removed+" baseline words absent in this same source block";
+      }
     }
     S.buttons.forEach((b,i)=>{
       const active=i===S.block;

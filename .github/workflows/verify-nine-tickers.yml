@@ -1,0 +1,91 @@
+name: Verify nine-ticker commercial ASR shootout
+on:
+  pull_request:
+    paths:
+      - 'streaming-demo/nine-tickers/**'
+      - '.github/workflows/verify-nine-tickers.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'streaming-demo/nine-tickers/**'
+      - '.github/workflows/verify-nine-tickers.yml'
+permissions:
+  contents: read
+jobs:
+  nine-lane-source-contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate browser application syntax
+        run: |
+          node --check streaming-demo/nine-tickers/app.js
+          test -f streaming-demo/nine-tickers/index.html
+          test -f streaming-demo/nine-tickers/styles.css
+      - name: Audit all nine lanes against exact original source fingerprints
+        run: |
+          node <<'JS'
+          const assert=require('node:assert/strict'),fs=require('node:fs'),crypto=require('node:crypto');
+          const dir='streaming-demo/nine-tickers/';
+          const html=fs.readFileSync(dir+'index.html','utf8');
+          const js=fs.readFileSync(dir+'app.js','utf8');
+          for(const id of ['play','seek','audio','blockNav','rawTickers','diffTickers',
+                             'domainTickers','inspectorBody','metricComments','metricAccounts',
+                             'metricEvents','metricBuyer','cueText','provenance'])
+            assert(html.includes('id="'+id+'"'),id);
+          assert(js.includes('SOURCE_MATCHED_PUBLIC_UNREVIEWED_NINE_DECODES'));
+          assert(html.includes('no human-gold')||html.includes('HUMAN-GOLD'));
+          const path=dir+'comparison.json';
+          if(!fs.existsSync(path)){
+            assert.equal(process.env.GITHUB_EVENT_NAME,'pull_request','main cannot publish incomplete experiment');
+            console.log('NINE_TICKER_UI_ONLY_PR: actual source-matched ASR dataset not published');
+            process.exit(0);
+          }
+          const d=JSON.parse(fs.readFileSync(path,'utf8'));
+          const sha=v=>typeof v==='string'&&/^[a-f0-9]{64}$/.test(v);
+          assert.equal(d.schema,'hl-commercial-nine-public-v1');
+          assert.equal(d.status,'SOURCE_MATCHED_PUBLIC_UNREVIEWED_NINE_DECODES');
+          assert.equal(d.source.sessionId,'20261117T142835_038897Z_huatzaitcg');
+          assert.equal(d.source.sourcePart,'part_000019.ts');
+          assert.equal(d.source.sourcePartOffsetSeconds,30);
+          assert.equal(d.source.durationSeconds,180);
+          assert.equal(d.source.sourcePartSha256,
+            '58e8dd7b568a65203d9a5c204f72f1a3538da58951c7a3f178844547c5fc91de');
+          assert.equal(d.source.mediaEventSyncVerified,false);
+          assert.equal(d.provenance.humanGoldAvailable,false);
+          assert.equal(d.provenance.actualSalesVerified,false);
+          assert.equal(d.provenance.wordTimingsVerified,false);
+          assert.equal(d.domainPackSha256,'dacb6b79f22ad3b7c16ecabe5ffb2c61af38c17e21381f21b850fb739e61d2a0');
+          assert.equal(d.domainCandidatesAreReviewOnly,true);
+          assert.equal(d.lanes.length,9);
+          assert.equal(d.clips.length,12);
+          const lanes=new Set(d.lanes.map(l=>l.id));
+          assert.equal(lanes.size,9);
+          for(const model of ['production-base.en','singlish-small','coats-large-v2'])
+            for(const phase of ['control','compact','focused'])
+              assert(lanes.has(model+'--'+phase),'missing '+model+'/'+phase);
+          for(let i=0;i<12;i++){
+            const c=d.clips[i];
+            assert.equal(c.index,i);
+            assert.equal(c.id,'clip'+String(i).padStart(2,'0'));
+            assert.equal(c.start,i*15);assert.equal(c.end,(i+1)*15);
+            assert(sha(c.wavSha256));
+            assert.equal(Object.keys(c.texts).length,9);
+            assert(Array.isArray(c.domainCandidateReview)&&c.domainCandidateReview.length<=6);
+            for(const r of c.domainCandidateReview){
+              assert.equal(r.reviewOnly,true);
+              assert.equal(r.audioVerifiedByHuman,false);
+            }
+            for(const id of lanes)assert.equal(typeof c.texts[id],'string');
+          }
+          const raw=fs.readFileSync(dir+d.source.audioFile);
+          assert(raw.length>600000&&raw.length<2000000);
+          assert.equal(crypto.createHash('sha256').update(raw).digest('hex'),d.source.audioSha256);
+          for(const l of d.lanes){
+            assert(/^[a-f0-9]{40}$/.test(l.revision)&&sha(l.promptSha256));
+            assert(Number.isFinite(l.inferenceSeconds)&&l.inferenceSeconds>=0);
+            assert.equal(l.verifiedSourceWav,true);
+            assert.equal(l.wer,null);
+          }
+          console.log('VERIFIED: same 12x15s source WAV hashes, 9 independent ASR decodings, media SHA, source and sales caveats');
+          JS

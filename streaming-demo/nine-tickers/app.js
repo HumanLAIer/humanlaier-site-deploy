@@ -117,12 +117,46 @@
        ||m.encodedDurationSeconds<178.8
        ||m.encodedDurationSeconds>181
        ||m.filename!=="commercial-180.mp4"
+       ||m.storageMode!=="sha256-checked-mp4-browser-assembly"
+       ||!Number.isSafeInteger(m.mp4Bytes)||m.mp4Bytes!==14043262
+       ||!Array.isArray(m.parts)||m.parts.length!==12
+       ||m.parts.some((p,i)=>p.file!=="media/video-"+String(i).padStart(2,"0")+".bin"
+                          ||!Number.isSafeInteger(p.bytes)
+                          ||p.bytes!==(i===11?1170259:1170273))
+       ||m.parts.reduce((sum,p)=>sum+p.bytes,0)!==m.mp4Bytes
        ||m.poster!=="commercial-preview.jpg"
        ||!hex(m.mp4Sha256)||!hex(m.posterSha256)
        ||m.originalAudioIncluded!==true
        ||m.mediaEventSyncVerified!==false)
        throw Error("Original video source verification failed");
   }
+  async function loadVideoSource(m) {
+    // Reassemble original verified MP4 bytes from small static GitHub Pages
+    // assets. No transcode, substitution, remote provider, or media inference.
+    // Digest verification occurs BEFORE enabling video playback.
+    if(!crypto?.subtle) throw Error("Secure browser crypto unavailable");
+    let loaded=0;
+    const blocks=await Promise.all(m.parts.map(async(part,i)=>{
+      const response=await fetch(part.file,{cache:"force-cache"});
+      if(!response.ok)throw Error("Missing original video chunk "+i);
+      const bytes=new Uint8Array(await response.arrayBuffer());
+      if(bytes.byteLength!==part.bytes)throw Error("Source video chunk size changed "+i);
+      loaded+=bytes.byteLength;
+      set("audioStatus","ORIGINAL VIDEO LOADING · "+Math.floor(100*loaded/m.mp4Bytes)+"%");
+      return bytes;
+    }));
+    const joined=new Uint8Array(m.mp4Bytes);
+    let pos=0;
+    for(const part of blocks){joined.set(part,pos);pos+=part.byteLength}
+    if(pos!==m.mp4Bytes)throw Error("Video assembly length mismatch");
+    const digest=await crypto.subtle.digest("SHA-256",joined);
+    const actual=Array.from(new Uint8Array(digest),x=>x.toString(16).padStart(2,"0")).join("");
+    if(actual!==m.mp4Sha256)throw Error("Source video SHA-256 mismatch");
+    const blob=new Blob([joined],{type:"video/mp4"});
+    if(blob.size!==m.mp4Bytes)throw Error("MP4 blob length mismatch");
+    return URL.createObjectURL(blob);
+  }
+
   function annotate(line,source,isHighlighted){
     line.replaceChildren();
     if(!source){line.append(el("span","muted","[No speech returned]"));return}
@@ -225,11 +259,12 @@
       button.title=c.actor+" · approximate collector/media location · original public chat";
     });
   }
-  function ready(d,m){
+  async function ready(d,m){
     checkData(d);checkVideo(m,d);
+    const verifiedMp4Url=await loadVideoSource(m);
     S.data=d;S.videoManifest=m;S.ready=true;
     buildBlocks();renderEvidence(d);
-    video.src=m.filename;
+    video.src=verifiedMp4Url;
     video.poster=m.poster;
     video.preload="metadata";
     video.load();
@@ -243,8 +278,9 @@
   Promise.all([
     fetch("comparison.json",{cache:"no-store"}).then(r=>{if(!r.ok)throw Error("ASR data missing");return r.json()}),
     fetch("video-manifest.json",{cache:"no-store"}).then(r=>{if(!r.ok)throw Error("Original video missing");return r.json()})
-  ]).then(([d,m])=>ready(d,m)).catch(()=>{
-    set("audioStatus","VERIFIED ORIGINAL VIDEO OR NINE-DECODING DATA NOT READY");
+  ]).then(([d,m])=>ready(d,m)).catch(error=>{
+    set("audioStatus","SOURCE VIDEO FAILED INTEGRITY CHECK · ORIGINAL ASR PRESERVED");
     $("videoError").hidden=false;
+    $("videoError").textContent="Original video unavailable or failed verification. "+String(error.message||"");
   });
 })();

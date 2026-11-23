@@ -13,6 +13,7 @@
   ];
   const TERMS=/(pok[eé]mon|sylveon|umbreon|leafeon|espeon|glaceon|rayquaza|charizard|pikachu|eevee|booster|etb|elite trainer box|vm[a-z]?x|packs?|psa(?:\s*10)?|cards?|slabs?|bids?|claims?|shipping|price|dollars?|sgd|market value|how much)/gi;
   const SOURCE_SHA="58e8dd7b568a65203d9a5c204f72f1a3538da58951c7a3f178844547c5fc91de";
+  const PACK_SHA="dacb6b79f22ad3b7c16ecabe5ffb2c61af38c17e21381f21b850fb739e61d2a0";
   const S={data:null,loaded:false,block:0,pan:true,rows:new Map(),buttons:[],last:-1};
   const audio=$("audio"),seek=$("seek"),play=$("play");
   const make=(tag,cls,value)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(value!==undefined)e.textContent=value;return e};
@@ -72,6 +73,7 @@
        ||!d.provenance||d.provenance.humanGoldAvailable!==false
        ||d.provenance.actualSalesVerified!==false
        ||d.provenance.wordTimingsVerified!==false
+       ||d.domainPackSha256!==PACK_SHA||d.domainCandidatesAreReviewOnly!==true
        ||!Array.isArray(d.lanes)||d.lanes.length!==9
        ||!Array.isArray(d.clips)||d.clips.length!==12
        ||!d.engagement||!Number.isFinite(d.engagement.comments)
@@ -93,6 +95,8 @@
       if(!c||c.index!==i||c.id!=="clip"+String(i).padStart(2,"0")
          ||c.start!==15*i||c.end!==15*(i+1)
          ||!sha(c.wavSha256)||!c.texts||Object.keys(c.texts).length!==9
+         ||!Array.isArray(c.domainCandidateReview)||c.domainCandidateReview.length>6
+         ||c.domainCandidateReview.some(r=>r.reviewOnly!==true||r.audioVerifiedByHuman!==false)
          ||!Array.from(ids).every(id=>typeof c.texts[id]==="string"&&c.texts[id].length<=12000))
           throw Error("One or more source audio blocks/lanes missing");
     }
@@ -126,14 +130,18 @@
   }
   function inspector(clip){
     const chat=(S.data.chatEvidence||[]).filter(item=>item.estimatedAudioSec>=clip.start&&item.estimatedAudioSec<clip.end);
+    const candidates=(clip.domainCandidateReview||[]).slice(0,3);
+    const suggestion=candidates.length
+      ?" Unverified catalogue suggestions: "+candidates.map(x=>x.name).join(", ")+". These are not confirmed by listening."
+      :" No high-specificity catalogue candidate is established for this block.";
     if(chat.length){
       set($("inspectorHeading"),"Buyer questions near this moment");
       set($("inspectorBody"),chat.slice(0,2).map(c=>c.actor+": “"+c.text+"”").join("   ·   ")
-          +" [Collector-media offset estimated; this does not prove the message reacted to the spoken phrase.]");
+          +" [Collector-media offset estimated; this does not prove the message reacted to the spoken phrase.]"+suggestion);
       set($("inspectorTag"),chat.length+" OBSERVED COMMENTS");
     }else{
       set($("inspectorHeading"),"Three engines, three configurations");
-      set($("inspectorBody"),"This block lets you compare the original words returned under nine actual decoding conditions. Domain highlights identify vocabulary references, not verified entities, products, price quotes, or completed sales.");
+      set($("inspectorBody"),"This block compares original words under nine measured decoding conditions. Highlighted terms are not verified products or sales."+suggestion);
       set($("inspectorTag"),"REVIEW UNVERIFIED SPEECH");
     }
   }

@@ -1,4 +1,4 @@
-name: Verify LIVE CNBC-style nine-ticker video and source hashes
+name: Verify LIVE portrait-video nine-ticker page and continuous model crawls
 on:
   pull_request:
     paths:
@@ -11,80 +11,91 @@ on:
 permissions:
   contents: read
 jobs:
-  live-site-check:
+  exact-public-revision:
     if: github.repository == 'HumanLAIer/humanlaier-site-deploy'
     runs-on: ubuntu-24.04
     timeout-minutes: 12
     steps:
-      - name: Independent public HTTP check of real video, source data and compact layout
+      - uses: actions/checkout@v4
+      - name: Rebuild byte-exact public artifact for the production main SHA
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.sha }}
+        run: |
+          GITHUB_SHA="$BASE_SHA" node scripts/build-pages.cjs
+      - name: Independent live HTTP SHA proof for full-height video, nine continuous transcripts and public source media
         run: |
           python - <<'PY'
-          import hashlib,json,time,urllib.request
+          import hashlib,json,pathlib,time,urllib.request
+          local=pathlib.Path(".pages-build/streaming-demo/nine-tickers")
           root="https://humanlaier.com/streaming-demo/nine-tickers/"
-          source_sha="58e8dd7b568a65203d9a5c204f72f1a3538da58951c7a3f178844547c5fc91de"
-          expected={
-            "comparison.json":("141f0c9ee47f7c49d5bc1f546814fff12c740de69f59dde27c23bdd85f8178be",28645),
-            "commercial-180.mp4":("9fdbdff777391886cfc39b220a053f3e10a49dd72454fe14d7443aacc0176f92",14043262),
-            "commercial-preview.jpg":("52393168432bc269d55335907a607a17fad02d40d9ed57da32b213a284096584",39321),
-          }
-          def get(path,maxbytes):
-              url=root+path+"?audit=6b32486426485e663cdcf059f48471a744390209"
-              req=urllib.request.Request(url,
-                 headers={"User-Agent":"Mozilla/5.0 HumanLAIer-Live-Source-Video-QA",
-                          "Accept":"*/*","Cache-Control":"no-cache"})
-              with urllib.request.urlopen(req,timeout=55) as rsp:
-                  if rsp.status!=200:raise ValueError("HTTP_NOT_200 "+path)
-                  raw=rsp.read(maxbytes+1)
-                  if not 1<=len(raw)<=maxbytes:raise ValueError("BAD_ASSET_LENGTH "+path)
-                  return raw
+          source_part="58e8dd7b568a65203d9a5c204f72f1a3538da58951c7a3f178844547c5fc91de"
+          exact=("index.html","styles.css","app.js","comparison.json",
+                 "video-manifest.json","commercial-180.mp4","commercial-preview.jpg")
+          expected={name:local.joinpath(name).read_bytes() for name in exact}
           def sha(raw):return hashlib.sha256(raw).hexdigest()
-          for attempt in range(38):
+          def public(name,attempt):
+              maxbytes=len(expected[name])+32
+              url=root+name+"?verified-layout="+sha(expected["index.html"])[:14]+"&attempt="+str(attempt)
+              req=urllib.request.Request(url,
+                headers={"User-Agent":"Mozilla/5.0 HL-Portrait-Crawl-Live-Audit",
+                         "Accept":"*/*","Cache-Control":"no-cache"})
+              with urllib.request.urlopen(req,timeout=48) as response:
+                  if response.status!=200:raise ValueError("REMOTE_HTTP_NOT_200 "+name)
+                  data=response.read(maxbytes+1)
+                  if not data or len(data)>maxbytes:
+                      raise ValueError("REMOTE_ASSET_SIZE_UNEXPECTED "+name)
+                  return data
+          for attempt in range(24):
               try:
-                  html=get("index.html",120000).decode("utf-8")
-                  assert "<title>Nine-Ticker Video Shootout" in html
-                  assert '<video id="video"' in html
-                  assert 'class="broadcast-top"' in html
-                  assert 'id="metricComments"' in html
-                  assert 'id="domainTickers"' in html
-                  assert "<h1" not in html
-                  css=get("styles.css",150000).decode("utf-8")
-                  assert "grid-template-columns:minmax(0,1fr) minmax(0,1fr)" in css
-                  assert "grid-template-rows:34px minmax(0,1fr) 28px 254px 25px" in css
-                  js=get("app.js",150000).decode("utf-8")
-                  assert 'm.filename!=="commercial-180.mp4"' in js
-                  assert "video.currentTime=" in js
-                  manifest=json.loads(get("video-manifest.json",10000))
-                  assert manifest["schema"]=="hl-commercial-video-source-v1"
-                  assert manifest["status"]=="VERIFIED_SOURCE_VIDEO_WITH_AUDIO"
-                  assert manifest["sourcePartSha256"]==source_sha
+                  # Detect stale GitHub Pages deployments cheaply BEFORE
+                  # fetching all 14 MB of real video.
+                  for name in ("index.html","styles.css","app.js"):
+                      got=public(name,attempt)
+                      if sha(got)!=sha(expected[name]):
+                          raise ValueError("REMOTE_REVISION_NOT_CURRENT "+name)
+                  html=expected["index.html"].decode()
+                  css=expected["styles.css"].decode()
+                  js=expected["app.js"].decode()
+                  assert 'class="video-column"' in html
+                  assert 'class="right-panel"' in html
+                  assert html.index('class="tickers"')<html.index('class="metrics"')
+                  assert 'var(--video-ratio)' in css
+                  assert "grid-template-rows:27px repeat(9,minmax(0,1fr))" in css
+                  assert 'function buildTimelines()' in js
+                  assert 'function panLines(seconds)' in js
+                  assert 'requestAnimationFrame(renderFrame)' in js
+                  assert 'function compareWords(' in js
+                  assert "sourceSeekRequested" in js
+                  dataset=json.loads(expected["comparison.json"])
+                  manifest=json.loads(expected["video-manifest.json"])
+                  assert dataset["source"]["sourcePartSha256"]==source_part
+                  assert dataset["provenance"]["humanGoldAvailable"] is False
+                  assert dataset["source"]["mediaEventSyncVerified"] is False
+                  assert len(dataset["lanes"])==9 and len(dataset["clips"])==12
+                  assert manifest["sourcePartSha256"]==source_part
                   assert manifest["originalAudioIncluded"] is True
                   assert manifest["mediaEventSyncVerified"] is False
-                  for leaf,(expected_sha,expected_size) in expected.items():
-                      raw=get(leaf,expected_size+50)
-                      assert len(raw)==expected_size,(leaf,len(raw),expected_size)
-                      assert sha(raw)==expected_sha,"REMOTE_SHA_MISMATCH "+leaf
-                      if leaf=="commercial-180.mp4":
-                          assert raw[4:8]==b"ftyp"
-                  data=json.loads(get("comparison.json",100000))
-                  assert data["schema"]=="hl-commercial-nine-public-v1"
-                  assert data["status"]=="SOURCE_MATCHED_PUBLIC_UNREVIEWED_NINE_DECODES"
-                  assert data["source"]["sourcePartSha256"]==source_sha
-                  assert len(data["lanes"])==9 and len(data["clips"])==12
-                  assert data["domainCandidatesAreReviewOnly"] is True
-                  assert data["provenance"]["humanGoldAvailable"] is False
+                  for name in exact[3:]:
+                      got=public(name,attempt)
+                      if sha(got)!=sha(expected[name]):
+                          raise ValueError("REMOTE_SOURCE_SHA_MISMATCH "+name)
+                  assert expected["commercial-180.mp4"][4:8]==b"ftyp"
                   print(json.dumps({
-                    "status":"LIVE_NINE_TICKER_REAL_VIDEO_SHA256_VERIFIED",
-                    "url":root,"models":3,"decodings":9,"sourceBlocks":12,
-                    "videoBytes":expected["commercial-180.mp4"][1],
-                    "videoSha256":expected["commercial-180.mp4"][0],
-                    "posterSha256":expected["commercial-preview.jpg"][0],
-                    "mediaSourceSha256":source_sha,"siteFitTest":"CHROME_4_LAPTOP_VIEWPORTS_PASS"
+                      "status":"LIVE_PORTRAIT_VIDEO_NINE_CONTINUOUS_TICKERS_SHA_VERIFIED",
+                      "url":root,
+                      "sourcePartSha256":source_part,
+                      "videoSha256":sha(expected["commercial-180.mp4"]),
+                      "verifiedAssets":len(exact),
+                      "models":3,"decodings":9,"sourceBlocks":12,
+                      "videoBytes":len(expected["commercial-180.mp4"]),
+                      "noHumanGold":True,
+                      "wordTimeInterpolationNotVerified":True
                   },sort_keys=True))
                   break
               except Exception as exc:
-                  problem=type(exc).__name__+": "+str(exc)[:240]
-                  if attempt==37:raise RuntimeError(
-                      "LIVE_NINE_VIDEO_NOT_VERIFIED "+problem) from exc
-                  print(f"live_pages_propagation_attempt={attempt+1} reason={problem}",flush=True)
-                  time.sleep(8)
+                  message=type(exc).__name__+": "+str(exc)[:140]
+                  if attempt==23:
+                      raise RuntimeError("LIVE_SITE_NOT_YET_MATCHING_APPROVED_MAIN: "+message) from exc
+                  print("PUBLIC_PROPAGATION_RECHECK "+str(attempt+1)+": "+message,flush=True)
+                  time.sleep(6)
           PY

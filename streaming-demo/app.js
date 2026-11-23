@@ -1514,6 +1514,10 @@
           graphEventFilter()==='host_shoutout_candidate'?'unverified ASR links only':
           'filtered by '+graphEventFilter());
     }
+    if(!participants.length && !((session().comments||[]).length+
+        (session().interactions||[]).length)){
+      $('graphStatline').textContent='No participant-level event log for this recording · only aggregate activity counts';
+    }
     for(const n of participants)gNodes.append(makeNode(n,{moment}));
     const positions=new Map(participants.map(n=>[n.id,n]));
     drawParticipantMentionEdges(positions);
@@ -1702,8 +1706,22 @@
     const box=$('graphInspector');box.replaceChildren();
     const id=state.selectedActor;
     if(!id){
-      box.append(elem('p','fine',
-        'Select an account or HOST to inspect source-backed event history. Event filters also filter graph pulses.'));
+      const events=(session().comments||[]).length+(session().interactions||[]).length;
+      if(!events){
+        box.append(elem('p','fine',
+          'No individual viewer activity was published for this source. Aggregate totals cannot create Constellation accounts, links or event markers.'));
+        const alternative=D.sessions.find(s=>s.id!==session().id&&containsIndividualActivity(s));
+        if(alternative){
+          const button=elem('button','subtle-button',
+            'Open activity-backed recording: '+alternative.label);
+          button.type='button';
+          button.addEventListener('click',()=>switchSession(alternative.id));
+          box.append(button);
+        }
+      }else{
+        box.append(elem('p','fine',
+          'Select an observed account to inspect source-backed comments and actions. Event filters also filter graph pulses.'));
+      }
       return;
     }
     if(id===HOST_NODE){
@@ -1853,8 +1871,31 @@
       ctx.moveTo(x,40);ctx.lineTo(x,355);ctx.stroke();ctx.setLineDash([]);
       ctx.fillText(fmt(t).slice(0,5),x+3,24);
     }
+    // Every individually published action AND comment receives an original
+    // collector-clock tick. This is an additional evidence layer inside the
+    // existing V4 timeline; it is NOT synthesized from 30-second bin totals.
+    // A single narrow strip avoids adding another transcript-like panel.
+    const marks=(state.visualEvents||[]).filter(e=>
+      Number.isFinite(e.t)&&e.t>=0&&e.t<=duration);
+    const markerKinds=[...new Set(marks.map(e=>e.kind))].sort();
+    for(const e of marks){
+      const x=axisX(e.t);
+      const y=29+markerKinds.indexOf(e.kind)%6*1.55;
+      ctx.beginPath();
+      ctx.strokeStyle=liveColors[e.kind]||'#507988';
+      ctx.lineWidth=1.65;
+      ctx.moveTo(x,y);ctx.lineTo(x,y+3.4);ctx.stroke();
+    }
+    cv.dataset.recordedMarkerCount=String(marks.length);
+    cv.dataset.recordedMarkerKinds=markerKinds.join(',');
+    cv.setAttribute('aria-label',
+      number(marks.length)+' observed collector-clock event markers across '+
+      number(markerKinds.length)+' recorded kinds. Select the actions, chat, '+
+      'or Constellation for individual sources; source-video timing is provisional.');
     const axis=$('laneLabels');axis.replaceChildren();
-    const h=elem('div','lane-label heading');h.append('CAPTURE CLOCK',elem('small','','30-SECOND BINS'));axis.append(h);
+    const h=elem('div','lane-label heading');
+    h.append('CAPTURE CLOCK',elem('small','',
+      '30-S BINS · '+number(marks.length)+' OBSERVED MARKERS'));axis.append(h);
     for(const lane of lanes){
       const l=elem('div','lane-label');l.append(elem('b','',lane.name),elem('strong','',String(Math.round(peakAt(state.eventT,lane.value)))),elem('small','',lane.unit));l.dataset.lane=String(lane.key);axis.append(l);
     }
@@ -2246,7 +2287,9 @@
     $('graphCommunity').setAttribute('aria-pressed','true');
     $('graphMoment').setAttribute('aria-pressed','false');
     $('graphInspector').textContent='Select a node to inspect actual recorded contributions.';
-    $('chatScope').value=isFeatured()?'all':'near';$('chatSearch').value='';$('graphSearch').value='';
+    $('chatScope').value=isFeatured()||session().comments.length<=300?'all':'near';
+    $('actionScope').value=session().interactions.length<=160?'all':'near';
+    $('chatSearch').value='';$('graphSearch').value='';
     $('featuredModelLabel').hidden=!isFeatured();
     $('featuredModel').hidden=!isFeatured();
     if(isFeatured()){

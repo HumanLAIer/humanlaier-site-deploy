@@ -6,7 +6,7 @@ const fs = require("node:fs");
 const { chromium } = require("playwright");
 
 async function main(){
-  const browser=await chromium.launch({headless:true,args:["--no-sandbox","--disable-dev-shm-usage"]});
+  const browser=await chromium.launch({headless:true,channel:"chrome",args:["--no-sandbox","--disable-dev-shm-usage"]});
   fs.mkdirSync(".private/nine-layout-qa",{recursive:true});
   try {
     const sizes=[
@@ -74,17 +74,35 @@ async function main(){
       assert(x.htmlScrollWidth<=size.width+1,"NO PAGE HORIZONTAL SCROLL");
       assert(!x.notesOpen,"notes collapsed by default");
       assert.equal(errors.length,0,"no page script errors: "+JSON.stringify(errors));
+      console.log("NINE_VIEWPORT_GEOMETRY_PASS "+JSON.stringify({
+        viewport:size,rows:x.rowRects.length,
+        tickerRowPx:+x.rowRects[0].height.toFixed(1),
+        fontPx:x.font,videoPanelPx:{w:x.screen.width,h:x.screen.height},
+        metricsPanelPx:{w:x.metrics.width,h:x.metrics.height},
+        pageHeight:x.htmlScrollHeight,lastRowBottom:x.rowRects.at(-1).bottom
+      }));
+      const shot=".private/nine-layout-qa/"+size.width+"x"+size.height+".png";
+      await page.screenshot({path:shot,fullPage:false,animations:"disabled"});
       const video=page.locator("#video");
       await video.evaluate(v=>v.load());
-      await page.waitForFunction(()=>{
-        const v=document.querySelector("#video");
-        return Number.isFinite(v.duration)&&v.duration>178&&v.duration<182
-              &&v.readyState>=1;
-      },null,{timeout:15000});
+      try {
+        await page.waitForFunction(()=>{
+          const v=document.querySelector("#video");
+          return Number.isFinite(v.duration)&&v.duration>178&&v.duration<182
+                &&v.readyState>=1;
+        },null,{timeout:25000});
+      } catch(error) {
+        const state=await video.evaluate(v=>({
+          readyState:v.readyState,networkState:v.networkState,
+          errorCode:v.error?.code,errorMessage:v.error?.message,
+          currentSrc:v.currentSrc,canPlayH264:v.canPlayType('video/mp4; codecs="avc1.42E01E, mp4a.40.2"')
+        }));
+        console.error("NINE_VIDEO_METADATA_DIAGNOSTIC "+JSON.stringify(state));
+        throw error;
+      }
       const time=await video.evaluate(v=>({duration:v.duration,readyState:v.readyState}));
       assert(time.duration>178&&time.duration<182,"actual playable 180s media metadata");
       const shot=".private/nine-layout-qa/"+size.width+"x"+size.height+".png";
-      await page.screenshot({path:shot,fullPage:false,animations:"disabled"});
       console.log("NINE_LAYOUT_PASS "+JSON.stringify({
         viewport:size,rows:x.rowRects.length,tickerRowPx:+x.rowRects[0].height.toFixed(1),
         fontPx:x.font,videoPx:{w:x.video.width,h:x.video.height},

@@ -9,6 +9,7 @@ on:
     paths:
       - 'streaming-demo/nine-tickers/.video-parts/**'
       - '.github/workflows/assemble-nine-video-once.yml'
+      - 'scripts/assemble-nine-ticker-video.py'
 permissions:
   contents: write
 concurrency:

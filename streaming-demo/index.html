@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#002147">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none';">
 <title>Human LAIer · Signal Recorder | Live Analysis Console</title>
-<link rel="stylesheet" href="ux.css">
+<link rel="stylesheet" href="ux.css?v=chatroom-20261123-2">
 </head>
 <body>
 <a class="skip-link" href="#workspace">Skip to workspace</a>
@@ -22,56 +22,10 @@
   </div>
 </header>
 <main id="workspace" class="workspace">
-<section class="featured-source" aria-labelledby="featuredSourceTitle">
-  <div class="featured-source-main">
-    <span class="featured-source-eyebrow">FEATURED EVIDENCE · NOV 17 CAPTURE / NOV 23 RESEARCH</span>
-    <h2 id="featuredSourceTitle">180 seconds of real TCG conversation. Nine genuine ASR decodings.</h2>
-    <p class="featured-source-meta">Original audio · 12 exact 15-second source blocks · 22 observed comments · 46 deliberate events · 30 participating accounts.</p>
-    <p class="featured-source-caveat">Recognition accuracy, word-level timing and audio-to-chat synchronization are <strong>not independently verified</strong>. The archived video/activity explorer below uses its own provisional clock.</p>
-  </div>
-  <a class="featured-source-link" href="nine-tickers/" aria-label="Explore original three-minute source audio and nine recorded speech-recognition outputs">
-    Explore the 3-minute source <span aria-hidden="true">↗</span>
-  </a>
-</section>
-<section id="featuredTranscript" class="featured-transcript" aria-labelledby="featuredTranscriptTitle">
-  <header class="featured-transcript-head">
-    <div>
-      <span class="featured-source-eyebrow">SOURCE-MATCHED HOST AUDIO · 12 × 15-SECOND BLOCKS</span>
-      <h2 id="featuredTranscriptTitle">Listen to the host. Read the recorded ASR.</h2>
-    </div>
-    <label class="featured-model-select" for="featuredAsrModel">TRANSCRIPTION ENGINE
-      <select id="featuredAsrModel" aria-label="Choose an actual machine transcript of the same original speech">
-        <option value="production-base.en--control">faster-whisper · baseline</option>
-        <option value="singlish-small--control">Singlish2English · baseline</option>
-        <option value="coats-large-v2--control">Coats Whisper · baseline</option>
-        <option value="production-base.en--focused">faster-whisper · focused TCG prompt</option>
-        <option value="singlish-small--focused">Singlish2English · focused TCG prompt</option>
-        <option value="coats-large-v2--focused">Coats Whisper · focused TCG prompt</option>
-      </select>
-    </label>
-  </header>
-  <div class="featured-transcript-grid">
-    <div class="featured-transcript-context">
-      <p class="featured-source-caption">Original recording audio (source-derived MP3) · November 17, 2026 · 03:00</p>
-      <audio id="featuredAudio" controls preload="metadata" src="nine-tickers/commercial-180.mp3" aria-label="Three-minute original livestream audio corresponding to the host machine transcript"></audio>
-      <p id="featuredSourcePosition" class="featured-source-caption" role="status">Audio 00:00 / 03:00 · transcript source-clock blocks</p>
-      <div class="featured-chat-evidence" aria-label="Independently observed viewer activity">
-        <strong>Viewer activity · independent collector clock</strong>
-        <p>22 original comments · 46 deliberate events · 30 participating accounts. These are observed counts, <em>not</em> validated audio/chat alignment.</p>
-        <div id="featuredChatExcerpts" class="featured-chat-excerpts">Loading observed public comments…</div>
-      </div>
-    </div>
-    <div class="featured-transcript-reading">
-      <div class="featured-transcript-note"><strong>Host speech · machine transcription, not human-verified.</strong> Click any 15-second passage to seek the correct source-audio block. These are block boundaries, not word-accurate timestamps or proven host-only diarization.</div>
-      <div id="featuredAsrRows" class="featured-asr-rows" aria-label="Full three-minute time-blocked machine transcript">Loading the twelve actual source-matched transcript blocks…</div>
-    </div>
-  </div>
-  <footer class="featured-transcript-foot">Transcript is preserved verbatim from the selected model output. Speech recognition may omit or invent words. Viewer comments and actions below are shown as independent observations; no reply, sale, or exact event/media synchronization is asserted. <a href="nine-tickers/">Compare all nine decoding configurations</a>.</footer>
-</section>
   <section class="controlbar" aria-label="Workspace configuration">
     <div class="workspace-heading">
       <h1>Stream analysis</h1>
-      <span>Explore earlier archived clips · independent collector-event and video clocks</span>
+      <span>Watch · understand · investigate</span>
     </div>
     <div class="layout-control">
       <label for="layoutPreset">WORKSPACE</label>
@@ -184,6 +138,8 @@
         <details id="conversationOptions" class="conversation-options">
           <summary>Filters &amp; activity feed</summary>
           <div class="conversation-options-content">
+            <label id="featuredModelLabel" for="featuredModel" hidden>TRANSCRIPTION SOURCE · ORIGINAL AUDIO</label>
+            <select id="featuredModel" aria-label="Select actual source ASR engine and decoding context" hidden></select>
             <label for="chatScope">TIME WINDOW</label>
             <select id="chatScope" aria-label="Choose combined conversation time range">
               <option value="near">Around playhead ±90 seconds</option>
@@ -203,7 +159,7 @@
         <summary>Evidence and timing notes</summary>
         <p id="conversationNote" class="conversation-note">Speech/chat ordering is best-estimate only, not evidence of replies. ASR and speaker attribution are unverified.</p>
       </details>
-      <div id="conversationList" class="conversation-scroll conversation-thread" tabindex="0" aria-label="Chronological recorded chat and reaction notifications, with independently clocked machine speech"></div>
+<div id="conversationList" class="conversation-scroll conversation-thread" tabindex="0" aria-label="Chronological recorded chat and reaction notifications, with independently clocked machine speech"></div>
       <footer id="conversationFooter" class="pane-foot">Actual comments only · observed platform handles, not verified real-world identities.</footer>
     </article>
 
@@ -418,7 +374,7 @@
 <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 <script src="data.js"></script>
 <script src="bridge.js"></script>
-<script src="app.js"></script>
-<script src="featured.js"></script>
+<script src="featured-evidence.js?v=chatroom-20261123-2"></script>
+<script src="featured-bootstrap.js?v=chatroom-20261123-2"></script>
 </body>
 </html>

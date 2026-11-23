@@ -6,6 +6,51 @@
 (() => {
   const $ = id => document.getElementById(id);
   const D = window.HL_SIGNAL_DATA;
+
+  // The original V4 renderer is always retained. The optional source adapter
+  // adds one audio-only capture when a separately verified, immutable source
+  // is available. Text, segment count, model inventory and chunk length are
+  // DATA, never layout assumptions.
+  const FEATURED_ID='source-nov17-original-audio-180';
+  const FEATURED=window.HL_FEATURED_SOURCE;
+  const featuredReady=!!(D&&FEATURED&&
+    FEATURED.schema==='hl-featured-source-chat-v2'&&
+    FEATURED.source?.sessionId==='20261117T142835_038897Z_huatzaitcg'&&
+    FEATURED.source?.sourcePartSha256==='58e8dd7b568a65203d9a5c204f72f1a3538da58951c7a3f178844547c5fc91de'&&
+    FEATURED.source?.audioSha256==='ce403fdf33f4bd26f678f3cbedac5a0d8eb2accb620b8e56ce1d45e80962196b'&&
+    Array.isArray(FEATURED.transcriptBlocks)&&FEATURED.transcriptBlocks.length>0&&
+    Array.isArray(FEATURED.models)&&FEATURED.models.length>0&&
+    FEATURED.models.includes(FEATURED.defaultModel));
+  if(featuredReady){
+    const duration=FEATURED.source.durationSeconds;
+    const handles=Object.fromEntries(FEATURED.chatExcerpts.map(e=>[e.handle,e.handle]));
+    D.sessions.unshift({
+      id:FEATURED_ID,label:'Nov 17 · original audio + host ASR',
+      startUTC:null,duration,identityScheme:'direct_tiktok_account_fields_v1',
+      accountLabels:handles,
+      stats:{records:0,sourceRecords:0,comments:0,chatters:0,likes:0,gifts:0,
+        giftProgressEvents:0,eventKinds:{}},
+      bins:Array.from({length:Math.ceil(duration/30)},(_,i)=>[i*30,0,0,0,0,0,0]),
+      comments:[],interactions:[],roomEvents:[],markers:[],showcaseMoments:[],
+      derivedSpeechEvents:[],
+      sourceMediaInventory:{segments:0,bytes:0,playablePreviews:1,approvedPosterStills:0,
+        syncStatus:'NOT_INDEPENDENTLY_VERIFIED'},
+      mediaCoveragePct:null,
+      clockEvidence:{eventMediaAlignment:'NOT_VERIFIED',eventWallclock:'NOT_KNOWN_FOR_SOURCE_AUDIO'}
+    });
+    D.review.unshift({
+      sid:FEATURED_ID,key:'featured-source-nov17-audio',
+      title:'Nov 17 · original source audio · '+Math.round(duration)+' seconds',
+      video:null,audio:FEATURED.source.audioFile,poster:null,storyboard:null,
+      videoStartMediaSec:null,videoDurationSec:null,audioStartMediaSec:0,
+      audioDurationSec:duration,mediaClockStatus:'UNCALIBRATED_INDEPENDENT_SOURCE',
+      transcript:FEATURED.transcriptBlocks.map(b=>[b.start,b.end,b.texts[FEATURED.defaultModel]??'']),
+      transcriptEvidence:'SOURCE_MATCHED_ASR_UNREVIEWED'
+    });
+    D.defaultSession=FEATURED_ID;
+    D.alignmentBySession[FEATURED_ID]={status:'PROVISIONAL',method:'AUDIO_CHAT_NOT_CALIBRATED',
+      verifiedAnchorCount:0,offsetSeconds:0};
+  }
   const clamp = (v,a,b) => Math.max(a,Math.min(b,Number.isFinite(+v)?+v:a));
   const fmt = value => { const t=Math.max(0,Math.floor(Number(value)||0));return [Math.floor(t/3600),Math.floor(t%3600/60),t%60].map(x=>String(x).padStart(2,'0')).join(':'); };
   const number = n => Number(n||0).toLocaleString('en-US');
@@ -38,6 +83,7 @@
   };
   const video=$('videoPlayer'),audio=$('audioPlayer');
   const session=()=>D.sessions[state.session];
+  const isFeatured=()=>featuredReady&&session()?.id===FEATURED_ID;
   const findReview=()=>((D.review||[]).filter(r=>r.sid===session().id));
   const sourceStart = track => {
     if(!state.source)return 0;
@@ -86,6 +132,7 @@
     return {status:'uncalibrated',offset:0,reason:'Insufficient source timing'};
   };
   function deriveEventTime(){
+    if(isFeatured())return clamp(mediaElapsed(),0,180);
     if(state.track==='events')return clamp(state.eventT,0,session().duration);
     const alignment=currentAlignment();
     if(alignment.status==='uncalibrated')return clamp(state.eventT,0,session().duration);
@@ -95,7 +142,8 @@
     const info=currentAlignment(); state.alignment=info.status;
     const pill=$('syncPill'),cursor=$('cursorStatus'),detail=$('alignmentDetails');
     pill.className='sync-pill '+(info.status==='verified'?'verified':info.status==='uncalibrated'?'uncalibrated':'');
-    pill.textContent=info.status==='verified'?'VERIFIED SYNC · UTC ANCHORS':
+    pill.textContent=isFeatured()?'AUDIO ONLY · CHAT SYNC UNVERIFIED':
+      info.status==='verified'?'VERIFIED SYNC · UTC ANCHORS':
       info.status==='estimated'?'ESTIMATED SYNC · NOT VERIFIED':
       info.status==='event-only'?'OBSERVED COLLECTOR CLOCK':'UNCALIBRATED SOURCE';
     cursor.textContent=info.status==='verified'?'VERIFIED EVENT POSITION':
@@ -114,7 +162,9 @@
       'Original source media plays independently. No source-to-event clock offset can be defended.':
       'Best guess only: '+fmt(Math.abs(state.offset))+(state.offset<0?' earlier':' later')+
       ' than the provisional media origin. No independent source anchors are verified.';
-    $('timelineFooter').textContent=info.status==='verified'?
+    $('timelineFooter').textContent=isFeatured()?
+      'This 180-second chart is an audio-position ruler, NOT a calibrated event timeline. Complete per-event collector records are not published for this source excerpt.':
+      info.status==='verified'?
       'The verified event cursor follows the selected media clock. Archived gaps remain gaps.':
       info.status==='uncalibrated'?
       'Media is independent of the collector cursor: click the timeline to inspect separately observed events. No synchronized reaction claim.':
@@ -140,6 +190,7 @@
     // No auto-dismiss timer is necessary for a useful accessible status.
   }
   function getEventUTC(t){
+    if(isFeatured())return 'UNAVAILABLE / AUDIO CLOCK ONLY';
     const ts=Date.parse(session().startUTC);return Number.isFinite(ts)?new Date(ts+t*1000).toISOString().replace('.000Z','Z'):'unknown UTC';
   }
   function stopMedia(){
@@ -168,6 +219,7 @@
   }
   function selectTrack(track,atEvent=null){
     stopMedia();
+    if(isFeatured())track='audio';
     if(track==='video' && !state.source?.video)track=state.source?.audio?'audio':'events';
     if(track==='audio' && !state.source?.audio)track=state.source?.video?'video':'events';
     if(!['video','audio','events'].includes(track))track='events';
@@ -175,10 +227,17 @@
     video.hidden=track!=='video';audio.hidden=track!=='audio';
     const still=track==='events'&&!state.source?.video&&!!state.source?.poster;
     $('posterPlayer').hidden=!(still||(track==='audio'&&state.source?.storyboard));
-    $('mediaEmpty').hidden=track!=='events';
-    $('sourceLabel').textContent=track==='video'?'ORIGINAL VIDEO · SINGLE TRANSPORT':
+    $('mediaEmpty').hidden=track!=='events'&&!(isFeatured()&&track==='audio');
+    $('sourceTrack').querySelector('option[value="audio"]').textContent=isFeatured()?'Original recorded audio':'Enhanced audio only';
+    $('sourceLabel').textContent=isFeatured()&&track==='audio'? 'ORIGINAL SOURCE AUDIO · UNREVIEWED ASR':
+      track==='video'?'ORIGINAL VIDEO · SINGLE TRANSPORT':
       track==='audio'?'ENHANCED AUDIO · SINGLE TRANSPORT':
       still?'ARCHIVED SOURCE STILL · EVENT REPLAY':'EVENT-ONLY REPLAY';
+    if(isFeatured()&&track==='audio'){
+      $('mediaEmpty').textContent='Source-derived original audio · '+
+        Math.round(FEATURED.source.durationSeconds)+' seconds. Host ASR appears in the existing Conversation pane. '+
+        'Viewer positions are independently estimated, not verified replies.';
+    }
     if(track==='events'){
       state.eventT=clamp(atEvent==null?state.eventT:atEvent,0,session().duration);
       $('mediaEmpty').textContent=still?
@@ -226,6 +285,7 @@
     }
     $('sourceTrack').querySelector('option[value="video"]').disabled=!picks.some(r=>r.video);
     $('sourceTrack').querySelector('option[value="audio"]').disabled=!picks.some(r=>r.audio);
+    $('sourceTrack').querySelector('option[value="events"]').disabled=isFeatured();
     state.source=null;setSource(picks.find(r=>r.video)?.key||picks[0]?.key||null);
   }
   function renderShowcase(){
@@ -233,7 +293,7 @@
     const choices=(D.sessions||[]).flatMap(s=>
       (Array.isArray(s.showcaseMoments)?s.showcaseMoments.slice(0,1):[])
         .map(moment=>({s,moment}))).slice(0,4);
-    section.hidden=!choices.length;
+    section.hidden=isFeatured()||!choices.length;
     list.replaceChildren();
     for(const {s,moment} of choices){
       if(!Number.isFinite(moment.anchorSec)||!Number.isFinite(moment.startSec)||
@@ -278,6 +338,7 @@
     syncFromMaster(true);
   }
   function seekEvent(t){
+    if(isFeatured()){seekSource(t);return;}
     const time=clamp(t,0,session().duration);
     state.selectedEventT=time;
     if(state.track==='events'){state.eventT=time;syncFromMaster(true);return;}
@@ -300,7 +361,8 @@
     const event=deriveEventTime(),outside=event<0||event>session().duration;
     const clamped=clamp(event,0,session().duration);
     state.eventT=clamped;
-    $('estEventClock').textContent=(
+    $('estEventClock').textContent=isFeatured()?
+      ('Source audio +'+fmt(mediaElapsed())+' · viewer timing uncalibrated'):(
       ['verified','event-only','uncalibrated'].includes(currentAlignment().status)?
         'Observed collector UTC: ':'Provisional collector UTC: ')+
       getEventUTC(clamped)+(outside?' (outside capture)':'');
@@ -371,7 +433,90 @@
     $('conversationFollow').setAttribute('aria-pressed','true');
     $('conversationFollow').textContent='Follow: on';
   }
+  // Real V4 chat bubbles, NOT a standalone transcript mass or a fake second
+  // live session. The only clock shared by ASR rows is their original source
+  // audio block time. Viewer comment placement is uncalibrated and explicitly
+  // distinguished; source-only published metadata supplies no 43 other events.
+  function renderFeaturedConversation(){
+    const list=$('conversationList'),prior=list.scrollTop;
+    const now=mediaElapsed(),filter=$('chatSearch').value.trim().toLowerCase();
+    const scope=$('chatScope').value,range=scope==='near'?90:scope==='wide'?900:Infinity;
+    const mode=$('conversationMode').value,variant=$('featuredModel').value;
+    const source=FEATURED.transcriptBlocks;
+    const rows=[];
+    const duration=FEATURED.source.durationSeconds;
+    if(mode!=='activity'){
+      for(const r of source){
+        const transcript=typeof r.texts[variant]==='string'?r.texts[variant]:
+          '[No recorded output from this engine for this passage]';
+        if(r.start>now+range||r.end<now-range)continue;
+        if(filter && !transcript.toLowerCase().includes(filter))continue;
+        rows.push({kind:'speech',t:r.start,end:r.end,text:transcript});
+      }
+      for(const e of FEATURED.chatExcerpts){
+        const placed=e.estimatedAudioSec!==null;
+        if(placed&&Math.abs(e.estimatedAudioSec-now)>range)continue;
+        if(filter&&!(e.text+' '+e.handle).toLowerCase().includes(filter))continue;
+        rows.push({kind:'chat',t:placed?e.estimatedAudioSec:duration+1,
+          text:e.text,handle:e.handle,unplaced:!placed});
+      }
+    }
+    rows.sort((a,b)=>a.t-b.t||(a.kind==='speech'?-1:1));
+    const frag=document.createDocumentFragment(),nodes=[];
+    for(const item of rows){
+      const wrap=elem('div','message-row '+item.kind+(item.kind==='chat'?' provisional-chat':''));
+      wrap.dataset.kind=item.kind;
+      wrap.dataset.time=String(item.t);
+      const bubble=elem('div','message-bubble');
+      const head=elem('div','message-head'),sender=elem('span','message-sender');
+      sender.textContent=item.kind==='speech'?'SOURCE SPEECH · ASR':
+        'VIEWER · '+item.handle;
+      if(item.kind==='speech'){
+        const seek=elem('button','message-time',
+          fmt(item.t)+'–'+fmt(item.end));
+        seek.type='button';
+        seek.title='Seek original audio block; NOT an exact word onset';
+        seek.addEventListener('click',()=>{seekSource(item.t);setPlaying(true);});
+        head.append(sender,seek);
+      }else{
+        const estimated=elem('span','message-time source-estimated',
+          item.unplaced?'No audio position':('≈ '+fmt(item.t)+' *'));
+        estimated.title='Provisional media placement derived from collector process observation; NOT verified';
+        head.append(sender,estimated);
+      }
+      bubble.append(head,elem('p','message-text',
+        item.text.trim()||'[No speech returned by this engine for this source block]'));
+      if(item.kind==='chat'){
+        bubble.append(elem('small','message-subline',
+          item.unplaced?'Collector comment · no reviewed audio position':
+            '* Collector comment · audio offset not calibrated · not a verified reply'));
+      }
+      wrap.append(bubble);frag.append(wrap);
+      nodes.push({element:wrap,kind:item.kind,t:item.t,end:item.end??item.t});
+    }
+    if(!rows.length)frag.append(elem('p','conversation-empty',
+      mode==='activity'?
+        (FEATURED.counts.deliberateEvents??'Some')+' deliberate events were counted, '+
+        'but individual actions are not included in this public source excerpt.':
+        'No published speech or viewer excerpt matches this filter.'));
+    list.replaceChildren(frag);
+    state.messageNodes=nodes;
+    $('clearParticipant').hidden=true;
+    $('conversationNote').textContent=
+      'Stream speech uses '+FEATURED.transcriptBlocks.length+' actual audio-timed ASR passages. '+
+      FEATURED.chatExcerpts.length+' independent public comments may have PROVISIONAL positions. '+
+      'Words, speaker and conversation sync are not human-verified. No inferred replies.';
+    $('conversationFooter').textContent=
+      FEATURED.transcriptBlocks.length+' source-audio ASR passages · '+
+      FEATURED.chatExcerpts.length+' exact public comment excerpts'+
+      (FEATURED.counts.comments===null?'':' of '+FEATURED.counts.comments+' total')+
+      ' · aggregate actions only · no verified audio/chat sync';
+    if(!state.conversationFollow)list.scrollTop=prior;
+    highlightConversation(false);
+  }
+
   function renderConversation(){
+    if(isFeatured())return renderFeaturedConversation();
     const list=$('conversationList'),oldScroll=list.scrollTop,
       range=$('chatScope').value==='near'?90:
         $('chatScope').value==='wide'?900:Infinity,
@@ -568,7 +713,7 @@
     highlightConversation(false);
   }
   function highlightConversation(force=false){
-    const nodes=state.messageNodes||[],now=state.eventT;
+    const nodes=state.messageNodes||[],now=isFeatured()?mediaElapsed():state.eventT;
     let nearestChat=null,nearestSpeech=null;
     for(const n of nodes){
       if(n.t<=now+1){
@@ -580,7 +725,7 @@
     let focus=null;
     for(const n of nodes){
       const relevant=n.kind==='speech'?nearestSpeech===n&&now<=n.end+2:
-        nearestChat===n&&Math.abs(now-n.t)<=6;
+        (!isFeatured()&&nearestChat===n&&Math.abs(now-n.t)<=6);
       n.element.querySelector('.message-bubble')?.classList.toggle('is-current',relevant);
       if(relevant && (!focus||n.t>focus.t))focus=n;
     }
@@ -2080,7 +2225,17 @@
     $('graphCommunity').setAttribute('aria-pressed','true');
     $('graphMoment').setAttribute('aria-pressed','false');
     $('graphInspector').textContent='Select a node to inspect actual recorded contributions.';
-    $('chatScope').value='near';$('chatSearch').value='';$('graphSearch').value='';
+    $('chatScope').value=isFeatured()?'all':'near';$('chatSearch').value='';$('graphSearch').value='';
+    $('featuredModelLabel').hidden=!isFeatured();
+    $('featuredModel').hidden=!isFeatured();
+    if(isFeatured()){
+      const selector=$('featuredModel');selector.replaceChildren();
+      for(const id of FEATURED.models){
+        const option=elem('option','',FEATURED.labels[id]||id);
+        option.value=id;selector.append(option);
+      }
+      selector.value=FEATURED.defaultModel;
+    }
     $('sessionSelect').value=id;
     const s=session();
     const identity=s.identityScheme==='direct_tiktok_account_fields_v1'?
@@ -2094,7 +2249,15 @@
     const recordedVideo=mediaInventory&&mediaInventory.segments?
       ' Original R2 archive contains '+number(mediaInventory.segments)+
       ' segment objects (not automatically embedded as playable media).':'';
-    $('inventoryStats').textContent=
+    $('inventoryStats').textContent=isFeatured()?
+      'Original '+Math.round(FEATURED.source.durationSeconds)+'s recording, '+
+      FEATURED.transcriptBlocks.length+' source-matched ASR segments ('+
+      Math.round(FEATURED.coverageSeconds)+'s timed coverage; recognition unreviewed). '+
+      'Collector counts: '+(FEATURED.counts.comments??'unknown')+' comments, '+
+      (FEATURED.counts.deliberateEvents??'unknown')+' deliberate events, '+
+      (FEATURED.counts.uniqueActors??'unknown')+' accounts; '+
+      FEATURED.chatExcerpts.length+' verbatim public comments are individually published. '+
+      'No calibrated source/audio-to-chat clock, transaction evidence, or event-level participant graph.':
       number(s.stats.records)+' published deliberate-action records from '+
       number(s.stats.sourceRecords||s.stats.records)+' collector source records; '+
       number(s.stats.comments)+' comments; '+identity+'. '+videoHint+
@@ -2102,6 +2265,7 @@
     prepareVisualEvents();
     populateEvidenceFilters();
     populateGraphEventFilter();
+    if(isFeatured())$('graphEventCoverage').textContent='This source exports summary activity only. No participant graph/links inferred.';
     renderSources();renderShowcase();setMarkers();renderMediaStitch();drawTimeline();renderGraph();renderChat();
     renderActionTimeline();renderRoomEvents();renderHostShoutouts();
     renderGraphInspector();
@@ -2146,6 +2310,15 @@
       changeOffset(state.selectedEventT-sourceAbsoluteMediaTime());
     });
     $('chatSearch').addEventListener('input',renderChat);
+    $('featuredModel').addEventListener('change',()=>{
+      if(isFeatured()){
+        const model=$('featuredModel').value;
+        if(!FEATURED.models.includes(model))return;
+        state.source.transcript=FEATURED.transcriptBlocks.map(b=>
+          [b.start,b.end,b.texts[model]??'']);
+        state.lastFocusedConversation=null;renderChat();
+      }
+    });
     $('conversationMode').addEventListener('change',renderChat);
     $('chatScope').addEventListener('change',renderChat);
     $('clearParticipant').addEventListener('click',()=>{

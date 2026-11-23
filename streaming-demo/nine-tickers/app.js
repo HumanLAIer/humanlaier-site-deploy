@@ -189,6 +189,16 @@
     $("tickerMotion").addEventListener("change",e=>{S.pan=e.target.checked;pan(audio.currentTime)});
     $("zekromJump").textContent="Jump to card-price discussion ↗";
     $("zekromJump").addEventListener("click",()=>go(10));
+    document.querySelectorAll("[data-evidence-second]").forEach(button=>{
+      button.addEventListener("click",()=>{
+        if(!S.loaded)return;
+        const proposed=Number(button.dataset.evidenceSecond);
+        if(!Number.isFinite(proposed)||proposed<0||proposed>=180)return;
+        audio.currentTime=proposed;
+        sync(proposed);
+        audio.play().catch(()=>set($("audioStatus"),"Select play to hear the approximate source moment."));
+      });
+    });
     audio.addEventListener("timeupdate",()=>sync(audio.currentTime));
     audio.addEventListener("seeked",()=>sync(audio.currentTime));
     audio.addEventListener("play",()=>{set($("playGlyph"),"Ⅱ");play.setAttribute("aria-label","Pause original source audio")});

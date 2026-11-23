@@ -909,6 +909,25 @@
     }
     return counts;
   }
+  // Like count, batch notification count and UNIQUE observed platform
+  // accounts are three different measures. A single TikTok account can
+  // generate dozens of reported likes; never synthesize one viewer per like.
+  function reportedLikeEvidence(){
+    const rows=(session().interactions||[]).filter(r=>r[1]==='like');
+    const actors=new Set(),unattributed=[];
+    let units=0,unknownUnits=0;
+    for(const row of rows){
+      const actor=row[2],reported=Number(row[3]);
+      if(actor && Object.prototype.hasOwnProperty.call(session().accountLabels||{},actor))
+        actors.add(actor);
+      else unattributed.push(row);
+      if(row[3]!==null&&row[3]!==undefined&&
+         Number.isFinite(reported)&&reported>=0)units+=reported;
+      else unknownUnits++;
+    }
+    return {notifications:rows.length,units,accounts:actors.size,
+      unknownUnits,unattributed:unattributed.length};
+  }
   function populateGraphEventFilter(){
     const kinds=graphKindsForSession(),sel=$('graphEventKind'),previous=state.graphEventKind;
     sel.replaceChildren();
@@ -921,7 +940,14 @@
       return String(liveLabels[a]||a).localeCompare(String(liveLabels[b]||b));
     })){
       const n=kinds.get(kind)||0;
-      option(kind,(liveLabels[kind]||kind.replaceAll('_',' '))+' · '+number(n)+' recorded');
+      if(kind==='like'){
+        const r=reportedLikeEvidence();
+        option(kind,'Likes · '+number(r.units)+' reported units · '+
+          number(r.notifications)+' notifications · '+number(r.accounts)+' accounts',n===0);
+      }else{
+        option(kind,(liveLabels[kind]||kind.replaceAll('_',' '))+
+          ' · '+number(n)+' recorded',n===0);
+      }
     }
     const shoutouts=(session().derivedSpeechEvents||[]).filter(e=>e.reviewStatus==='CANDIDATE_ASR_UNVERIFIED');
     option('host_shoutout_candidate','ASR name candidates · '+number(shoutouts.length));
@@ -961,6 +987,14 @@
         number(mentions.unmatched)+' unresolved tags · NOT verified replies';
     }else if(graphEventFilter()==='room'){
       note=number(roomCount)+' observed room signals; actorless signals never invent viewers';
+    }else if(graphEventFilter()==='like'){
+      const likes=reportedLikeEvidence();
+      note=number(likes.units)+(likes.unknownUnits?' known':'')+' reported like units · '+
+        number(likes.notifications)+' captured notifications · '+
+        number(likes.accounts)+' distinct observed liking accounts'+
+        (likes.unattributed?' · '+number(likes.unattributed)+' unattributed notifications':'')+
+        (likes.unknownUnits?' · '+number(likes.unknownUnits)+' missing batch sizes':'')+
+        ' · likes ≠ unique viewers';
     }else{
       note=number(kinds.get(graphEventFilter())||0)+' observed '+
         (liveLabels[graphEventFilter()]||graphEventFilter().replaceAll('_',' '))+
@@ -998,17 +1032,21 @@
   function updateActivityTicker(events){
     const groups=new Map();
     for(const e of events){
-      const row=groups.get(e.kind)||{events:0,units:0};
+      const row=groups.get(e.kind)||{events:0,units:0,actors:new Set()};
       row.events++;
-      // gift_progress never counts as a completed virtual gift; missing
-      // like batch counts never become fabricated like units.
+      if(e.actor&&session().accountLabels?.[e.actor])row.actors.add(e.actor);
+      // A batch count is NOT a unique viewer. Gift progress is NOT a
+      // completed virtual gift. Keep the observed unit and notice counts.
       row.units+=e.kind==='comment'?1:Math.max(0,Number(e.reportedUnits??e.units)||0);
       groups.set(e.kind,row);
     }
     const labels=[...groups].map(([kind,rec])=>{
-      const counted=(kind==='like'||kind==='gift')&&rec.units>0;
+      if(kind==='like')return number(rec.units)+' reported like units ('+
+        number(rec.events)+' notification'+(rec.events===1?'':'s')+', '+
+        number(rec.actors.size)+' observed account'+(rec.actors.size===1?'':'s')+')';
+      const counted=kind==='gift'&&rec.units>0;
       return number(counted?rec.units:rec.events)+' '+
-        (counted?liveLabels[kind]:kind==='like'?'like observations':liveLabels[kind]||kind);
+        (counted?liveLabels[kind]:liveLabels[kind]||kind);
     });
     const shown=graphEventFilter()==='participant_mention'?
       number(peerMentions().rows.filter(m=>m.t<=state.eventT+.0001&&
@@ -1491,6 +1529,8 @@
           ' possible named targets (media-time ASR; NOT event-clock replies)':
           graphEventFilter()==='participant_mention'?
           ' observed @mention endpoints within ±90 collector seconds (NOT replies)':
+          graphEventFilter()==='like'?
+          ' observed liking accounts within ±90 collector seconds; like units are NOT viewers · HOST is a role':
           ' observed accounts within ±90 collector seconds; no synthetic host spokes');
     }else{
       const keep=state.linkDensity==='all'?pool.edges.length:
@@ -1508,11 +1548,19 @@
         line.setAttribute('data-pair',a+'|'+b);
         gEdges.append(line);
       }
-      $('graphStatline').textContent=number(participants.length)+' observed accounts · '+
-        number(links.length)+' of '+number(pool.totalLinks)+' same-minute co-activity links · '+
-        (graphEventFilter()==='all'?'all recorded action kinds':
-          graphEventFilter()==='host_shoutout_candidate'?'unverified ASR links only':
-          'filtered by '+graphEventFilter());
+      if(graphEventFilter()==='like'){
+        const likes=reportedLikeEvidence();
+        $('graphStatline').textContent=number(participants.length)+
+          ' observed liking accounts · '+number(likes.units)+' reported like units in '+
+          number(likes.notifications)+' notifications · '+
+          number(links.length)+' co-activity links · HOST is not a viewer';
+      }else{
+        $('graphStatline').textContent=number(participants.length)+' observed accounts · '+
+          number(links.length)+' of '+number(pool.totalLinks)+' same-minute co-activity links · '+
+          (graphEventFilter()==='all'?'all recorded action kinds':
+            graphEventFilter()==='host_shoutout_candidate'?'unverified ASR links only':
+            'filtered by '+graphEventFilter());
+      }
     }
     if(!participants.length && !((session().comments||[]).length+
         (session().interactions||[]).length)){

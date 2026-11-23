@@ -106,6 +106,58 @@ async function sourceChat(browser){
    await page.locator('#masterPlay').click();
    assert.equal(await page.locator('#videoPlayer').evaluate(v=>v.paused),true);
    console.log('SOURCE_ACTIVITY_CONSTELLATION_BROWSER_PASS '+JSON.stringify(evidence));
+   // Like batch units are NOT people. The default recording has 417
+   // reported units in 35 notifications from only eight liking accounts.
+   await page.locator('#graphEventKind').selectOption('like');
+   const defaultLikes=await page.evaluate(()=>({
+     graphNodes:document.querySelectorAll('#networkNodes g[data-actor]').length,
+     label:document.querySelector('#graphEventKind option[value="like"]').textContent,
+     note:document.getElementById('graphEventCoverage').textContent,
+     status:document.getElementById('graphStatline').textContent
+   }));
+   assert.equal(defaultLikes.graphNodes,8,'Nov17 35 notifications are from eight unique liking accounts');
+   for(const value of ['417','35','8'])assert(defaultLikes.label.includes(value));
+   assert(defaultLikes.note.includes('likes ≠ unique viewers'));
+   assert(defaultLikes.status.includes('HOST is not a viewer'));
+
+   // Citrus reproduces the reported "20 likes vs five participants" case.
+   // Account @junetlt reported 2 + 15 + 3 = 20 likes in three notifications.
+   await page.locator('#sessionSelect').selectOption('nov15-citrus');
+   await page.waitForFunction(()=>document.getElementById('sessionSelect').value==='nov15-citrus'&&
+     document.querySelectorAll('#networkNodes g[data-actor]').length===5,null,{timeout:10000});
+   assert.equal(await page.locator('#networkHostNode .host-role-node').count(),1,
+     'HOST remains a separate broadcast role, never an additional viewer');
+   assert((await page.locator('#graphStatline').textContent()).includes('5 observed accounts'));
+   await page.locator('#graphEventKind').selectOption('like');
+   const citrusLikes=await page.evaluate(()=>({
+     people:document.querySelectorAll('#networkNodes g[data-actor]').length,
+     label:document.querySelector('#graphEventKind option[value="like"]').textContent,
+     note:document.getElementById('graphEventCoverage').textContent,
+     stat:document.getElementById('graphStatline').textContent
+   }));
+   assert.equal(citrusLikes.people,4,'Four like accounts; not 46 like-unit nodes');
+   for(const value of ['46','6','4'])assert(citrusLikes.label.includes(value));
+   assert(citrusLikes.note.includes('4 distinct observed liking accounts')&&
+     citrusLikes.note.includes('likes ≠ unique viewers'));
+   assert(citrusLikes.stat.includes('4 observed liking accounts'));
+   await page.locator('#sourceTrack').selectOption('events');
+   const target=page.locator('#actionEventList button.evidence-event')
+     .filter({hasText:'@junetlt'}).filter({hasText:'3 units'}).first();
+   await target.click();
+   await page.waitForFunction(()=>{
+     const text=document.getElementById('activityEventTicker').textContent;
+     return text.includes('20 reported like units') &&
+       text.includes('3 notifications') &&
+       text.includes('1 observed account');
+   },null,{timeout:12000});
+   assert.equal(await page.locator('#networkNodes g[data-actor="@junetlt"]').count(),1);
+   assert.equal(await page.locator('#networkNodes g[data-actor="@junetlt"][data-pulse-kind="like"]').count(),1);
+   console.log('BATCHED_LIKES_ARE_NOT_VIEWERS_BROWSER_PASS '+JSON.stringify({
+     capture:'nov15-citrus',totalPeople:5,likingPeople:4,
+     likeUnits:46,notifications:6,
+     exampleUnits:20,exampleNotifications:3,exampleAccounts:1
+   }));
+
    // Retain the DIFFERENT original 180s source for its 12 speech blocks;
    // do not splice its ASR or aggregate comments into the 120s event capture.
    await page.locator('#sessionSelect').selectOption('source-nov17-original-audio-180');

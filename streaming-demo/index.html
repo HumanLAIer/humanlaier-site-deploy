@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#002147">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none';">
 <title>Human LAIer · Signal Recorder | Live Analysis Console</title>
-<link rel="stylesheet" href="ux.css?v=chatroom-20261123-1">
+<link rel="stylesheet" href="ux.css?v=chatroom-20261123-2">
 </head>
 <body>
 <a class="skip-link" href="#workspace">Skip to workspace</a>
@@ -25,7 +25,7 @@
   <section class="controlbar" aria-label="Workspace configuration">
     <div class="workspace-heading">
       <h1>Stream analysis</h1>
-      <span>Host speech + public activity · independently timestamped evidence</span>
+      <span>Watch · understand · investigate</span>
     </div>
     <div class="layout-control">
       <label for="layoutPreset">WORKSPACE</label>
@@ -70,12 +70,6 @@
         <audio id="audioPlayer" preload="metadata" aria-label="Enhanced source audio (same transport)" hidden></audio>
         <img id="posterPlayer" alt="Storyboard frames from the preserved media excerpt" hidden>
         <div id="mediaEmpty" class="media-empty">Recorded collector-event playback; no source video is available in the public edition.</div>
-        <div id="featuredAudioSlate" class="featured-audio-slate" hidden>
-          <span class="featured-audio-eyebrow">ORIGINAL SOURCE AUDIO / NOV 17</span>
-          <strong>Pokémon TCG live room</strong>
-          <p>03:00 source audio · 12 transcribed blocks</p>
-          <small>Host speech and viewer comments are recorded independently; their timing is not calibrated.</small>
-        </div>
         <span id="sourceLabel" class="source-label">NO SOURCE SELECTED</span>
       </div>
       <div class="transport" aria-label="Single playback controller">
@@ -141,21 +135,11 @@
           <button id="conversationFollow" class="subtle-button" type="button" aria-pressed="true">Follow: on</button>
           <button id="clearParticipant" class="subtle-button" type="button" hidden>Clear person</button>
         </div>
-        <div id="featuredModelBar" class="featured-model-bar" hidden>
-          <label for="featuredModel">HOST ASR</label>
-          <select id="featuredModel" aria-label="Choose observed machine transcription">
-            <option value="production-base.en--control">faster-whisper · baseline</option>
-            <option value="coats-large-v2--control">Coats Whisper · baseline</option>
-            <option value="singlish-small--control">Singlish2English · baseline</option>
-            <option value="production-base.en--focused">faster-whisper · TCG context</option>
-            <option value="coats-large-v2--focused">Coats Whisper · TCG context</option>
-            <option value="singlish-small--focused">Singlish2English · TCG context</option>
-          </select>
-          <a href="nine-tickers/" title="Nine original model outputs and provenance">9-way research ↗</a>
-        </div>
         <details id="conversationOptions" class="conversation-options">
           <summary>Filters &amp; activity feed</summary>
           <div class="conversation-options-content">
+            <label id="featuredModelLabel" for="featuredModel" hidden>TRANSCRIPTION SOURCE · ORIGINAL AUDIO</label>
+            <select id="featuredModel" aria-label="Select actual source ASR engine and decoding context" hidden></select>
             <label for="chatScope">TIME WINDOW</label>
             <select id="chatScope" aria-label="Choose combined conversation time range">
               <option value="near">Around playhead ±90 seconds</option>
@@ -175,11 +159,7 @@
         <summary>Evidence and timing notes</summary>
         <p id="conversationNote" class="conversation-note">Speech/chat ordering is best-estimate only, not evidence of replies. ASR and speaker attribution are unverified.</p>
       </details>
-      <div id="featuredClockNote" class="featured-clock-note" hidden>
-        <strong>Source audio time ≠ viewer event time.</strong>
-        Host text uses real 15-second audio blocks. Three public viewer quotes are placed approximately from uncalibrated recorder observations, <em>not</em> verified replies.
-      </div>
-      <div id="conversationList" class="conversation-scroll conversation-thread" tabindex="0" aria-label="Chronological recorded chat and reaction notifications, with independently clocked machine speech"></div>
+<div id="conversationList" class="conversation-scroll conversation-thread" tabindex="0" aria-label="Chronological recorded chat and reaction notifications, with independently clocked machine speech"></div>
       <footer id="conversationFooter" class="pane-foot">Actual comments only · observed platform handles, not verified real-world identities.</footer>
     </article>
 
@@ -394,7 +374,7 @@
 <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 <script src="data.js"></script>
 <script src="bridge.js"></script>
-<script src="featured-evidence.js?v=chatroom-20261123-1"></script>
-<script src="app.js?v=chatroom-20261123-1"></script>
+<script src="featured-evidence.js?v=chatroom-20261123-2"></script>
+<script src="featured-bootstrap.js?v=chatroom-20261123-2"></script>
 </body>
 </html>

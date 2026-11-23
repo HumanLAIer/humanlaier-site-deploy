@@ -21,11 +21,27 @@
     <a class="back" href="../../singlish-compare/">Previous comparison</a>
   </header>
 
-  <section class="video-area" aria-label="Original 180-second synchronized livestream video and audio">
+  <section class="broadcast-top" aria-label="Original livestream video and audience intelligence">
     <div class="screen">
-      <video id="video" controls playsinline preload="metadata" aria-label="Original three-minute TikTok livestream recording with synchronized sound" poster="commercial-preview.jpg"></video>
-      <div class="video-error" id="videoError" role="status" hidden>Video source is not available. No substitute audio or footage is shown.</div>
+      <video id="video" controls playsinline preload="metadata" aria-label="Original three-minute TikTok livestream video with original sound" poster="commercial-preview.jpg"></video>
+      <div class="video-error" id="videoError" role="status" hidden>Source video unavailable — no substituted footage.</div>
     </div>
+    <aside class="metrics" aria-label="Commercial intelligence from observed public chat">
+      <div class="metrics-heading"><strong>LIVE COMMERCE SIGNALS</strong><span>OBSERVED · NOT VERIFIED SALES</span></div>
+      <div class="kpis">
+        <div class="kpi"><strong id="metricComments">22</strong><span>COMMENTS</span></div>
+        <div class="kpi"><strong id="metricAccounts">30</strong><span>ACCOUNTS</span></div>
+        <div class="kpi"><strong id="metricEvents">46</strong><span>ACTIONS</span></div>
+        <div class="kpi"><strong id="metricBuyer">2</strong><span>BUYER QUERIES</span></div>
+      </div>
+      <div class="metrics-subheading"><strong>BUYER INTELLIGENCE</strong><span>CLICK TO SEEK · TIMES APPROX.</span></div>
+      <div id="chatSignals" class="chat-signals">
+        <button type="button" class="signal" data-seek-sec="50"><span>PRICE</span><strong>80 packs $6.7k?</strong><small>~00:50</small></button>
+        <button type="button" class="signal" data-seek-sec="52"><span>SOURCE</span><strong>loose packs from ETB?</strong><small>~00:52</small></button>
+        <button type="button" class="signal" data-seek-sec="168"><span>VALUE</span><strong>Around $400 on pc I think</strong><small>~02:48</small></button>
+      </div>
+      <div class="metric-foot" id="metricContext">Same 180s source · 3 ASR engines × 3 conditions · no human-gold verdict</div>
+    </aside>
   </section>
 
   <nav class="transport" aria-label="Choose source video position">

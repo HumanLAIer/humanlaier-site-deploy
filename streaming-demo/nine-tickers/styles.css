@@ -133,6 +133,23 @@ button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible,su
   color:var(--text);font:450 clamp(13px,1.08vw,16px)/1.35 var(--sans);
   letter-spacing:.006em;will-change:transform;
 }
+/* Each of the 12 source-verified 15s blocks is laid out only once.
+   Continuous, video-clock-driven transform moves the entire 180s tape.
+   Block delimiters remain visible without replacing or snapping the text. */
+.ticker-tape{
+  display:inline-flex;align-items:center;
+  min-width:max-content;white-space:nowrap;
+  transition:none!important;transform:translate3d(0,0,0);
+}
+.ticker-chunk{
+  position:relative;display:inline-block;flex:0 0 auto;
+  white-space:pre;min-width:200px;
+  padding:0 34px 0 0;
+}
+.ticker-chunk::after{
+  content:"│";position:absolute;right:13px;top:0;
+  color:#79949e;font:12px/1.5 var(--mono);opacity:.72;
+}
 .ticker-line .term{color:var(--mint);font-weight:650;text-decoration:underline;text-decoration-color:#69c7bf;text-decoration-style:dotted;text-underline-offset:3px}
 .ticker-line .word-change{color:#ffe0aa;background:#9b703333;border-bottom:1px solid var(--gold);padding-bottom:1px}
 .ticker-line .word-unique{color:#e6d5fb;background:#78619a28;border-bottom:1px solid var(--violet)}

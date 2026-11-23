@@ -3,80 +3,90 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#071a27">
-<meta name="description" content="Original TikTok video and nine synchronized real ASR decodings, on one screen.">
+<meta name="theme-color" content="#071b29">
+<meta name="description" content="Original full-height portrait livestream video beside nine synchronized, source-verified ASR decodings and compact audience context.">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; media-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <title>Nine-Ticker Video Shootout | Human LAIer</title>
 <link rel="stylesheet" href="styles.css">
 <script src="app.js" defer></script>
 </head>
 <body>
-<a class="skip" href="#video">Skip to video</a>
-<main class="studio" aria-label="Nine-ticker original-video shootout">
+<a class="skip" href="#video">Skip to source video</a>
+<main class="studio" aria-label="Full-height livestream video and nine-way speech interpretation comparison">
   <header class="mast">
-    <a class="mark" href="../" aria-label="Human LAIer streaming demo"><img src="../assets/human-laier-dark.svg" width="65" height="30" alt="Human LAIer"></a>
-    <strong>NINE-TICKER VIDEO SHOOTOUT</strong>
-    <span class="source-name">@HUATZAITCG · 17 NOV 2026 · 180s</span>
-    <span id="audienceStatus" class="audience-status" aria-label="Observed audience signals">22 comments · 30 accounts · 46 actions</span>
-    <a class="back" href="../../singlish-compare/">Previous comparison</a>
+    <a class="mark" href="../" aria-label="Human LAIer streaming demo"><img src="../assets/human-laier-dark.svg" width="62" height="28" alt="Human LAIer"></a>
+    <strong>NINE-TICKER SHOOTOUT</strong>
+    <span class="source-name">@HUATZAITCG · 17 NOV 2026 · 03:00</span>
+    <span class="mast-purpose">3 ENGINES × 3 VOCABULARY CONDITIONS · ORIGINAL VIDEO</span>
+    <a class="back" href="../../singlish-compare/">Prior comparison</a>
   </header>
 
-  <section class="broadcast-top" aria-label="Original livestream video and audience intelligence">
+  <section class="video-column" aria-label="Original full-height portrait video">
     <div class="screen">
-      <video id="video" controls playsinline preload="metadata" aria-label="Original three-minute TikTok livestream video with original sound" poster="commercial-preview.jpg"></video>
-      <div class="video-error" id="videoError" role="status" hidden>Source video unavailable — no substituted footage.</div>
+      <video id="video" controls playsinline preload="metadata" aria-label="Original 180-second vertical TikTok livestream with synchronized source audio" poster="commercial-preview.jpg"></video>
+      <div class="video-error" id="videoError" role="status" hidden>Original source video unavailable. No substitute footage or audio is shown.</div>
     </div>
-    <aside class="metrics" aria-label="Commercial intelligence from observed public chat">
-      <div class="metrics-heading"><strong>LIVE COMMERCE SIGNALS</strong><span>OBSERVED · NOT VERIFIED SALES</span></div>
+  </section>
+
+  <div class="right-panel">
+    <nav class="transport" aria-label="Navigate synchronized source video blocks">
+      <span class="clock" id="currentClock">00:00</span>
+      <div class="blocks" id="blockNav" role="group" aria-label="Twelve 15-second source video blocks"></div>
+      <span class="clock">03:00</span>
+      <label class="speed-label" for="speed">SPEED
+        <select id="speed" aria-label="Video playback speed"><option value="0.75">.75×</option><option value="1" selected>1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option></select>
+      </label>
+      <label class="motion-label" for="tickerMotion"><input id="tickerMotion" type="checkbox" checked>Pan long text</label>
+    </nav>
+
+    <section class="tickers" aria-label="Nine synchronized ASR transcripts with differences highlighted">
+      <div class="ticker-bar">
+        <strong>ASR MODEL <span class="header-detail">/ CONTEXT</span></strong>
+        <div class="ticker-key" aria-label="Highlight legend">
+          <span><i class="key-change" aria-hidden="true"></i> Changed</span>
+          <span><i class="key-domain" aria-hidden="true"></i> Domain</span>
+          <span><i class="key-unique" aria-hidden="true"></i> Unique</span>
+        </div>
+        <span id="cueText">01 / 00:00–00:15</span>
+      </div>
+      <div class="ticker-set basic" id="rawTickers" aria-label="Unprompted: three original model transcripts"></div>
+      <div class="ticker-set glossary" id="diffTickers" aria-label="Compact TCG prompt: three original model transcripts"></div>
+      <div class="ticker-set focused" id="domainTickers" aria-label="Focused prompt: three original model transcripts"></div>
+    </section>
+
+    <aside class="metrics" aria-label="Supporting evidence from public chat; not verified transactions">
+      <div class="metrics-heading">
+        <strong>OBSERVED AUDIENCE CONTEXT</strong>
+        <span>PUBLIC CHAT · TIME ALIGNMENT PROVISIONAL</span>
+      </div>
       <div class="kpis">
         <div class="kpi"><strong id="metricComments">22</strong><span>COMMENTS</span></div>
         <div class="kpi"><strong id="metricAccounts">30</strong><span>ACCOUNTS</span></div>
         <div class="kpi"><strong id="metricEvents">46</strong><span>ACTIONS</span></div>
         <div class="kpi"><strong id="metricBuyer">2</strong><span>BUYER QUERIES</span></div>
       </div>
-      <div class="metrics-subheading"><strong>BUYER INTELLIGENCE</strong><span>CLICK TO SEEK · TIMES APPROX.</span></div>
       <div id="chatSignals" class="chat-signals">
         <button type="button" class="signal" data-seek-sec="50"><span>PRICE</span><strong>80 packs $6.7k?</strong><small>~00:50</small></button>
         <button type="button" class="signal" data-seek-sec="52"><span>SOURCE</span><strong>loose packs from ETB?</strong><small>~00:52</small></button>
         <button type="button" class="signal" data-seek-sec="168"><span>VALUE</span><strong>Around $400 on pc I think</strong><small>~02:48</small></button>
       </div>
-      <div class="metric-foot" id="metricContext">Same 180s source · 3 ASR engines × 3 conditions · no human-gold verdict</div>
+      <div class="metric-foot" id="metricContext">Illustrative questions only · no confirmed product, purchase, or revenue</div>
     </aside>
-  </section>
 
-  <nav class="transport" aria-label="Choose source video position">
-    <span class="clock" id="currentClock">00:00</span>
-    <div class="blocks" id="blockNav" role="group" aria-label="Twelve 15-second source video blocks"></div>
-    <span class="clock">03:00</span>
-    <label class="speed-label" for="speed">SPEED
-      <select id="speed" aria-label="Video playback speed"><option value="0.75">.75×</option><option value="1" selected>1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option></select>
-    </label>
-    <label class="motion-label" for="tickerMotion"><input id="tickerMotion" type="checkbox" checked>Scroll text</label>
-  </nav>
-
-  <section class="tickers" aria-label="Nine synchronized transcript tickers">
-    <div class="ticker-bar">
-      <strong>ASR MODEL</strong>
-      <span id="cueText">BLOCK 01 / 00:00–00:15</span>
-      <span class="ticker-meta-title">CPU / 180s</span>
-    </div>
-    <div class="ticker-set basic" id="rawTickers" aria-label="No glossary: three model transcript tickers"></div>
-    <div class="ticker-set glossary" id="diffTickers" aria-label="Compact trading-card glossary: three model transcript tickers"></div>
-    <div class="ticker-set focused" id="domainTickers" aria-label="Focused vocabulary: three model transcript tickers"></div>
-  </section>
-
-  <footer class="foot">
-    <span id="audioStatus" role="status">Loading source-verified video and nine decodings…</span>
-    <span class="disclaimer">15s blocks · unreviewed ASR · chat/video sync provisional · no verified sales</span>
-    <details class="notes">
-      <summary>DATA NOTES</summary>
-      <div class="notes-panel">
-        <strong>Three ASR engines × three decoding conditions.</strong> Each line is real, unedited model output from the same original source audio. Colored terms are lexical highlights, not confirmed card identities. Horizontally scrolling text is presentation only—not word-level alignment.
-        <p>The focused glossary was selected after a baseline was inspected; this is not a blind accuracy benchmark. No human-gold transcript, calibrated chat/video clock, verified sale or revenue claim exists. The original video is a re-encoded, SHA-matched excerpt of the public November 17 livestream. <span id="provenance">Source identity verification pending.</span></p>
-        <a href="https://github.com/HumanLAIer/hl-livestream-pilot/pull/176">Model experiment</a>
-      </div>
-    </details>
-  </footer>
+    <footer class="foot">
+      <span id="audioStatus" role="status">Loading original video and verified model outputs…</span>
+      <span class="disclaimer">15s blocks · no human-gold verdict</span>
+      <details class="notes">
+        <summary>DATA NOTES</summary>
+        <div class="notes-panel">
+          <strong>Same original video and 180 seconds of audio; three ASR models × three decoding conditions.</strong>
+          <p>Each ticker preserves the exact original model output. Amber indicates words newly present versus that model's unprompted transcript; lavender indicates unprompted words not found in the other two engines; teal identifies TCG terms. Highlights mean <em>different</em>, not <em>correct</em>. A small Δ count reports newly present words versus that model's baseline. Terms not present in a conditioned transcript cannot be highlighted there.</p>
+          <p>The focused glossary was selected after examining a baseline, so this is not a blind accuracy benchmark. No independently verified human reference transcript, word-level timestamping, calibrated chat/video clock, completed transaction, or revenue claim exists. The original source video is re-encoded and SHA-matched to the public November 17 livestream. <span id="provenance">Source identity verification pending.</span></p>
+          <a href="https://github.com/HumanLAIer/hl-livestream-pilot/pull/176">Nine ASR model study</a>
+        </div>
+      </details>
+    </footer>
+  </div>
 </main>
 </body>
 </html>

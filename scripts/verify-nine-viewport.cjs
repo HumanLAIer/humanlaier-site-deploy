@@ -183,6 +183,36 @@ async function main(){
       assert(afterPos.pos<beforePos.pos-1,"continuous ticker must advance across block boundary");
       assert(beforePos.pos-afterPos.pos<950,"no large source block snap/reset");
       assert(afterPos.cue.startsWith("02 /"),"source block indicator follows actual media seek");
+      // The focused Singlish decoder really generated 26 identical phrases.
+      // Default presentation flags/collapses the loop rather than visually
+      // implying 26 confirmations; the full original is one click away.
+      const loopLane=page.locator(".ticker-row").nth(7);
+      const loopSegment=loopLane.locator('.ticker-chunk[data-source-block="2"]');
+      const rawToggle=loopLane.locator(".ticker-raw-toggle");
+      assert.equal(await page.locator(".ticker-loop-flag").count(),1,
+                   "only the actual repetitive model output should be flagged");
+      assert.equal(await loopSegment.getAttribute("data-loop-collapsed"),"true");
+      assert((await loopSegment.textContent()).includes("“let's go” ×26"),
+             "source evidence summarized as exact repetition count");
+      assert(await rawToggle.isVisible(),
+             "operator can inspect the unmodified focused ASR output");
+      assert((await loopLane.locator(".ticker-change").textContent()).includes("26"),
+             "repetition indicator replaces misleading token-improvement counter");
+      await rawToggle.click();
+      assert.equal(await loopSegment.getAttribute("data-loop-collapsed"),"false",
+                   "RAW displays the full original source transcript");
+      const expandedText=await loopSegment.textContent();
+      assert.equal((expandedText.match(/let's go/g)||[]).length,26,
+                   "all 26 repeated source phrases remain accessible verbatim");
+      await rawToggle.click();
+      assert.equal(await loopSegment.getAttribute("data-loop-collapsed"),"true",
+                   "FOLD reversibly restores the legible warning");
+      assert.equal(await page.locator(".ticker-chunk").count(),108,
+                   "raw display toggle never drops any source segment");
+      console.log("NINE_SOURCE_VERIFIED_DECODE_LOOP_MARKER "+JSON.stringify({
+        lane:"singlish-small--focused",block:2,repeatPhrase:"let's go",
+        repeats:26,rawInspectable:true,sourceTranscriptsUnchanged:true
+      }));
       console.log("NINE_UNINTERRUPTED_TICKER_MOTION "+JSON.stringify({
         viewport:size,beforePx:+beforePos.pos.toFixed(2),
         afterPx:+afterPos.pos.toFixed(2),continuousOriginalText:true,

@@ -106,7 +106,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible,su
 .ticker-set.glossary{--accent:var(--gold);--tint:#132d39}
 .ticker-set.focused{--accent:var(--blue);--tint:#0f2a39}
 .ticker-row{
-  display:grid;grid-template-columns:149px minmax(0,1fr) 105px;
+  display:grid;grid-template-columns:149px minmax(0,1fr) 137px;
   align-items:stretch;min-width:0;min-height:0;
   background:var(--tint);border-bottom:1px solid var(--line);
 }
@@ -222,6 +222,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible,su
 .signal strong{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:500 12px var(--sans)}
 .signal small{text-align:right;color:#a7bac2;font:10px var(--mono)}
 .metric-foot{padding:3px 12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:9px var(--mono);color:#96afb6}
+.metric-foot.is-review-candidate{color:#c7b9d8}
 .foot{
   display:flex;align-items:center;gap:10px;min-width:0;
   padding:0 10px;background:#0d2c39;border-top:1px solid var(--line);
@@ -272,7 +273,9 @@ button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible,su
   .clock{font-size:9px}.block-btn{font-size:8px}
   .speed-label{font-size:0}.speed-label select{font-size:10px}
   .motion-label{display:none}
-  .ticker-bar,.ticker-row{grid-template-columns:93px minmax(0,1fr) 48px}
+  .ticker-bar,.ticker-row{grid-template-columns:93px minmax(0,1fr) 82px}
+  .ticker-row.has-decode-loop .ticker-badge{display:none}
+  .ticker-row.has-decode-loop .ticker-meta{gap:4px}
   .ticker-bar{font-size:8px;padding:0 5px}
   .ticker-key{gap:7px}.ticker-key span{font-size:8px}
   .ticker-key i{width:6px;height:6px}.ticker-bar>span:last-child{font-size:8px}

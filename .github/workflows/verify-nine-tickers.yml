@@ -78,6 +78,15 @@ jobs:
             }
             for(const id of lanes)assert.equal(typeof c.texts[id],'string');
           }
+          // Static executive examples must remain grounded in the actual,
+          // immutable model outputs, not decorative synthesized quotations.
+          const second=d.clips[1].texts;
+          assert(second["production-base.en--control"].includes("Sufion V-Man"));
+          assert(second["production-base.en--focused"].includes("Sylveon VMAX"));
+          assert((second["singlish-small--focused"].match(/let's go/gi)||[]).length>=15);
+          const pricing=d.clips[10].texts;
+          assert(pricing["production-base.en--control"].toLowerCase().includes("how much"));
+          assert.equal(pricing["production-base.en--focused"].trim(),"I have no idea.");
           const raw=fs.readFileSync(dir+d.source.audioFile);
           assert(raw.length>600000&&raw.length<2000000);
           assert.equal(crypto.createHash('sha256').update(raw).digest('hex'),d.source.audioSha256);

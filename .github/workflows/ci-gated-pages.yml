@@ -1,0 +1,182 @@
+name: CI-Gated Pages Release
+# Disabled for deployment until Work switches Pages source to Actions and
+# sets HL_PAGES_ACTIONS_ENABLED=true. During staging tests still run.
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  site-integrity:
+    name: Website inventory and build integrity
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Syntax-check shipped JavaScript
+        run: |
+          set -euo pipefail
+          for src in js/*.js singlish-compare/app.js streaming-demo/*.js streaming-demo/nine-tickers/app.js scripts/*.cjs; do
+            node --check "$src"
+          done
+      - name: Verify independent Singlish archive
+        run: node scripts/verify-singlish-contracts.cjs
+      - name: Build exact static site allowlist
+        run: node scripts/build-pages.cjs
+      - name: Inspect site inventory and custom domain
+        run: |
+          test -f .pages-build/release.json
+          test -f .pages-build/CNAME
+          test -f .pages-build/.nojekyll
+          test -f .pages-build/index.html
+          test -f .pages-build/thanks.html
+          test ! -e .pages-build/.github
+          test ! -e .pages-build/scripts
+          test ! -e .pages-build/streaming-demo/verify-source-chat-browser.cjs
+          grep -q '^humanlaier.com$' .pages-build/CNAME
+          grep -q 'release=' .pages-build/streaming-demo/index.html
+
+  main-demo:
+    name: Main Signal Recorder V4 acceptance
+    runs-on: ubuntu-24.04
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify source contract and evolving transcript adapter
+        run: node streaming-demo/verify-featured-chat.cjs
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser test tools
+        run: |
+          npm install --no-save --ignore-scripts 'playwright@1.56.1'
+          npx playwright install --with-deps chrome
+      - name: Test V4 original video, group chat, audio fallback and mobile
+        env:
+          HL_TEST_TARGET: main
+        run: node scripts/verify-pages-browser.cjs
+
+  nine-ticker:
+    name: Separate nine-ticker research bakeoff acceptance
+    runs-on: ubuntu-24.04
+    timeout-minutes: 24
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify nine-ticker study and original media SHA
+        run: node scripts/verify-nine-contracts.cjs
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser test tools
+        run: |
+          npm install --no-save --ignore-scripts 'playwright@1.56.1'
+          npx playwright install --with-deps chrome
+      - name: Test independent bakeoff real media in Chrome
+        env:
+          HL_TEST_TARGET: bakeoff
+        run: node scripts/verify-pages-browser.cjs
+      - name: Check independent nine-ticker research screen layout
+        run: |
+          mkdir -p .private/nine-layout-qa
+          python3 -m http.server 8765 --bind 127.0.0.1 > .private/nine-layout-qa/http.log 2>&1 &
+          sleep 2
+          node scripts/verify-nine-viewport.cjs
+      - name: Preserve bakeoff layout evidence on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nine-ticker-viewport-evidence
+          path: .private/nine-layout-qa/
+          retention-days: 3
+          if-no-files-found: ignore
+
+  package:
+    name: Package only checked site commit
+    needs: [site-integrity, main-demo, nine-ticker]
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Rebuild approved site at this exact commit
+        run: node scripts/build-pages.cjs
+      - name: Upload for Pages only after authorized cutover
+        if: vars.HL_PAGES_ACTIONS_ENABLED == 'true'
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: .pages-build
+          include-hidden-files: true
+          retention-days: 5
+
+  deploy:
+    name: Deploy only passing current main SHA
+    needs: [site-integrity, main-demo, nine-ticker, package]
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && vars.HL_PAGES_ACTIONS_ENABLED == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    concurrency:
+      group: humanlaier-pages-production
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    outputs:
+      deployed: ${{ steps.deployment.outcome == 'success' }}
+    steps:
+      - name: Confirm tested SHA remains latest main
+        id: latest
+        env:
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          latest="$(git ls-remote "https://github.com/${GITHUB_REPOSITORY}.git" refs/heads/main | cut -f1)"
+          test -n "$latest"
+          if [[ "$latest" == "$SHA" ]]; then
+            echo "current=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Superseded by $latest; rejecting stale deploy $SHA"
+            echo "current=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Configure Pages after explicit source change
+        if: steps.latest.outputs.current == 'true'
+        uses: actions/configure-pages@v5
+      - name: Deploy tested Pages artifact
+        id: deployment
+        if: steps.latest.outputs.current == 'true'
+        uses: actions/deploy-pages@v4
+
+  production-smoke:
+    name: Check exact live HTTPS revision and browser behavior
+    needs: [deploy]
+    if: needs.deploy.outputs.deployed == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate public SHA, critical files, and video byte ranges
+        run: node scripts/verify-live-pages.cjs
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser test tools
+        run: |
+          npm install --no-save --ignore-scripts 'playwright@1.56.1'
+          npx playwright install --with-deps chrome
+      - name: Test deployed V4 as independent product demo
+        env:
+          HL_TEST_TARGET: main
+          HL_SITE_PUBLIC_BASE: https://humanlaier.com
+        run: node scripts/verify-pages-browser.cjs
+      - name: Test deployed nine-ticker as separate research comparison
+        env:
+          HL_TEST_TARGET: bakeoff
+          HL_SITE_PUBLIC_BASE: https://humanlaier.com
+        run: node scripts/verify-pages-browser.cjs

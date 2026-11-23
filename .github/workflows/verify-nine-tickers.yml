@@ -1,4 +1,4 @@
-name: Verify compact nine-ticker video-and-metrics broadcast console
+name: Verify portrait-video-left and nine ASR rows with subordinate context
 on:
   pull_request:
     paths:
@@ -38,9 +38,12 @@ jobs:
             assert(html.includes('id="'+id+'"'),"missing "+id);
           }
           assert(!html.includes("<h1"),"no introductory hero/essay");
-          assert(html.includes("broadcast-top")&&html.includes("ticker-row")===false);
-          assert(css.includes("grid-template-columns:minmax(0,1fr) minmax(0,1fr)"),"50/50 video+metrics");
-          assert(css.includes("grid-template-rows:22px repeat(9,minmax(0,1fr))"),"nine tight rows");
+          assert(html.includes("video-column")&&html.includes("right-panel")&&html.includes("ticker-row")===false);
+          assert(html.indexOf('class="tickers"')<html.indexOf('class="metrics"'),"metrics follow the tickers");
+          assert(css.includes("--video-ratio:.5625")&&css.includes("var(--video-ratio)"),"portrait column sized by actual video aspect");
+          assert(css.includes("grid-template-rows:32px minmax(0,1fr)")===false||css.includes("grid-template-rows:var(--mast-h) minmax(0,1fr)"),"portrait fills all height below mast");
+          assert(css.includes("grid-template-rows:27px repeat(9,minmax(0,1fr))"),"nine legible simultaneous rows");
+          assert(js.includes("function compareWords(")&&js.includes("function differences("),"source-only comparative token highlights");
           assert(js.includes("SOURCE_MATCHED_PUBLIC_UNREVIEWED_NINE_DECODES"));
           assert(!js.includes("audio.src="),"video must replace audio player");
           const d=JSON.parse(read("comparison.json"));
@@ -121,7 +124,7 @@ jobs:
         run: |
           npm install --no-save --ignore-scripts 'playwright@1.56.1'
           npx playwright install --with-deps chrome
-      - name: Check 1280x720 and 1366x768 video+9 ticker visibility and playback
+      - name: Check full-height portrait video, nine right-hand tickers, diff and lower metrics at four laptop sizes
         run: |
           mkdir -p .private/nine-layout-qa
           python3 -m http.server 8765 --bind 127.0.0.1 > .private/nine-layout-qa/http.log 2>&1 &

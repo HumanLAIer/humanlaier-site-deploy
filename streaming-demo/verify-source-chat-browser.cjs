@@ -26,6 +26,9 @@ const probe=String.raw`(()=>{
     // Check V4's real seek controller against decoded source media. Chrome's
     // --virtual-time-budget accelerates timers but may freeze the natural
     // HTMLVideoElement clock; do not misreport that as a site playback bug.
+    const readyAtStart=video.readyState;
+    const decodedAtStart=typeof video.getVideoPlaybackQuality==='function'?
+      video.getVideoPlaybackQuality().totalVideoFrames:null;
     const seekInput=document.getElementById('masterSeek');
     seekInput.value='45';
     seekInput.dispatchEvent(new Event('input',{bubbles:true}));
@@ -37,6 +40,8 @@ const probe=String.raw`(()=>{
       track:document.getElementById('sourceTrack').value,
       videoSrc:video.currentSrc,
       videoReady:video.readyState,
+      videoReadyAtStart:readyAtStart,
+      videoDecodedAtStart:decodedAtStart,
       videoSize:[video.videoWidth,video.videoHeight],
       videoDuration:video.duration,
       videoHidden:video.hidden,
@@ -87,7 +92,7 @@ const cleanup=()=>{server.kill();try{fs.unlinkSync(testPage);}catch{}try{fs.unli
        data.dockDisplay!=='grid'||data.modelOptions!==9||data.extraPanel||
        !data.nonemptySpeech||!data.sourceTimeLabel.includes('ORIGINAL SOURCE VIDEO')||
        data.track!=='video'||!data.videoSrc.endsWith('/streaming-demo/nine-tickers/commercial-180.mp4')||
-       data.videoReady<2||data.videoSize[0]<100||data.videoSize[1]<100||
+       data.videoReadyAtStart<2||data.videoSize[0]<100||data.videoSize[1]<100||
        Math.abs(data.videoDuration-180)>1||data.videoHidden||
        !data.videoPlaying||!data.videoSeekApplied||data.videoError!==null)
       throw Error('Source chat visual acceptance failed: '+JSON.stringify(data));

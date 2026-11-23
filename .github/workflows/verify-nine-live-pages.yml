@@ -1,0 +1,68 @@
+name: Verify live nine-ticker Pages HTML, JSON and audio SHA
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/verify-nine-live-pages.yml'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/verify-nine-live-pages.yml'
+permissions:
+  contents: read
+jobs:
+  live-public-http-smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - name: Confirm actual humanlaier.com responses (no credentials or site writes)
+        run: |
+          python - <<'PY'
+          import hashlib,json,time,urllib.request,urllib.error
+          root="https://humanlaier.com/streaming-demo/nine-tickers/"
+          expected={
+            "comparison.json":"141f0c9ee47f7c49d5bc1f546814fff12c740de69f59dde27c23bdd85f8178be",
+            "commercial-180.mp3":"ce403fdf33f4bd26f678f3cbedac5a0d8eb2accb620b8e56ce1d45e80962196b",
+          }
+          def get(path,limit):
+              req=urllib.request.Request(root+path,
+                  headers={"User-Agent":"Mozilla/5.0 HL-Release-Verification/1.0",
+                           "Accept":"*/*","Cache-Control":"no-cache"})
+              with urllib.request.urlopen(req,timeout=22) as x:
+                  assert x.status==200
+                  data=x.read(limit+1)
+                  assert 0<len(data)<=limit
+                  return data
+          last=None
+          for attempt in range(32):
+              try:
+                  html=get("index.html",200000).decode("utf-8")
+                  assert "<title>Nine Tickers" in html
+                  assert 'id="rawTickers"' in html and 'id="domainTickers"' in html
+                  js=get("app.js",100000).decode("utf-8")
+                  assert "SOURCE_MATCHED_PUBLIC_UNREVIEWED_NINE_DECODES" in js
+                  data=get("comparison.json",300000)
+                  audio=get("commercial-180.mp3",2000000)
+                  assert len(audio)==1080692
+                  for leaf,body in (("comparison.json",data),
+                                    ("commercial-180.mp3",audio)):
+                      assert hashlib.sha256(body).hexdigest()==expected[leaf]
+                  doc=json.loads(data)
+                  assert doc["schema"]=="hl-commercial-nine-public-v1"
+                  assert len(doc["lanes"])==9 and len(doc["clips"])==12
+                  assert doc["provenance"]["humanGoldAvailable"] is False
+                  assert doc["source"]["sourcePartSha256"]=="58e8dd7b568a65203d9a5c204f72f1a3538da58951c7a3f178844547c5fc91de"
+                  assert doc["source"]["mediaEventSyncVerified"] is False
+                  assert doc["domainCandidatesAreReviewOnly"] is True
+                  print(json.dumps({"status":"LIVE_SITE_200_AND_SHA256_VERIFIED",
+                                    "url":root,"lanes":9,"clips":12,
+                                    "audioBytes":len(audio),
+                                    "jsonSha256":expected["comparison.json"],
+                                    "audioSha256":expected["commercial-180.mp3"]},
+                                   sort_keys=True))
+                  break
+              except Exception as exc:
+                  last=type(exc).__name__+": "+str(exc)[:180]
+                  if attempt==31:
+                      raise RuntimeError("LIVE_PAGES_PUBLIC_HTTP_NOT_VERIFIED: "+last)
+                  time.sleep(8)
+          PY

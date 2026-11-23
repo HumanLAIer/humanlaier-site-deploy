@@ -209,6 +209,10 @@ async function videoFallback(browser){
  try{
    await page.route('**/nine-tickers/commercial-180.mp4',route=>route.abort('failed'));
    await page.goto(origin+'/streaming-demo/',{waitUntil:'domcontentloaded',timeout:35000});
+   await page.waitForFunction(()=>!!window.HL_FEATURED_SOURCE &&
+     [...document.getElementById('sessionSelect').options]
+       .some(o=>o.value==='source-nov17-original-audio-180'),null,{timeout:25000});
+   await page.locator('#sessionSelect').selectOption('source-nov17-original-audio-180');
    await page.waitForFunction(()=>{
      const src=document.getElementById('audioPlayer').currentSrc;
      return document.getElementById('sourceTrack').value==='audio'&&
@@ -228,7 +232,9 @@ async function mobile(browser){
  const page=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
  try{
    await page.goto(origin+'/streaming-demo/',{waitUntil:'domcontentloaded',timeout:35000});
-   await page.waitForFunction(()=>document.querySelectorAll('.message-row.speech').length>0,
+   await page.waitForFunction(()=>document.getElementById('sessionSelect')?.value==='nov17-participation' &&
+       document.querySelectorAll('.message-row.chat').length>0 &&
+       document.querySelectorAll('#networkNodes g[data-actor]').length>0,
      null,{timeout:20000});
    await page.locator('[data-mobile-tab="conversation"]').click();
    const metrics=await page.evaluate(()=>{
@@ -236,13 +242,21 @@ async function mobile(browser){
      const r=t.getBoundingClientRect();
      return {visible:getComputedStyle(t).display!=='none'&&r.width>0,
        viewport:innerWidth,htmlWidth:document.documentElement.scrollWidth,
-       speech:document.querySelectorAll('.message-row.speech').length,
+       comments:document.querySelectorAll('.message-row.chat').length,
+       graphNodes:document.querySelectorAll('#networkNodes g[data-actor]').length,
        left:r.left,right:r.right};
    });
-   assert(metrics.visible&&metrics.speech>0,'Mobile chat is visible on its native tab');
+   assert(metrics.visible&&metrics.comments>0,'Original activity chat visible on mobile native tab');
+   assert(metrics.graphNodes>0,'Original activity constellation must have real nodes on mobile');
    assert(metrics.htmlWidth<=metrics.viewport+3,'No mobile page horizontal overflow');
    assert(metrics.left>=-2&&metrics.right<=metrics.viewport+3,'Conversation stays within viewport');
-   console.log('V4_MOBILE_CHAT_PASS '+JSON.stringify(metrics));
+   await page.locator('[data-mobile-tab="constellation"]').click();
+   const graphVisible=await page.locator('#networkSvg').evaluate(el=>{
+     const r=el.getBoundingClientRect();
+     return r.width>100&&r.height>100&&getComputedStyle(el).visibility!=='hidden';
+   });
+   assert(graphVisible,'Constellation remains usable on its original mobile tab');
+   console.log('V4_MOBILE_CHAT_AND_CONSTELLATION_PASS '+JSON.stringify(metrics));
  }finally{await page.close();}
 }
 async function nine(browser){

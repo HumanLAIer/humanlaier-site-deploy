@@ -138,22 +138,24 @@ async function main(){
       });
       assert(diff.highlighted>0,"changed words are visibly marked in the nine-ticker bake-off");
       assert.equal(diff.nineCount,9);
-      // The test server (Python SimpleHTTPRequestHandler) does not reliably
-      // support HTTP range seeking into MP4. The actual decoded A/V duration
-      // is checked above. For precise 14.8s -> 15.2s interpolation assertions,
-      // inject a deterministic media-clock getter ONLY in this test browser.
-      // This is NOT a simulated transcription or a production code change.
+      // Original H.264/AAC media and duration were independently decoded
+      // above. A seek may be awaiting an HTTP range response at this instant.
+      // Complete the selected block at 150s with a deterministic media-clock
+      // getter ONLY in this test browser, then interpolate 14.8s -> 15.2s.
+      // We never fabricate model text or enable this clock in production.
       await page.evaluate(()=>{
         const video=document.querySelector("#video");
         video.pause();
         window.__sourceTapeNodes=Array.from(document.querySelectorAll(".ticker-line"));
-        window.__syntheticMediaClock=14.8;
+        window.__syntheticMediaClock=150;
         Object.defineProperty(video,"currentTime",{
           configurable:true,
           get(){return window.__syntheticMediaClock},
           set(t){window.__syntheticMediaClock=Number(t)}
         });
         video.dispatchEvent(new Event("seeked"));
+        video.pause();
+        window.__syntheticMediaClock=14.8;
         video.dispatchEvent(new Event("timeupdate"));
       });
       const beforePos=await page.evaluate(()=>({

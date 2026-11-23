@@ -1,0 +1,88 @@
+/* Streaming Intelligence Lab: source-first, compact, accessible research overlay.
+   Deliberately inherits the complete, unmodified nine-ticker study in an iframe. */
+:root{
+  color-scheme: dark;
+  --bg:#071b29;--layer:#0b2532;--layer2:#102d3b;--line:#345362;
+  --text:#f4f5f6;--muted:#b9c9cd;--quiet:#94abb3;--mint:#91ddd5;--gold:#ffca7b;
+  --mono:ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace;
+  --sans:Inter,Arial,system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{width:100%;height:100%;margin:0;background:var(--bg);color:var(--text);font:13px var(--sans)}
+body{overflow:hidden}
+button,select,input{font:inherit}
+button{cursor:pointer}
+a{color:var(--mint)}
+button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible,summary:focus-visible{outline:2px solid var(--mint);outline-offset:2px}
+.skip{position:fixed;top:-60px;left:6px;padding:8px 12px;background:var(--mint);color:var(--bg);z-index:20}
+.skip:focus{top:4px}
+.topbar{height:42px;display:flex;align-items:center;gap:14px;padding:0 14px;border-bottom:1px solid var(--line);background:#071a27}
+.wordmark{font-size:12px;font-weight:600;letter-spacing:.025em;white-space:nowrap}
+.wordmark b{color:var(--mint)}
+.section-mark{color:var(--quiet);font:10px var(--mono)}
+.source-label{color:var(--quiet);font:10px var(--mono);white-space:nowrap}
+.grow{flex:1}
+.phase-pill{color:var(--gold);font:10px var(--mono);white-space:nowrap}
+#openReview{background:#163b47;color:var(--text);border:1px solid #52727d;border-radius:3px;padding:6px 11px;font-size:12px}
+#openReview[aria-expanded="true"]{background:var(--mint);color:#071b29}
+#openReview span{padding-left:8px}
+.workspace{position:relative;height:calc(100dvh - 42px);min-height:0}
+#sourceFrame{display:block;width:100%;height:100%;border:0;background:var(--bg)}
+.review-panel{position:absolute;right:0;top:0;bottom:0;width:min(510px,calc(100vw - 12px));z-index:5;background:var(--layer);border-left:1px solid #5e7780;box-shadow:-18px 0 50px #0009;display:grid;grid-template-rows:auto minmax(0,1fr) auto}
+.review-panel[hidden]{display:none}
+.review-head{padding:13px 16px 10px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}
+.review-head small{color:var(--mint);font:9px var(--mono);letter-spacing:.09em}
+.review-head h1{font-size:19px;font-weight:650;margin:3px 0 0;letter-spacing:-.015em}
+#closeReview{border:1px solid var(--line);background:var(--layer2);color:var(--text);border-radius:4px;width:32px;height:32px}
+.review-body{overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;padding:0 16px 22px;scrollbar-color:#4d707b transparent}
+.status-line{font:10px var(--mono);color:var(--quiet);padding:12px 0 3px}
+.review-section{padding:12px 0 15px;border-bottom:1px solid var(--line)}
+.section-title{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.section-title h2{margin:0;font:650 13px var(--sans)}
+.section-title span{font-size:10px;color:var(--muted)}
+.section-title.sub{margin:17px 0 8px}
+.mono{font-family:var(--mono)}
+.muted{color:var(--muted);font-size:11px;line-height:1.55;margin:7px 0 10px}
+.candidate-list{display:grid;gap:6px}
+.candidate{border:1px solid #35525e;background:var(--layer2);padding:9px 10px;border-radius:5px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 9px}
+.candidate strong{font-weight:650;font-size:13px;overflow-wrap:anywhere}
+.candidate .kind{font:10px var(--mono);color:var(--quiet)}
+.candidate .why{font:10px var(--mono);color:var(--muted);grid-column:1/-1;line-height:1.5}
+.candidate .review-badge{font:9px var(--mono);color:var(--gold);white-space:nowrap;align-self:center}
+.empty{padding:12px;border:1px dashed #4d6874;color:var(--muted);font-size:11px;line-height:1.5;border-radius:4px}
+.phase-select{font:9px var(--mono);color:var(--quiet)}
+.phase-select select{background:var(--layer2);color:var(--text);border:1px solid var(--line);padding:4px;margin-left:4px;border-radius:3px;font-size:11px}
+.source-transcripts{display:grid;gap:5px}
+.transcript{background:#102a38;border:1px solid #304b58;border-radius:4px;padding:7px 9px}
+.transcript strong{display:block;color:var(--mint);font:10px var(--mono);margin-bottom:3px}
+.transcript p{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.4;font-size:11px}
+.tiny-note{font-size:10px;color:var(--quiet);line-height:1.5;margin:8px 0 0}
+.probe-input{display:flex;gap:6px}
+.probe-input input{min-width:0;flex:1;background:#071b29;border:1px solid #607d85;border-radius:3px;padding:9px;color:var(--text)}
+.probe-input button{background:var(--mint);color:#05212c;border:0;border-radius:3px;padding:0 13px;font-weight:700}
+.chips{display:flex;gap:5px;flex-wrap:wrap;margin-top:9px}
+.chips button{border:1px solid #46616d;border-radius:3px;color:var(--text);background:var(--layer2);padding:5px 8px;font:10px var(--mono)}
+.chips button:hover{border-color:var(--mint)}
+.probe-result{min-height:53px;background:#102a38;border:1px solid var(--line);border-radius:4px;padding:10px;margin-top:10px;font-size:11px;line-height:1.6}
+.probe-result strong{color:var(--mint)}
+.probe-result .secondary{color:var(--muted)}
+.probe-result .warning{color:var(--gold)}
+.provenance{border-bottom:1px solid var(--line);padding:14px 0}
+.provenance summary{cursor:pointer;color:var(--mint);font-size:12px}
+.provenance-text{color:var(--muted);font-size:11px;line-height:1.6}
+.provenance dl{display:grid;grid-template-columns:95px minmax(0,1fr);gap:5px 8px}
+.provenance dt{color:var(--quiet)}
+.provenance dd{margin:0;overflow-wrap:anywhere;font-family:var(--mono);font-size:10px}
+.review-foot{padding:10px 16px;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:10px;color:var(--quiet);font:9px var(--mono)}
+.review-foot a{text-decoration:none;white-space:nowrap}
+.sr-only{position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden}
+@media(max-width:1020px){.source-label{display:none}}
+@media(max-width:650px){
+  .topbar{padding:0 9px;gap:7px}
+  .wordmark{font-size:11px}
+  .section-mark{display:none}
+  .phase-pill{display:none}
+  #openReview{font-size:11px;padding:6px 8px;margin-left:auto}
+  .review-panel{width:100%;border-left:0}
+}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}

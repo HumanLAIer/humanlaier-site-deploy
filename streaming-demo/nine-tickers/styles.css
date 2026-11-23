@@ -170,6 +170,26 @@ button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible,su
 }
 .ticker-change{font:700 10px var(--mono);color:var(--gold);font-variant-numeric:tabular-nums}
 .ticker-change.is-empty{color:#728e98}
+/* Preserve exact model evidence; collapse only the repetitive ticker view.
+   An explicit RAW toggle restores the 26-repeat source for auditing. */
+.ticker-row.has-decode-loop{background:#2a252a}
+.ticker-row.has-decode-loop .ticker-model{border-left-color:#ffc0a9;background:#30232b}
+.ticker-change.is-decode-loop{color:#ffb8a5;white-space:nowrap;font-weight:800}
+.ticker-raw-toggle{
+  border:1px solid #9a8079;border-radius:2px;
+  color:#ffdec4;background:#473331;padding:2px 3px;
+  font:700 9px/1 var(--mono);letter-spacing:0;
+}
+.ticker-raw-toggle:hover{background:#6d4a39;color:white}
+.ticker-raw-toggle[hidden]{display:none!important}
+.ticker-raw-toggle[aria-pressed="true"]{color:#0a2731;background:#ffd4ad}
+.ticker-loop-flag{background:#3b2c2e36}
+.ticker-loop-summary{
+  display:inline-block;color:#ffd3bb;
+  background:#623b3647;border-left:3px solid #ffc0a9;
+  padding:3px 8px;font:650 clamp(12px,1.01vw,15px)/1.35 var(--sans);
+  letter-spacing:.01em;
+}
 .ticker-badge{font:10px var(--mono);color:#c2d2d8;font-variant-numeric:tabular-nums}
 .metrics{
   min-height:0;min-width:0;

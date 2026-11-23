@@ -90,7 +90,7 @@
         }
         const fraction=repeats*width/words.length;
         if(repeats>=10&&fraction>=.8&&(!best||fraction>best.fraction||
-           (fraction===best.fraction&&width>best.width))){
+           (fraction===best.fraction&&width<best.width))){
           best={start,width,repeats,fraction};
         }
       }

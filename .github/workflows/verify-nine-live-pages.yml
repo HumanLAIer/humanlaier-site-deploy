@@ -17,11 +17,16 @@ jobs:
     timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
+      - name: Rebuild byte-exact public artifact for the production main SHA
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.sha }}
+        run: |
+          GITHUB_SHA="$BASE_SHA" node scripts/build-pages.cjs
       - name: Independent live HTTP SHA proof for full-height video, nine continuous transcripts and public source media
         run: |
           python - <<'PY'
           import hashlib,json,pathlib,time,urllib.request
-          local=pathlib.Path("streaming-demo/nine-tickers")
+          local=pathlib.Path(".pages-build/streaming-demo/nine-tickers")
           root="https://humanlaier.com/streaming-demo/nine-tickers/"
           source_part="58e8dd7b568a65203d9a5c204f72f1a3538da58951c7a3f178844547c5fc91de"
           exact=("index.html","styles.css","app.js","comparison.json",

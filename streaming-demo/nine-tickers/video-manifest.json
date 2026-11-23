@@ -1,0 +1,22 @@
+{
+  "schema": "hl-commercial-video-source-v1",
+  "status": "VERIFIED_SOURCE_VIDEO_WITH_AUDIO",
+  "sessionId": "20261117T142835_038897Z_huatzaitcg",
+  "sourcePart": "part_000019.ts",
+  "sourcePartSha256": "58e8dd7b568a65203d9a5c204f72f1a3538da58951c7a3f178844547c5fc91de",
+  "sourcePartOffsetSeconds": 30,
+  "expectedDurationSeconds": 180,
+  "encodedDurationSeconds": 180.022,
+  "filename": "commercial-180.mp4",
+  "mp4Bytes": 14043262,
+  "mp4Sha256": "9fdbdff777391886cfc39b220a053f3e10a49dd72454fe14d7443aacc0176f92",
+  "poster": "commercial-preview.jpg",
+  "posterBytes": 39321,
+  "posterSha256": "52393168432bc269d55335907a607a17fad02d40d9ed57da32b213a284096584",
+  "originalAudioIncluded": true,
+  "mediaEventSyncVerified": false,
+  "sourceResearchRun": 45242204569,
+  "codec": "H.264/AAC",
+  "transcode": "480-pixel width, 18fps; exact original part from SHA-verified public stream",
+  "note": "This is a real source-video excerpt, re-encoded for browser playback. No new transcript inference."
+}

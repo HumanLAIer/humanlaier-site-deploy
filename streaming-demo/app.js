@@ -713,6 +713,34 @@
     }
     if(!shown.length)fragment.append(elem('p','conversation-empty',
       'No observed chat, action notifications or preserved ASR speech matches this window.'));
+    // Historical experimental captures were released for original activity
+    // evidence, NOT full host ASR. Do not silently import words from a
+    // different video or label 0 ASR blocks as verified silent speech.
+    if(includesMessage&&!state.source?.transcript?.length&&!needle&&!state.selectedActor){
+      const notice=elem('div','conversation-empty');
+      notice.append(elem('strong','',
+        'Host speech is not transcribed for this recording. '));
+      notice.append(elem('span','',
+        'Viewer comments and actions below are original collector observations. '+
+        'An ASR excerpt from another capture would not be synchronized to this video.'));
+      const separate=(D.sessions||[]).map(s=>({
+        s,media:(D.review||[]).find(r=>r.sid===s.id&&
+          Array.isArray(r.transcript)&&r.transcript.length>0&&r.video)
+      })).filter(x=>x.s.id!==session().id&&x.media&&
+        (x.s.comments?.length||0)+(x.s.interactions?.length||0)>0)
+        .sort((a,b)=>b.media.transcript.length-a.media.transcript.length)[0];
+      if(separate){
+        const open=elem('button','subtle-button',
+          'Open separate '+separate.s.label+' · '+
+          number(separate.media.transcript.length)+' machine-ASR passages');
+        open.type='button';
+        open.title='Switch to a DIFFERENT original recording with speech and activity. '+
+          'ASR and collector/media timing remain unverified.';
+        open.addEventListener('click',()=>switchSession(separate.s.id));
+        notice.append(open);
+      }
+      fragment.prepend(notice);
+    }
     list.replaceChildren(fragment);
     state.messageNodes=nodes;
     const hasSpeech=!!state.source?.transcript?.length;

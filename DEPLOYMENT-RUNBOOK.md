@@ -31,7 +31,7 @@ If settings access is blocked, do not disable the old publishing method or chang
 
 Changes are proposed via PR. All source/site, main V4 and bakeoff tests run on every PR even if the PR modifies only one page. A failure, cancellation or missing gate blocks the Actions deployment. After merging, tests rerun on main before packaging and deployment. Publishing uses an allowlisted static artifact containing the original website, CNAME, .nojekyll, all archived media, both streaming experiences, and a commit-bound release manifest. Internal CI scripts and workflows are excluded from that artifact.
 
-The V4 browser suite verifies real elapsed-time video playback, seeking, pause/resume, mute and speed, source audio fallback, left/right conversation bubbles, transcript model selection, original archived captures and mobile layout. The distinct bakeoff suite validates nine genuine ASR outputs, source integrity, original video, and the dense research layout.
+The main and bakeoff browser suites run against the generated, allowlisted .pages-build artifact, not against unreleased repository paths. The V4 browser suite verifies real elapsed-time video playback, seeking, pause/resume, mute and speed, source audio fallback, left/right conversation bubbles, transcript model selection, original archived captures and mobile layout. The distinct bakeoff suite validates nine genuine ASR outputs, source integrity, original video, and the dense research layout.
 
 A successful Pages deployment action is not proof of site correctness. Post-deployment checks must verify the *exact* public commit, critical asset hashes, HTTP byte-range support, and actual browser playback. A failing post-deploy smoke test must be reported as a failed release.
 

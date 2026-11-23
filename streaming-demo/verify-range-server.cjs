@@ -3,7 +3,7 @@
 // video CDNs do. Python SimpleHTTPServer responds 200 to video seeks and can
 // make a valid MP4 appear broken in headless Chrome.
 const http=require('node:http'),fs=require('node:fs'),path=require('node:path');
-const root=process.cwd();
+const root=path.resolve(process.env.HL_TEST_WEB_ROOT||process.cwd());
 const mime={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8',
   '.css':'text/css; charset=utf-8','.json':'application/json; charset=utf-8',
   '.svg':'image/svg+xml','.jpg':'image/jpeg','.png':'image/png',

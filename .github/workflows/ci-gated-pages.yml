@@ -49,13 +49,18 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Install browser test tools
+      - name: Install pinned Playwright, using runner Chrome when available
         run: |
           npm install --no-save --ignore-scripts 'playwright@1.56.1'
-          npx playwright install --with-deps chrome
+          if ! command -v google-chrome >/dev/null 2>&1; then
+            npx playwright install --with-deps chrome
+          fi
+      - name: Build exact Pages artifact for browser-level release acceptance
+        run: node scripts/build-pages.cjs
       - name: Test V4 original video, group chat, audio fallback and mobile
         env:
           HL_TEST_TARGET: main
+          HL_TEST_WEB_ROOT: .pages-build
         run: node scripts/verify-pages-browser.cjs
 
   nine-ticker:
@@ -69,13 +74,18 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Install browser test tools
+      - name: Install pinned Playwright, using runner Chrome when available
         run: |
           npm install --no-save --ignore-scripts 'playwright@1.56.1'
-          npx playwright install --with-deps chrome
+          if ! command -v google-chrome >/dev/null 2>&1; then
+            npx playwright install --with-deps chrome
+          fi
+      - name: Build exact Pages artifact for independent bakeoff acceptance
+        run: node scripts/build-pages.cjs
       - name: Test independent bakeoff real media in Chrome
         env:
           HL_TEST_TARGET: bakeoff
+          HL_TEST_WEB_ROOT: .pages-build
         run: node scripts/verify-pages-browser.cjs
       - name: Check independent nine-ticker research screen layout
         run: |
@@ -166,10 +176,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Install browser test tools
+      - name: Install pinned Playwright, using runner Chrome when available
         run: |
           npm install --no-save --ignore-scripts 'playwright@1.56.1'
-          npx playwright install --with-deps chrome
+          if ! command -v google-chrome >/dev/null 2>&1; then
+            npx playwright install --with-deps chrome
+          fi
       - name: Test deployed V4 as independent product demo
         env:
           HL_TEST_TARGET: main

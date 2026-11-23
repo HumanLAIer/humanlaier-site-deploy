@@ -5,6 +5,10 @@ on:
       - feature/broadcast-video-nine-lines-20261123
     paths:
       - 'streaming-demo/nine-tickers/.video-parts/**'
+  pull_request:
+    paths:
+      - 'streaming-demo/nine-tickers/.video-parts/**'
+      - '.github/workflows/assemble-nine-video-once.yml'
 permissions:
   contents: write
 concurrency:
@@ -12,12 +16,23 @@ concurrency:
   cancel-in-progress: false
 jobs:
   assemble-original:
-    if: github.repository == 'HumanLAIer/humanlaier-site-deploy'
+    if: >-
+      github.repository == 'HumanLAIer/humanlaier-site-deploy' &&
+      (
+        (github.event_name == 'push' &&
+         github.ref == 'refs/heads/feature/broadcast-video-nine-lines-20261123')
+        ||
+        (github.event_name == 'pull_request' &&
+         github.event.pull_request.head.repo.full_name == github.repository &&
+         github.event.pull_request.head.ref == 'feature/broadcast-video-nine-lines-20261123' &&
+         github.event.pull_request.user.login == 'alex-hidden-laier')
+      )
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: feature/broadcast-video-nine-lines-20261123
           fetch-depth: 1
           persist-credentials: true
       - uses: actions/setup-python@v5

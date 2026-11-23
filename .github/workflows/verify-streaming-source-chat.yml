@@ -1,0 +1,34 @@
+name: Verify integrated streaming source conversation
+on:
+  pull_request:
+    paths:
+      - 'streaming-demo/app.js'
+      - 'streaming-demo/index.html'
+      - 'streaming-demo/ux.css'
+      - 'streaming-demo/featured-evidence.js'
+      - 'streaming-demo/verify-featured-chat.cjs'
+      - '.github/workflows/verify-streaming-source-chat.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'streaming-demo/app.js'
+      - 'streaming-demo/index.html'
+      - 'streaming-demo/ux.css'
+      - 'streaming-demo/featured-evidence.js'
+      - 'streaming-demo/verify-featured-chat.cjs'
+      - '.github/workflows/verify-streaming-source-chat.yml'
+permissions:
+  contents: read
+jobs:
+  source-chat-contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check JavaScript syntax
+        run: |
+          node --check streaming-demo/bridge.js
+          node --check streaming-demo/app.js
+          node --check streaming-demo/featured-evidence.js
+      - name: Verify exact source evidence and native group-chat layout
+        run: node streaming-demo/verify-featured-chat.cjs

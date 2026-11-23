@@ -55,7 +55,7 @@ const probe=String.raw`(()=>{
     const elem=document.createElement('pre');elem.id='__source_chat_qa_result';
     elem.textContent=JSON.stringify(result);
     document.body.appendChild(elem);
-    },1200);
+    },3500);
   }
   check();
 })();`;
@@ -64,7 +64,7 @@ const testPage=path.join(root,checkFile+'.html');
 const testScript=path.join(root,checkFile+'.js');
 fs.writeFileSync(testPage,html.replace('</body>','<script src="'+checkFile+'.js"></script></body>'));
 fs.writeFileSync(testScript,probe);
-const server=cp.spawn('python3',['-m','http.server','18764','--bind','127.0.0.1'],{stdio:'ignore'});
+const server=cp.spawn(process.execPath,[path.join(root,'verify-range-server.cjs')],{stdio:'ignore'});
 const cleanup=()=>{server.kill();try{fs.unlinkSync(testPage);}catch{}try{fs.unlinkSync(testScript);}catch{}};
 (async()=>{
   try{

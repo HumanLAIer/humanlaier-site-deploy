@@ -18,7 +18,7 @@ OUTPUT = ROOT / "commercial-180.mp4"
 EXPECTED = "9fdbdff777391886cfc39b220a053f3e10a49dd72454fe14d7443aacc0176f92"
 COUNT = 19
 PART_SIZE = 765000
-FINAL_SIZE = 273264
+FINAL_SIZE = 273262
 TOTAL = 14043262
 
 
@@ -43,7 +43,7 @@ def run() -> dict:
             for i,part in enumerate(parts):
                 size=part.stat().st_size
                 if part.is_symlink() or size!=(FINAL_SIZE if i==COUNT-1 else PART_SIZE):
-                    raise ValueError("assembled_video_part_size_invalid")
+                    raise ValueError(f"assembled_video_part_size_invalid: part={i:02d}, bytes={size}")
                 with part.open("rb") as source:
                     while True:
                         chunk=source.read(1024*1024)

@@ -37,6 +37,9 @@ jobs:
               try:
                   html=get("index.html",200000).decode("utf-8")
                   assert "<title>Nine Tickers" in html
+                  assert "03 OBSERVED FINDINGS" in html
+                  assert "Sufion V-Man" in html and "Sylveon VMAX" in html
+                  assert "COMMERCIAL OMISSION" in html and "DECODE DEGENERATION" in html
                   assert 'id="rawTickers"' in html and 'id="domainTickers"' in html
                   js=get("app.js",100000).decode("utf-8")
                   assert "SOURCE_MATCHED_PUBLIC_UNREVIEWED_NINE_DECODES" in js

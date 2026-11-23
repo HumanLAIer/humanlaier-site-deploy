@@ -93,7 +93,7 @@
         const ratio=similarity(key,known);
         const phoneticMatch=phonetic && phonetic===signature(known) && ratio>=.55;
         const strictFuzzy=/^[a-z ]+$/.test(key)&&/^[a-z ]+$/.test(known)&&
-          ratio >= (known[0]!==key[0]?.84:.88);
+          ratio >= (known[0]!==key[0] ? 0.84 : 0.88);
         if(!phoneticMatch&&!strictFuzzy) continue;
         const proposal={entity,alias,match:phoneticMatch?"phonetic":"fuzzy",score:ratio};
         if(!best || proposal.score>best.score) best=proposal;

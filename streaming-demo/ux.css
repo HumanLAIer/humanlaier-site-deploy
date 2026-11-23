@@ -523,3 +523,36 @@ select{max-width:100%}
   .featured-asr-clock{font-size:9px}
   .featured-chat-line{flex-wrap:wrap;gap:3px 8px}
 }
+/* First-class Nov17 source playback inside the EXISTING V4 three-panel workbench. */
+.featured-audio-slate[hidden],.featured-model-bar[hidden],.featured-clock-note[hidden]{display:none!important}
+.media-viewport.featured-audio-active{height:clamp(175px,26vh,255px);min-height:175px}
+.featured-audio-slate{width:100%;height:100%;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;
+  gap:5px;padding:30px 14px 17px;color:#ecf4f5;
+  background:radial-gradient(ellipse at 50% 110%,#174962 0%,#071b2d 74%)}
+.featured-audio-eyebrow{font:700 10px/1.4 var(--mono);letter-spacing:.09em;color:#7bd1c7}
+.featured-audio-slate strong{font:500 clamp(19px,2vw,26px)/1.2 var(--serif);color:#f6ead3}
+.featured-audio-slate p{margin:0;font:700 11px/1.4 var(--mono);color:#c5dde0}
+.featured-audio-slate small{max-width:335px;font:10px/1.4 var(--sans);color:#aecbd0}
+.featured-model-bar{display:flex;align-items:center;gap:6px 9px;flex-wrap:wrap;
+  padding:5px 0 1px;border-top:1px solid #d5e0df}
+.featured-model-bar label{font:700 10px var(--mono);color:#34616c;white-space:nowrap}
+.featured-model-bar select{flex:1;min-width:150px;max-width:100%;width:auto;
+  min-height:31px;border:1px solid #abc9cb;border-radius:3px;padding:3px 6px;
+  font:11px/1.3 var(--sans);background:#fff;color:#123b4b}
+.featured-model-bar a{font:700 10px/1.3 var(--mono);color:#176b78;
+  text-decoration:underline;text-underline-offset:3px;white-space:nowrap}
+.featured-clock-note{padding:7px 11px;background:#f8f7ef;
+  border-bottom:1px solid #e5dcbc;color:#66532e;
+  font:11px/1.45 var(--sans)}
+.featured-clock-note strong{font-weight:700;color:#6f4d1e}
+.message-row.provisional-chat .message-bubble{border-style:dashed;border-color:#8fbaac}
+.message-row.provisional-chat .message-subline{display:block;color:#42675e;
+  font-size:10px;line-height:1.4;margin-top:5px}
+.message-row .source-estimated{color:#566e64;text-decoration:none;cursor:default}
+.message-row.speech .message-time{font-variant-numeric:tabular-nums}
+@media(max-width:700px){
+  .media-viewport.featured-audio-active{height:215px;min-height:215px}
+  .featured-model-bar{gap:5px}
+  .featured-model-bar select{min-width:100px}
+}

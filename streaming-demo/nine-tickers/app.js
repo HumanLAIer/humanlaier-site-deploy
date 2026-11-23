@@ -379,6 +379,17 @@
       b.classList.toggle("active",active);
       b.setAttribute("aria-pressed",String(active));
     });
+    // Source-backed multi-ASR disagreement, not a corrected transcript.
+    // This is a hypothesis raised for human listening review.
+    const entityFoot=$("metricContext");
+    const umbrella=(S.block===3 &&
+      /mombreon\s+please/i.test(clip.texts["production-base.en--focused"]) &&
+      /momebrion\s+please/i.test(clip.texts["singlish-small--compact"]) &&
+      /um bombion\s+please/i.test(clip.texts["coats-large-v2--control"]));
+    entityFoot.classList.toggle("is-review-candidate",umbrella);
+    entityFoot.textContent=umbrella
+      ?"REVIEW ONLY · Umbreon? · Base CTX: mombreon · Sing TCG: momebrion · Coats RAW: um bombion · Coats CTX omits · LISTEN TO VERIFY"
+      :"Illustrative questions only · no confirmed product, purchase, or revenue";
   }
   // A CNBC-style continuous crawl. All word positions within a verified
   // 15-second block receive a uniform, linear time interpolation. We have

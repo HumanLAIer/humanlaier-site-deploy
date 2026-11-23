@@ -63,6 +63,12 @@ jobs:
           assert.equal(d.domainCandidatesAreReviewOnly,true);
           assert.equal(d.lanes.length,9);
           assert.equal(d.clips.length,12);
+          assert(js.includes("function detectDecodeLoop(") &&
+                 js.includes("function renderTapeSegment("),
+                 "repetition warning must be reversible and preserve ASR evidence");
+          const suspect=d.clips[1].texts["singlish-small--focused"];
+          assert.equal((suspect.match(/let's go/g)||[]).length,26,
+                       "source-backed 26-repeat Singlish focused decoder fault");
           const lanes=new Set(d.lanes.map(x=>x.id));
           assert.equal(lanes.size,9);
           for(const m of ["production-base.en","singlish-small","coats-large-v2"])

@@ -81,6 +81,7 @@
         <div class="notes-panel">
           <strong>Same original video and 180 seconds of audio; three ASR models × three decoding conditions.</strong>
           <p>Each ticker preserves the exact original model output. Amber indicates words newly present versus that model's unprompted transcript; lavender indicates unprompted words not found in the other two engines; teal identifies TCG terms. Highlights mean <em>different</em>, not <em>correct</em>. A small Δ count reports newly present words versus that model's baseline. Terms not present in a conditioned transcript cannot be highlighted there.</p>
+          <p><strong>Repetition warning:</strong> when one decoder repeats the same words ten or more times across most of a source block, its ticker shows an explicit <em>suspected ASR loop</em> summary. The RAW/FOLD control restores the verbatim model output in that lane; no source transcript or score is modified. Repetition detection is not proof of incorrect speech.</p>
           <p>The focused glossary was selected after examining a baseline, so this is not a blind accuracy benchmark. No independently verified human reference transcript, word-level timestamping, calibrated chat/video clock, completed transaction, or revenue claim exists. The original source video is re-encoded and SHA-matched to the public November 17 livestream. <span id="provenance">Source identity verification pending.</span></p>
           <a href="https://github.com/HumanLAIer/hl-livestream-pilot/pull/176">Nine ASR model study</a>
         </div>

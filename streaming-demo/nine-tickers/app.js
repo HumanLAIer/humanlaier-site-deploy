@@ -14,6 +14,61 @@
   const SRC="58e8dd7b568a65203d9a5c204f72f1a3538da58951c7a3f178844547c5fc91de";
   const PACK="dacb6b79f22ad3b7c16ecabe5ffb2c61af38c17e21381f21b850fb739e61d2a0";
   const TERMS=/(pok[eé]mon|sylveon|umbreon|leafeon|espeon|glaceon|rayquaza|charizard|pikachu|eevee|booster|etb|elite trainer box|vm[a-z]?x|packs?|psa(?:\s*10)?|cards?|slabs?|bids?|claims?|shipping|price|dollars?|sgd|market value|how much)/gi;
+
+  // Compare original model words, never rewrite them or confuse agreement
+  // with human-verified accuracy. Only the presentation is annotated.
+  const WORD_RE=/[\p{L}\p{N}]+(?:['’.-][\p{L}\p{N}]+)*/gu;
+  const simplify=s=>s.normalize("NFKC").toLocaleLowerCase("en")
+    .replace(/['’]/g,"").replace(/[^\p{L}\p{N}]+/gu,"");
+  function getWords(source){
+    WORD_RE.lastIndex=0;
+    return Array.from(source.matchAll(WORD_RE),m=>({
+      start:m.index,end:m.index+m[0].length,text:m[0],key:simplify(m[0])
+    }));
+  }
+  function compareWords(source,reference){
+    const newer=getWords(source),older=getWords(reference);
+    const n=newer.length,m=older.length, changed=new Set();
+    if(!n)return {words:newer,changed,added:0,removed:m};
+    if(!m)return {words:newer,changed:new Set(newer.map((_,i)=>i)),added:n,removed:0};
+    let matched=0;
+    if(n*m>120000){
+      // Bounded fallback for pathological repetition. Still only a visual
+      // hint, not an accuracy score. Prefer no fabricated word alignment.
+      const left=new Map();
+      for(const x of older)left.set(x.key,(left.get(x.key)||0)+1);
+      for(let i=0;i<n;i++){
+        const key=newer[i].key,available=left.get(key)||0;
+        if(available){left.set(key,available-1);matched++}
+        else changed.add(i);
+      }
+    }else{
+      const stride=m+1;
+      const dp=new Uint16Array((n+1)*stride);
+      for(let i=n-1;i>=0;i--)for(let j=m-1;j>=0;j--){
+        dp[i*stride+j]=newer[i].key===older[j].key
+          ?dp[(i+1)*stride+j+1]+1
+          :Math.max(dp[(i+1)*stride+j],dp[i*stride+j+1]);
+      }
+      let i=0,j=0;
+      while(i<n&&j<m){
+        if(newer[i].key===older[j].key){matched++;i++;j++}
+        else if(dp[(i+1)*stride+j]>=dp[i*stride+j+1]){changed.add(i);i++}
+        else j++;
+      }
+      while(i<n)changed.add(i++);
+    }
+    return {words:newer,changed,added:n-matched,removed:m-matched};
+  }
+  function differences(source,reference,otherRaw){
+    if(otherRaw){
+      const known=new Set(otherRaw.flatMap(text=>getWords(text).map(x=>x.key)));
+      const words=getWords(source),changed=new Set();
+      words.forEach((w,i)=>{if(w.key.length>=3&&!known.has(w.key))changed.add(i)});
+      return {words,changed,added:changed.size,removed:0,mode:"unique"};
+    }
+    return {...compareWords(source,reference),mode:"changed"};
+  }
   const S={ready:false,data:null,videoManifest:null,block:0,lastTime:-1,pan:true,rows:new Map(),buttons:[]};
   const video=$("video");
   const el=(tag,cls,t)=>{
@@ -52,11 +107,12 @@
         viewport.append(line);
         button.append(viewport);
         const stats=el("div","ticker-meta");
+        const delta=el("span","ticker-change is-empty","—");
         const number=el("span","ticker-badge","—");
-        stats.append(number);
+        stats.append(delta,number);
         row.append(label,button,stats);
         box.append(row);
-        S.rows.set(key,{line,viewport,number,row,model,phase});
+        S.rows.set(key,{line,viewport,number,delta,row,model,phase});
       }
     }
   }
@@ -123,19 +179,25 @@
        ||m.mediaEventSyncVerified!==false)
        throw Error("Original video source verification failed");
   }
-  function annotate(line,source,isHighlighted){
+  function annotate(line,source,diff){
     line.replaceChildren();
     if(!source){line.append(el("span","muted","[No speech returned]"));return}
-    if(!isHighlighted){line.append(document.createTextNode(source));return}
-    let index=0,match;
-    TERMS.lastIndex=0;
-    while((match=TERMS.exec(source))!==null){
-      if(match.index>index)line.append(document.createTextNode(source.slice(index,match.index)));
-      line.append(el("span","term",match[0]));
-      index=TERMS.lastIndex;
-      if(!match[0].length)break;
+    let pos=0;
+    for(let i=0;i<diff.words.length;i++){
+      const token=diff.words[i];
+      if(token.start>pos)line.append(document.createTextNode(source.slice(pos,token.start)));
+      TERMS.lastIndex=0;
+      const isDomain=TERMS.test(token.text);
+      const changed=diff.changed.has(i);
+      if(isDomain||changed){
+        const classes=[];
+        if(isDomain)classes.push("term");
+        if(changed)classes.push(diff.mode==="unique"?"word-unique":"word-change");
+        line.append(el("span",classes.join(" "),token.text));
+      }else line.append(document.createTextNode(token.text));
+      pos=token.end;
     }
-    if(index<source.length)line.append(document.createTextNode(source.slice(index)));
+    if(pos<source.length)line.append(document.createTextNode(source.slice(pos)));
   }
   function buildBlocks(){
     const box=$("blockNav");
@@ -154,12 +216,26 @@
     S.block=Math.max(0,Math.min(11,index|0));
     S.lastTime=-1;
     const clip=S.data.clips[S.block];
-    set("cueText","BLOCK "+String(S.block+1).padStart(2,"0")+" / "+time(clip.start)+"–"+time(clip.end));
+    set("cueText",String(S.block+1).padStart(2,"0")+" / "+time(clip.start)+"–"+time(clip.end));
+    const baseline=MODELS.map(m=>[m.id,clip.texts[m.id+"--control"]]);
     for(const [id,r] of S.rows){
-      annotate(r.line,clip.texts[id],r.phase.id!=="control");
+      const original=clip.texts[id];
+      const ref=clip.texts[r.model.id+"--control"];
+      const others=r.phase.id==="control"
+        ?baseline.filter(([modelId])=>modelId!==r.model.id).map(([,text])=>text)
+        :null;
+      const diff=differences(original,ref,others);
+      annotate(r.line,original,diff);
       const m=S.data.lanes.find(l=>l.id===id);
       r.number.textContent=m.inferenceSeconds.toFixed(1)+"s";
-      r.row.title=m.model+" / "+m.phase+" / "+m.revision+" / peak "+Math.round(m.peakRssMib)+" MiB";
+      r.delta.textContent=(diff.mode==="unique"?"≠":"+")+diff.added;
+      r.delta.classList.toggle("is-empty",diff.added===0);
+      r.delta.title=diff.mode==="unique"
+        ?diff.added+" tokens not present in either other unprompted engine"
+        :diff.added+" newly present words; "+diff.removed+" baseline words absent in this decode";
+      r.row.title=m.model+" / "+m.phase+" / "+m.revision+
+        " / peak "+Math.round(m.peakRssMib)+" MiB / "+
+        (diff.mode==="unique"?"unshared words "+diff.added:"changed words +"+diff.added+"/−"+diff.removed);
       r.line.style.transform="translateX(0px)";
     }
     S.buttons.forEach((b,i)=>{
@@ -196,6 +272,11 @@
   function bindControls(){
     $("speed").addEventListener("change",e=>{video.playbackRate=Number(e.target.value)||1});
     $("tickerMotion").addEventListener("change",e=>{S.pan=e.target.checked;panLines(video.currentTime)});
+    video.addEventListener("loadedmetadata",()=>{
+      const ratio=video.videoWidth/video.videoHeight;
+      if(Number.isFinite(ratio)&&ratio>.4&&ratio<.75)
+        document.documentElement.style.setProperty("--video-ratio",ratio.toFixed(6));
+    });
     video.addEventListener("timeupdate",()=>syncClock(video.currentTime));
     video.addEventListener("seeked",()=>syncClock(video.currentTime));
     video.addEventListener("play",()=>set("audioStatus","SOURCE VIDEO · NINE LIVE-SYNCED TRANSCRIPTS"));
@@ -214,7 +295,6 @@
     set("metricAccounts",d.engagement.uniqueActors);
     set("metricEvents",d.engagement.deliberateEvents);
     set("metricBuyer",d.engagement.buyerIntentComments);
-    set("audienceStatus",d.engagement.comments+" comments · "+d.engagement.uniqueActors+" accounts · "+d.engagement.deliberateEvents+" actions");
     const byTime=d.chatEvidence.slice().sort((a,b)=>a.estimatedAudioSec-b.estimatedAudioSec);
     document.querySelectorAll(".signal").forEach((button,i)=>{
       const c=byTime[i];

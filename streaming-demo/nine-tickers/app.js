@@ -69,7 +69,7 @@
     }
     return {...compareWords(source,reference),mode:"changed"};
   }
-  const S={ready:false,data:null,videoManifest:null,block:0,lastTime:-1,pan:true,rows:new Map(),buttons:[],frame:0,seekIntent:null};
+  const S={ready:false,data:null,videoManifest:null,block:0,lastTime:-1,pan:true,rows:new Map(),buttons:[],frame:0,seekIntent:null,seekTimer:0};
   const video=$("video");
   const el=(tag,cls,t)=>{
     const x=document.createElement(tag);
@@ -338,14 +338,31 @@
   }
   function seekSeconds(t){
     if(!S.ready)return;
-    // HTTP media range/decoder seeks can be asynchronous. Hold the intended
-    // clock position until seeked, rather than momentarily snapping the
-    // transcript crawl back to the previous media position.
+    // Pause the old video clock while the real decoder seeks. Do not start
+    // playback until the video has confirmed the requested position.
     const dest=Math.max(0,Math.min(179.95,t));
+    video.pause();
     S.seekIntent=dest;
-    video.currentTime=dest;
+    video.dataset.sourceSeekRequested=dest.toFixed(3);
+    clearTimeout(S.seekTimer);
+    set("audioStatus","SEEKING ORIGINAL VIDEO · TICKERS HELD AT REQUESTED BLOCK");
+    try{
+      video.currentTime=dest;
+    }catch(error){
+      S.seekIntent=null;
+      set("audioStatus","VIDEO SEEK NOT SUPPORTED BY THIS BROWSER");
+      syncClock(video.currentTime);
+      return;
+    }
     syncClock(dest);
-    video.play().catch(()=>set("audioStatus","Press play to hear the source video."));
+    S.seekTimer=setTimeout(()=>{
+      if(S.seekIntent===dest){
+        S.seekIntent=null;
+        video.dataset.sourceSeekRequested="";
+        set("audioStatus","VIDEO SEEK TIMED OUT · TICKERS RETURNED TO ACTUAL MEDIA TIME");
+        syncClock(video.currentTime);
+      }
+    },9000);
   }
   function seekBlock(n){seekSeconds(Math.max(0,n)*15)}
   function bindControls(){
@@ -361,7 +378,20 @@
       document.fonts.ready.then(()=>{if(S.ready)measureTimelines()});
     video.addEventListener("timeupdate",()=>syncClock(S.seekIntent!==null?S.seekIntent:video.currentTime));
     video.addEventListener("seeked",()=>{
-      S.seekIntent=null;
+      if(S.seekIntent!==null){
+        if(Math.abs(video.currentTime-S.seekIntent)>1.25){
+          // A stale decoder event must not claim that a different source
+          // block was reached. The pending-seek timeout handles failure.
+          return;
+        }
+        clearTimeout(S.seekTimer);
+        S.seekTimer=0;
+        S.seekIntent=null;
+        video.dataset.sourceSeekRequested="";
+        syncClock(video.currentTime);
+        video.play().catch(()=>set("audioStatus","Source seek complete; press play to resume."));
+        return;
+      }
       syncClock(video.currentTime);
     });
     video.addEventListener("play",()=>{

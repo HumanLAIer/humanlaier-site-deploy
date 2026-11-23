@@ -14,9 +14,13 @@ for(const id of ["video","videoError","blockNav","rawTickers","diffTickers",
   assert(html.includes('id="'+id+'"'),"missing "+id);
 }
 assert(!html.includes("<h1"),"no introductory hero/essay");
-assert(html.includes("broadcast-top")&&html.includes("ticker-row")===false);
-assert(css.includes("grid-template-columns:minmax(0,1fr) minmax(0,1fr)"),"50/50 video+metrics");
-assert(css.includes("grid-template-rows:22px repeat(9,minmax(0,1fr))"),"nine tight rows");
+assert(html.includes('class="video-column"')&&html.includes('class="right-panel"'),"portrait video to left, transcript column to right");
+assert(html.indexOf('class="tickers"')<html.indexOf('class="metrics"'),"metrics below nine source-model outputs");
+assert(css.includes("--video-ratio:.5625")&&css.includes("var(--video-ratio)"),"video column sized to actual portrait aspect");
+assert(css.includes("grid-template-rows:var(--mast-h) minmax(0,1fr)"),"original video fills usable viewport height");
+assert(css.includes("grid-template-rows:27px repeat(9,minmax(0,1fr))"),"nine legible continuous source tracks");
+assert(js.includes("function buildTimelines()")&&js.includes("function panLines(seconds)"),"source text assembled as continuous non-resetting ribbons");
+assert(js.includes("requestAnimationFrame(renderFrame)"),"smooth media-clock-driven crawl while playing");
 assert(js.includes("SOURCE_MATCHED_PUBLIC_UNREVIEWED_NINE_DECODES"));
 assert(!js.includes("audio.src="),"video must replace audio player");
 const d=JSON.parse(read("comparison.json"));

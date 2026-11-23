@@ -69,7 +69,7 @@
     }
     return {...compareWords(source,reference),mode:"changed"};
   }
-  const S={ready:false,data:null,videoManifest:null,block:0,lastTime:-1,pan:true,rows:new Map(),buttons:[]};
+  const S={ready:false,data:null,videoManifest:null,block:0,lastTime:-1,pan:true,rows:new Map(),buttons:[],frame:0};
   const video=$("video");
   const el=(tag,cls,t)=>{
     const x=document.createElement(tag);
@@ -103,7 +103,7 @@
         button.setAttribute("aria-label","Replay "+model.label+" "+phase.meaning+" source block");
         button.addEventListener("click",()=>seekBlock(S.block));
         const viewport=el("span","ticker-viewport");
-        const line=el("span","ticker-line","[Awaiting verified model output]");
+        const line=el("span","ticker-line ticker-tape","[Awaiting verified source timeline]");
         viewport.append(line);
         button.append(viewport);
         const stats=el("div","ticker-meta");
@@ -112,7 +112,7 @@
         stats.append(delta,number);
         row.append(label,button,stats);
         box.append(row);
-        S.rows.set(key,{line,viewport,number,delta,row,model,phase});
+        S.rows.set(key,{line,viewport,number,delta,row,model,phase,segments:[],diffs:[],anchors:[]});
       }
     }
   }
@@ -199,6 +199,55 @@
     }
     if(pos<source.length)line.append(document.createTextNode(source.slice(pos)));
   }
+  // Every lane owns one immutable 180-second ribbon of 12 real ASR blocks.
+  // We annotate text once. Nothing is replaced when the source crosses 15s.
+  function buildTimelines(){
+    const laneById=new Map(S.data.lanes.map(l=>[l.id,l]));
+    for(const [id,r] of S.rows){
+      r.line.replaceChildren();
+      r.segments=[];
+      r.diffs=[];
+      for(let i=0;i<12;i++){
+        const clip=S.data.clips[i];
+        const original=clip.texts[id];
+        const raw=clip.texts[r.model.id+"--control"];
+        const others=r.phase.id==="control"
+          ?MODELS.filter(m=>m.id!==r.model.id)
+                 .map(m=>clip.texts[m.id+"--control"])
+          :null;
+        const diff=differences(original,raw,others);
+        const segment=el("span","ticker-chunk");
+        segment.dataset.sourceBlock=String(i+1);
+        segment.title="Source block "+(i+1)+" ("+time(i*15)+"–"+time((i+1)*15)+
+          "): original "+r.model.label+" "+r.phase.code+" transcript";
+        annotate(segment,original,diff);
+        r.segments.push(segment);
+        r.diffs.push(diff);
+        r.line.append(segment);
+      }
+      r.line.dataset.continuousSourceTape="true";
+      const result=laneById.get(id);
+      r.number.textContent=result.inferenceSeconds.toFixed(1)+"s";
+      r.row.title=result.model+" / "+result.phase+" / "+result.revision+
+        " / peak "+Math.round(result.peakRssMib)+" MiB / 180s source-aligned, 12 contiguous blocks";
+    }
+    measureTimelines();
+  }
+  function measureTimelines(){
+    if(!S.ready)return;
+    for(const r of S.rows.values()){
+      let px=0;
+      r.anchors=[0];
+      for(const chunk of r.segments){
+        // getBoundingClientRect includes subpixel text advance; no guessed
+        // word timestamps. The whole source span gets exactly 15 seconds.
+        const width=chunk.getBoundingClientRect().width;
+        px+=Math.max(width,1);
+        r.anchors.push(px);
+      }
+    }
+    panLines(video.currentTime);
+  }
   function buildBlocks(){
     const box=$("blockNav");
     box.replaceChildren();S.buttons=[];
@@ -211,32 +260,21 @@
       box.append(b);S.buttons.push(b);
     }
   }
+  // Active block updates only navigation and a small delta indicator; the
+  // actual ticker DOM/text is built once and never refreshed or reset.
   function renderBlock(index){
     if(!S.ready)return;
     S.block=Math.max(0,Math.min(11,index|0));
-    S.lastTime=-1;
     const clip=S.data.clips[S.block];
     set("cueText",String(S.block+1).padStart(2,"0")+" / "+time(clip.start)+"–"+time(clip.end));
-    const baseline=MODELS.map(m=>[m.id,clip.texts[m.id+"--control"]]);
-    for(const [id,r] of S.rows){
-      const original=clip.texts[id];
-      const ref=clip.texts[r.model.id+"--control"];
-      const others=r.phase.id==="control"
-        ?baseline.filter(([modelId])=>modelId!==r.model.id).map(([,text])=>text)
-        :null;
-      const diff=differences(original,ref,others);
-      annotate(r.line,original,diff);
-      const m=S.data.lanes.find(l=>l.id===id);
-      r.number.textContent=m.inferenceSeconds.toFixed(1)+"s";
+    for(const r of S.rows.values()){
+      const diff=r.diffs[S.block];
+      if(!diff)continue;
       r.delta.textContent=(diff.mode==="unique"?"≠":"+")+diff.added;
       r.delta.classList.toggle("is-empty",diff.added===0);
       r.delta.title=diff.mode==="unique"
-        ?diff.added+" tokens not present in either other unprompted engine"
-        :diff.added+" newly present words; "+diff.removed+" baseline words absent in this decode";
-      r.row.title=m.model+" / "+m.phase+" / "+m.revision+
-        " / peak "+Math.round(m.peakRssMib)+" MiB / "+
-        (diff.mode==="unique"?"unshared words "+diff.added:"changed words +"+diff.added+"/−"+diff.removed);
-      r.line.style.transform="translateX(0px)";
+        ?diff.added+" tokens absent in both other unprompted engines for this same source block"
+        :diff.added+" newly present words; "+diff.removed+" baseline words absent in this same source block";
     }
     S.buttons.forEach((b,i)=>{
       const active=i===S.block;
@@ -244,13 +282,25 @@
       b.setAttribute("aria-pressed",String(active));
     });
   }
+  // A CNBC-style continuous crawl. All word positions within a verified
+  // 15-second block receive a uniform, linear time interpolation. We have
+  // NO verified word timestamps, so this is an approximate visual timebase.
+  // At t=15n the transform equals the previous span's exact end and the
+  // next span's exact start: no jump, DOM replacement or reset.
   function panLines(seconds){
     if(!S.ready)return;
     const reduced=window.matchMedia("(prefers-reduced-motion:reduce)").matches;
-    const fraction=Math.max(0,Math.min(1,((seconds%15)/15-.14)/.74));
-    for(const v of S.rows.values()){
-      const max=Math.max(0,v.line.scrollWidth-v.viewport.clientWidth+6);
-      v.line.style.transform="translateX(-"+((!reduced&&S.pan?fraction:0)*max).toFixed(1)+"px)";
+    const t=Math.max(0,Math.min(180,Number(seconds)||0));
+    const clip=Math.min(11,Math.floor(Math.min(179.999999,t)/15));
+    const progress=Math.max(0,Math.min(1,(t-15*clip)/15));
+    for(const r of S.rows.values()){
+      if(r.anchors.length!==13)continue;
+      const start=r.anchors[clip],end=r.anchors[clip+1];
+      // Default advances the written left-to-right transcript from right
+      // to left, as a genuine broadcast ticker. Reduced-motion / opt-out
+      // anchors the current block instead of animating its words.
+      const px=(S.pan&&!reduced)?start+(end-start)*progress:start;
+      r.line.style.transform="translate3d(-"+px.toFixed(3)+"px,0,0)";
     }
   }
   function syncClock(t){
@@ -261,6 +311,21 @@
     if(block!==S.block||S.lastTime<0)renderBlock(block);
     S.lastTime=seconds;
     panLines(seconds);
+  }
+  function renderFrame(){
+    S.frame=0;
+    if(!S.ready)return;
+    syncClock(video.currentTime);
+    if(!video.paused&&!video.ended&&!S.frame){
+      S.frame=requestAnimationFrame(renderFrame);
+    }
+  }
+  function startFrames(){
+    if(!S.frame)S.frame=requestAnimationFrame(renderFrame);
+  }
+  function stopFrames(){
+    if(S.frame){cancelAnimationFrame(S.frame);S.frame=0}
+    syncClock(video.currentTime);
   }
   function seekSeconds(t){
     if(!S.ready)return;
@@ -277,10 +342,21 @@
       if(Number.isFinite(ratio)&&ratio>.4&&ratio<.75)
         document.documentElement.style.setProperty("--video-ratio",ratio.toFixed(6));
     });
+    window.addEventListener("resize",()=>{if(S.ready)measureTimelines()});
+    if(document.fonts&&document.fonts.ready)
+      document.fonts.ready.then(()=>{if(S.ready)measureTimelines()});
     video.addEventListener("timeupdate",()=>syncClock(video.currentTime));
     video.addEventListener("seeked",()=>syncClock(video.currentTime));
-    video.addEventListener("play",()=>set("audioStatus","SOURCE VIDEO · NINE LIVE-SYNCED TRANSCRIPTS"));
-    video.addEventListener("pause",()=>set("audioStatus","PAUSED · ALL NINE TRANSCRIPTS ALIGNED"));
+    video.addEventListener("play",()=>{
+      set("audioStatus","PLAYING · CONTINUOUS SOURCE-SYNCED TICKERS");
+      startFrames();
+    });
+    video.addEventListener("pause",()=>{
+      set("audioStatus","PAUSED · CONTINUOUS TICKERS HOLD POSITION");
+      stopFrames();
+    });
+    video.addEventListener("ended",stopFrames);
+    video.addEventListener("ratechange",()=>syncClock(video.currentTime));
     video.addEventListener("error",()=>{
       $("videoError").hidden=false;
       set("audioStatus","VIDEO UNAVAILABLE · TRANSCRIPT DATA PRESERVED");
@@ -308,7 +384,7 @@
   function ready(d,m){
     checkData(d);checkVideo(m,d);
     S.data=d;S.videoManifest=m;S.ready=true;
-    buildBlocks();renderEvidence(d);
+    buildBlocks();renderEvidence(d);buildTimelines();
     video.src=m.filename;
     video.poster=m.poster;
     video.preload="metadata";

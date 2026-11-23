@@ -30,8 +30,8 @@ async function main(){
         const v=document.querySelector("#video");
         return v?.getAttribute("src")==="commercial-180.mp4"
           && document.querySelectorAll(".ticker-row").length===9
-          && document.querySelector(".ticker-line")?.textContent
-             !== "[Awaiting verified model output]";
+          && document.querySelectorAll(".ticker-line[data-continuous-source-tape='true']").length===9
+          && document.querySelectorAll(".ticker-chunk").length===108;
       },null,{timeout:20000});
       await page.waitForFunction(()=>{
         const v=document.querySelector("#video");
@@ -130,6 +130,46 @@ async function main(){
       });
       assert(diff.highlighted>0,"changed words are visibly marked in the nine-ticker bake-off");
       assert.equal(diff.nineCount,9);
+      // Every real transcript is laid out once as a continuous 180-second
+      // ribbon. Seeking across a 15-second boundary must move the same DOM
+      // elements forward without any per-block text replacement or snapback.
+      await page.evaluate(()=>{
+        const video=document.querySelector("#video");
+        video.pause();
+        window.__sourceTapeNodes=Array.from(document.querySelectorAll(".ticker-line"));
+        video.currentTime=14.8;
+        video.dispatchEvent(new Event("timeupdate"));
+      });
+      const beforePos=await page.evaluate(()=>({
+        pos:new DOMMatrixReadOnly(getComputedStyle(document.querySelector(".ticker-line")).transform).m41,
+        text:document.querySelector(".ticker-line").textContent,
+        built:document.querySelectorAll(".ticker-chunk").length,
+      }));
+      await page.evaluate(()=>{
+        const video=document.querySelector("#video");
+        video.currentTime=15.2;
+        video.dispatchEvent(new Event("timeupdate"));
+      });
+      const afterPos=await page.evaluate(()=>({
+        pos:new DOMMatrixReadOnly(getComputedStyle(document.querySelector(".ticker-line")).transform).m41,
+        text:document.querySelector(".ticker-line").textContent,
+        sameNodes:window.__sourceTapeNodes.every((el,i)=>
+          el===document.querySelectorAll(".ticker-line")[i]),
+        built:document.querySelectorAll(".ticker-chunk").length,
+        cue:document.querySelector("#cueText").textContent,
+      }));
+      assert.equal(beforePos.built,108,"12 original source chunks per ASR ticker");
+      assert.equal(afterPos.built,108,"source chunk inventory never changes on seek");
+      assert(afterPos.sameNodes,"ticker DOM node identity preserved across 15-second boundary");
+      assert.equal(beforePos.text,afterPos.text,"original full-show ASR text never re-rendered");
+      assert(afterPos.pos<beforePos.pos-1,"continuous ticker must advance across block boundary");
+      assert(beforePos.pos-afterPos.pos<950,"no large source block snap/reset");
+      assert(afterPos.cue.startsWith("02 /"),"source block indicator follows actual media seek");
+      console.log("NINE_UNINTERRUPTED_TICKER_MOTION "+JSON.stringify({
+        viewport:size,beforePx:+beforePos.pos.toFixed(2),
+        afterPx:+afterPos.pos.toFixed(2),continuousOriginalText:true,
+        sourceChunks:afterPos.built,sourceTimeInterpolation:true
+      }));
       console.log("NINE_PORTRAIT_RIGHT_PANEL_PASS "+JSON.stringify({
         viewport:size,
         portrait:{width:+x.videoPanel.width.toFixed(1),

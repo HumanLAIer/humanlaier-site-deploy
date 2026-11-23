@@ -12,7 +12,8 @@ http.createServer((req,res)=>{
   let file;
   try{
     const route=decodeURIComponent(new URL(req.url,'http://127.0.0.1').pathname);
-    file=path.resolve(root,'.'+route);
+    const local=path.resolve(root,'.'+route);
+    file=route.endsWith('/')?path.join(local,'index.html'):local;
   }catch{res.writeHead(400);res.end();return;}
   if(!file.startsWith(root+path.sep)){res.writeHead(403);res.end();return;}
   fs.stat(file,(err,st)=>{

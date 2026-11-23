@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#071b29">
+  <meta name="robots" content="noindex,nofollow,noarchive,nosnippet">
+  <meta name="description" content="Human LAIer experimental source-linked entity retrieval research interface.">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; media-src 'self'; connect-src 'self'; frame-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>Streaming Intelligence Lab | Human LAIer</title>
+  <link rel="stylesheet" href="./lab.css">
+  <script src="./lab.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#sourceFrame">Skip to the original nine-ticker study</a>
+  <header class="topbar">
+    <div class="wordmark">HUMAN <b>LAIer</b> <span class="section-mark">/ STREAMING LAB</span></div>
+    <span class="source-label">17 NOV 2026 · SOURCE-VERIFIED VIDEO · RESEARCH</span>
+    <span class="grow"></span>
+    <span class="phase-pill">UNREVIEWED / INTERNAL WORKFLOW</span>
+    <button type="button" id="openReview" aria-controls="reviewPanel" aria-expanded="false">Entity evidence <span aria-hidden="true">▤</span></button>
+  </header>
+  <main class="workspace">
+    <iframe id="sourceFrame" title="Existing nine synchronized ASR tickers and original 180-second video"
+      src="../streaming-demo/nine-tickers/" loading="eager" referrerpolicy="same-origin"></iframe>
+    <aside id="reviewPanel" class="review-panel" aria-label="Review-only retrieval evidence" hidden>
+      <div class="review-head">
+        <div><small>ANALYSIS / SOURCE LAB</small><h1>Entity evidence</h1></div>
+        <button type="button" id="closeReview" aria-label="Close entity evidence panel">✕</button>
+      </div>
+      <div class="review-body">
+        <div class="status-line" id="labStatus" role="status">Loading published research source…</div>
+        <section class="review-section">
+          <div class="section-title"><h2>Current source block</h2><span id="clipClock" class="mono">00:00–00:15</span></div>
+          <p class="muted" id="clipLabel">Nine-ticker video, part-local time only.</p>
+          <div id="candidateList" class="candidate-list" aria-live="polite"></div>
+          <div class="section-title sub"><h2>Original model outputs</h2>
+            <label class="phase-select" for="phaseSelect">CONTEXT
+              <select id="phaseSelect" aria-label="ASR prompting condition">
+                <option value="control">Unprompted</option>
+                <option value="compact">Compact TCG</option>
+                <option value="focused">Focused</option>
+              </select>
+            </label>
+          </div>
+          <div id="sourceTranscripts" class="source-transcripts"></div>
+          <p class="tiny-note">These are original model words, not a human transcript. Source video is the sole playback clock; audience-event times are not calibrated to it.</p>
+        </section>
+        <section class="review-section">
+          <div class="section-title"><h2>Phonetic retrieval probe</h2><span class="mono">REVIEW ONLY</span></div>
+          <p class="muted">Illustrative English-species / multilingual lookup. This browser probe covers three species, not the complete 75,673-record private catalogue.</p>
+          <form id="probeForm" autocomplete="off">
+            <label class="sr-only" for="probe">Enter a name or distorted ASR word</label>
+            <div class="probe-input"><input id="probe" maxlength="60" placeholder="Try Mbreon, Bracky, or Zachrom" spellcheck="false"><button type="submit">Find</button></div>
+          </form>
+          <div class="chips" aria-label="Example probe values">
+            <button type="button" data-probe="Mbreon">Mbreon</button>
+            <button type="button" data-probe="Mbrion">Mbrion</button>
+            <button type="button" data-probe="Bracky">Bracky</button>
+            <button type="button" data-probe="ブラッキー">ブラッキー</button>
+            <button type="button" data-probe="月亮伊布">月亮伊布</button>
+            <button type="button" data-probe="Zachrom">Zachrom</button>
+            <button type="button" data-probe="ordinary conversation">Negative</button>
+          </div>
+          <div id="probeResult" class="probe-result" role="status" aria-live="polite">Type a candidate term to inspect its alias or phonetic route.</div>
+        </section>
+        <details class="provenance">
+          <summary>Evidence and release limits</summary>
+          <div class="provenance-text">
+            <p>Playback and all nine ASR lanes are reused unchanged from the published nine-ticker study. Candidate lists are sourced from the study's existing unreviewed domain-candidate metadata. Probe results are illustrative local retrieval hypotheses, never proof that a word was uttered.</p>
+            <dl>
+              <dt>Source session</dt><dd id="sourceSession">Not loaded</dd>
+              <dt>Source part</dt><dd id="sourcePart">Not loaded</dd>
+              <dt>Part SHA-256</dt><dd id="sourceDigest">Not loaded</dd>
+              <dt>Catalogue SHA-256</dt><dd id="packDigest">Not loaded</dd>
+            </dl>
+            <p>No auto-rewriting; no claimed purchases, revenue, exact card printing or independently calibrated chat/video synchronization. The original public model comparison is not a human-verified evaluation. Umbreon and Zekrom probes are independent examples and must not be presented as matches to this source video.</p>
+            <p>This URL is not linked or indexed, but public GitHub Pages is <strong>not authenticated internal hosting</strong>. Never add private recordings, credentials, or unapproved derived data.</p>
+          </div>
+        </details>
+      </div>
+      <footer class="review-foot"><span id="sourceStatus">ORIGINAL NINE-TICKER STUDY UNCHANGED</span><a href="../streaming-demo/nine-tickers/" target="_blank" rel="noopener noreferrer">Open source study</a></footer>
+    </aside>
+  </main>
+</body>
+</html>

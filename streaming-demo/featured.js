@@ -92,8 +92,8 @@
     for(const c of data.clips){
       const button=make("button","featured-asr-block");
       button.type="button";
-      button.setAttribute("aria-label","Seek original audio "+format(c.start)+" through "+format(c.end)+
-        ", transcript block "+(c.index+1));
+      button.title="Seek original audio "+format(c.start)+" through "+format(c.end)+
+        " · transcript block "+(c.index+1);
       const clock=make("span","featured-asr-clock",format(c.start)+"–"+format(c.end));
       const transcript=c.texts[model.value];
       const line=make("span","featured-asr-text",

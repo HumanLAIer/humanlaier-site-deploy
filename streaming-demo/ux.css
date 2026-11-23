@@ -453,3 +453,73 @@ select{max-width:100%}
 .featured-source-link:focus-visible{outline:3px solid #c69f51;outline-offset:3px}
 @media(max-width:800px){.featured-source{flex-direction:column;align-items:stretch;padding:12px}
   .featured-source-link{max-width:none;width:100%}}
+
+/* Source-timestamped host ASR viewer, intentionally separated from the
+   collector-clock V4 conversation and network workspace. */
+.featured-transcript{border:1px solid #b8cfcd;border-radius:3px;
+  background:#fff;margin:0 0 13px;color:#244653;overflow:hidden}
+.featured-transcript-head{display:flex;align-items:end;justify-content:space-between;
+  flex-wrap:wrap;gap:8px 18px;padding:11px 15px;background:#f6f9f8;
+  border-bottom:1px solid #d8e3e1}
+.featured-transcript-head h2{margin:0;color:var(--oxford);
+  font:700 clamp(16px,1.55vw,21px)/1.25 var(--sans)}
+.featured-model-select{display:flex;flex-direction:column;gap:3px;
+  font:700 10px/1.35 var(--mono);color:#426878;min-width:205px}
+.featured-model-select select{min-height:33px;max-width:100%;
+  font:12px/1.3 var(--sans);background:#fff;color:#183c4d;
+  border:1px solid #aec6c6;border-radius:3px;padding:4px 6px}
+.featured-transcript-grid{display:grid;grid-template-columns:minmax(235px,.95fr) minmax(280px,1.55fr);
+  gap:0}
+.featured-transcript-context{padding:13px 15px;background:#f9fbfa;
+  border-right:1px solid #d8e3e1;min-width:0}
+.featured-transcript-context audio{display:block;width:100%;height:42px;
+  margin:6px 0 4px}
+.featured-source-caption{font:11px/1.45 var(--mono);color:#496775;
+  margin:0 0 7px}
+.featured-chat-evidence{margin-top:12px;padding-top:10px;
+  border-top:1px solid #d7e1e0}
+.featured-chat-evidence>strong{font:700 11px/1.35 var(--mono);color:var(--oxford)}
+.featured-chat-evidence>p{font:11px/1.45 var(--sans);
+  color:#425b65;margin:5px 0 8px}
+.featured-chat-excerpts{display:flex;flex-direction:column;gap:5px}
+.featured-chat-source{font:10px/1.4 var(--sans);color:#58707b}
+.featured-chat-line{display:flex;align-items:start;gap:8px;
+  padding:5px 7px;background:#fff;border-left:2px solid #2b8895;
+  font:11px/1.45 var(--sans);overflow-wrap:anywhere}
+.featured-chat-line strong{font:700 10px/1.4 var(--mono);color:#126375;flex:0 0 auto}
+.featured-transcript-reading{padding:11px 13px;min-width:0}
+.featured-transcript-note{font:11px/1.5 var(--sans);color:#4b626a;
+  margin:0 0 9px}
+.featured-transcript-note strong{color:var(--oxford)}
+.featured-asr-rows{display:flex;flex-direction:column;gap:4px;
+  height:228px;overflow:auto;overscroll-behavior:contain;
+  scrollbar-width:thin;scroll-padding-block:10px}
+.featured-asr-block{display:grid;grid-template-columns:85px minmax(0,1fr);
+  align-items:start;gap:8px;width:100%;text-align:left;padding:7px 9px;
+  background:#f8fbfc;border:1px solid #e2ebed;border-radius:3px;
+  color:#254451;cursor:pointer}
+.featured-asr-clock{font:700 10px/1.5 var(--mono);color:#497584;
+  font-variant-numeric:tabular-nums}
+.featured-asr-text{font:12px/1.5 var(--sans);overflow-wrap:anywhere}
+.featured-asr-block:hover{border-color:#7cb2ad;background:#edf7f3}
+.featured-asr-block.is-active{background:#e8f5f2;border-color:#287f78;
+  box-shadow:inset 3px 0 0 #287f78}
+.featured-asr-block.is-active .featured-asr-clock{color:#165c56}
+.featured-asr-block:focus-visible,.featured-model-select select:focus-visible{
+  outline:3px solid #c69f51;outline-offset:2px}
+.featured-asr-error{padding:12px;color:#6c3333;font:12px/1.5 var(--sans)}
+.featured-transcript-foot{padding:9px 15px;background:#f8faf9;
+  border-top:1px solid #d8e3e1;color:#526973;font:10px/1.5 var(--sans)}
+.featured-transcript-foot a{color:#12657e;text-decoration:underline;text-underline-offset:2px}
+@media(max-width:850px){
+  .featured-transcript-grid{grid-template-columns:minmax(0,1fr)}
+  .featured-transcript-context{border-right:0;border-bottom:1px solid #d8e3e1}
+  .featured-asr-rows{height:242px}
+}
+@media(max-width:550px){
+  .featured-transcript-head{align-items:stretch}
+  .featured-model-select{width:100%}
+  .featured-asr-block{grid-template-columns:69px minmax(0,1fr);gap:5px}
+  .featured-asr-clock{font-size:9px}
+  .featured-chat-line{flex-wrap:wrap;gap:3px 8px}
+}

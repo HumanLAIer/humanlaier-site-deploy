@@ -7,12 +7,13 @@ const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypt
 const root=path.resolve(__dirname,'..');
 const dest=path.join(root,'.pages-build');
 const allow=['index.html','thanks.html','CNAME','.nojekyll','robots.txt','sitemap.xml',
-  'assets','css','js','singlish-compare','streaming-demo'];
+  'assets','css','js','singlish-compare','streaming-demo','streaming-lab'];
 const required=[
   'index.html','CNAME','.nojekyll','streaming-demo/index.html',
   'streaming-demo/app.js','streaming-demo/ux.css',
   'streaming-demo/featured-bootstrap.js','streaming-demo/featured-evidence.js',
   'streaming-demo/nine-tickers/comparison.json',
+  'streaming-lab/index.html','streaming-lab/lab.js','streaming-lab/lab.css',
   'streaming-demo/nine-tickers/video-manifest.json',
   'streaming-demo/nine-tickers/commercial-180.mp4',
   'streaming-demo/nine-tickers/commercial-180.mp3',
@@ -45,7 +46,8 @@ assert.equal(fs.readFileSync(path.join(dest,'CNAME'),'utf8').trim(),'humanlaier.
 // A new release always gets a new JavaScript/CSS URL, even when the source
 // HTML or its fixed historical query strings are unchanged.
 for(const page of ['index.html','thanks.html','streaming-demo/index.html',
-                   'streaming-demo/nine-tickers/index.html','singlish-compare/index.html']){
+                   'streaming-demo/nine-tickers/index.html','streaming-lab/index.html',
+                   'singlish-compare/index.html']){
   const filepath=path.join(dest,page);
   const html=fs.readFileSync(filepath,'utf8').replace(
     /\b(src|href)=(["'])([^"'?#]+?\.(?:js|css))(?:\?[^"'#]*)?\2/g,
@@ -64,6 +66,7 @@ const checks={};
 for(const asset of ['index.html','streaming-demo/index.html',
   'streaming-demo/app.js','streaming-demo/featured-bootstrap.js',
   'streaming-demo/nine-tickers/comparison.json',
+  'streaming-lab/index.html','streaming-lab/lab.js',
   'streaming-demo/nine-tickers/video-manifest.json',
   'streaming-demo/nine-tickers/commercial-180.mp4',
   'streaming-demo/nine-tickers/commercial-180.mp3']){

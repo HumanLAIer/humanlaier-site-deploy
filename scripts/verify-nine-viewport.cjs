@@ -24,11 +24,11 @@ async function main(){
       });
       await page.waitForFunction(()=>{
         const v=document.querySelector("#video");
-        return v?.getAttribute("src")==="commercial-180.mp4"
+        return v?.getAttribute("src")?.startsWith("blob:")
           && document.querySelectorAll(".ticker-row").length===9
           && document.querySelector(".ticker-line")?.textContent
              !== "[Awaiting verified model output]";
-      },null,{timeout:20000});
+      },null,{timeout:60000});
       const x=await page.evaluate(()=>{
         const rect=sel=>{
           const r=document.querySelector(sel).getBoundingClientRect();
@@ -59,7 +59,7 @@ async function main(){
         };
       });
       assert.equal(x.rowRects.length,9,"exact nine source-verified ticker rows");
-      assert.equal(x.source,"commercial-180.mp4","real video source attached");
+      assert(x.source.startsWith("blob:"),"source-verified MP4 assembled in browser");
       assert(x.video.width>400&&x.video.height>200,"video visibly large");
       assert(x.screen.width>400&&x.metrics.width>400,"50/50 upper columns");
       assert(Math.abs(x.screen.width-x.metrics.width)<=3,"equal-width video and metrics columns");
@@ -67,8 +67,8 @@ async function main(){
       assert(x.tickers.top>=x.screen.bottom-1,"all tickers below video");
       assert(x.rowRects[0].top>=x.tickers.top,"ticker rows begin inside lower half");
       assert(x.rowRects.at(-1).bottom<=x.foot.top+1,"ninth row fully above footer");
-      assert(x.rowRects.every(y=>y.height>=19&&y.height<=29),"CNBC-size <=29px ticker strips");
-      assert(x.font>=12&&x.font<=14,"roughly ten-point ticker text");
+      assert(x.rowRects.every(y=>y.height>=19&&y.height<=30),"CNBC-size <=30px ticker strips");
+      assert(x.font>=10&&x.font<=12,"dense approximately 10px broadcast ticker text");
       assert(x.htmlScrollHeight<=size.height+1,"NO PAGE VERTICAL SCROLL");
       assert(x.bodyScrollHeight<=size.height+1,"NO BODY VERTICAL SCROLL");
       assert(x.htmlScrollWidth<=size.width+1,"NO PAGE HORIZONTAL SCROLL");

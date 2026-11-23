@@ -209,6 +209,27 @@ async function main(){
                    "FOLD reversibly restores the legible warning");
       assert.equal(await page.locator(".ticker-chunk").count(),108,
                    "raw display toggle never drops any source segment");
+      // Block 4 is a separate cross-model rare-entity disagreement.
+      // Surfaced only as a review hypothesis; no ASR text is replaced.
+      await page.evaluate(()=>{
+        window.__syntheticMediaClock=49;
+        document.querySelector("#video").dispatchEvent(new Event("timeupdate"));
+      });
+      const review=await page.locator("#metricContext").textContent();
+      assert(review.includes("REVIEW ONLY")&&review.includes("Umbreon?"),
+             "the inferred Pokémon entity remains an unverified question");
+      assert(review.includes("mombreon")&&review.includes("momebrion")&&
+             review.includes("um bombion"),
+             "displayed phonetic clues must match the three source ASR variants");
+      await page.evaluate(()=>{
+        window.__syntheticMediaClock=65;
+        document.querySelector("#video").dispatchEvent(new Event("timeupdate"));
+      });
+      assert(!(await page.locator("#metricContext").textContent()).includes("Umbreon?"),
+             "the block-specific candidate must not leak into unrelated speech");
+      console.log("NINE_UNVERIFIED_UMBREON_REVIEW_ONLY "+
+                   JSON.stringify({block:4,candidate:"Umbreon?",
+                                   originalOutputsPreserved:true}));
       console.log("NINE_SOURCE_VERIFIED_DECODE_LOOP_MARKER "+JSON.stringify({
         lane:"singlish-small--focused",block:2,repeatPhrase:"let's go",
         repeats:26,rawInspectable:true,sourceTranscriptsUnchanged:true

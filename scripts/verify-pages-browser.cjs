@@ -207,14 +207,21 @@ async function rootPages(browser){
        if(!r.ok)throw Error('Local range server not ready');
      });
    }
+   const target=String(process.env.HL_TEST_TARGET||'main');
+   assert(['main','bakeoff','site'].includes(target),'Choose an independent page acceptance target');
    const browser=await chromium.launch({headless:true,channel:'chrome',
-     args:['--no-sandbox','--disable-dev-shm-usage']});
+     args:['--no-sandbox','--disable-dev-shm-usage','--autoplay-policy=no-user-gesture-required']});
    try{
-     await sourceChat(browser);
-     if(!remote)await videoFallback(browser); // Don't intentionally disrupt live media.
-     await mobile(browser);
-     await nine(browser);
-     await rootPages(browser);
+     if(target==='main'){
+       await sourceChat(browser);
+       if(!remote)await videoFallback(browser); // Don't intentionally disrupt live media.
+       await mobile(browser);
+       await rootPages(browser);
+     }else if(target==='bakeoff'){
+       await nine(browser);
+     }else{
+       await rootPages(browser);
+     }
    }finally{await browser.close();}
  }catch(err){console.error('RELEASE_BROWSER_ACCEPTANCE_FAILED',err);process.exitCode=1;}
  finally{if(server)server.kill();}

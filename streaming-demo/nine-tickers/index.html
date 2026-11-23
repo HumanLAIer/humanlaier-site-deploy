@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#061927">
-<meta name="description" content="Nine synchronized research tickers across three independently captured ASR model transcripts, with transparent comparison and review-only domain hypotheses.">
+<meta name="description" content="Nine source-aligned ASR tickers comparing three Whisper-family engines and three vocabulary conditions on one product-and-price-focused TCG livestream excerpt.">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; media-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
-<title>Nine Tickers · One Recording | Human LAIer Signal Lab</title>
+<title>Nine Tickers · Commercial Signal Shootout | Human LAIer</title>
 <link rel="stylesheet" href="styles.css">
 <script src="app.js" defer></script>
 </head>
@@ -27,15 +27,15 @@
   <section class="intro shell" aria-labelledby="heroTitle">
     <div class="intro-main">
       <div class="eyebrow"><i aria-hidden="true"></i> RESEARCH EXPERIMENT / NOVEMBER 23, 2026</div>
-      <h1 id="heroTitle">Nine tickers.<br><em>One recording.</em></h1>
-      <p class="lead">Hear what three speech-recognition engines actually returned—then watch where their words diverge and where Pokémon catalogue retrieval proposes something worth checking.</p>
-      <div class="identity-line"><span>HUATZAITCG / SINGAPORE</span><b aria-hidden="true">·</b><span>180 SECONDS</span><b aria-hidden="true">·</b><span>12 SOURCE BLOCKS</span><b aria-hidden="true">·</b><span>3 INDEPENDENT ASR RUNS</span></div>
+      <h1 id="heroTitle">Nine tickers.<br><em>One commercial moment.</em></h1>
+      <p class="lead">Three ASR engines. Three vocabulary configurations. One source recording where viewers discuss booster packs, ETB sourcing, and prices. Does domain context improve decision-useful speech recognition—or insert mistakes?</p>
+      <div class="identity-line"><span>HUATZAITCG / SINGAPORE</span><b aria-hidden="true">·</b><span>180 SECONDS</span><b aria-hidden="true">·</b><span>12 SOURCE BLOCKS</span><b aria-hidden="true">·</b><span>NINE SOURCE-MATCHED DECODINGS</span></div>
     </div>
     <div class="intro-stat" aria-label="Experimental configuration">
       <div class="stat-number">3<span>×</span>3</div>
-      <strong>THREE MODELS <i>×</i> THREE VIEWS</strong>
-      <p>Only the first three tickers are separate model outputs. The other six are analytical views of those same source words—not new transcriptions.</p>
-      <span class="stat-foot">NO HUMAN-GOLD VERDICT · NO AUTO-CORRECTION</span>
+      <strong>THREE MODELS <i>×</i> THREE CONDITIONS</strong>
+      <p>Nine real model decoding outputs are required for this comparison. If a lane has not run, it will be clearly marked unavailable—not filled with synthetic transcription.</p>
+      <span class="stat-foot">NO VERIFIED SALES · NO HUMAN-GOLD VERDICT</span>
     </div>
   </section>
 
@@ -43,7 +43,7 @@
     <div class="shell">
       <div class="transport">
         <div class="transport-head">
-          <span class="transport-label"><i class="green-square" aria-hidden="true"></i> ONE SHARED AUDIO SOURCE <span>/ NOV 17 LIVE CAPTURE</span></span>
+          <span class="transport-label"><i class="green-square" aria-hidden="true"></i> ONE SHARED AUDIO SOURCE <span>/ COMMERCIAL CARD-PACK WINDOW</span></span>
           <span class="transport-cue">15-SECOND BLOCK ALIGNMENT <span aria-hidden="true">·</span> NOT WORD TIMING</span>
         </div>
         <div class="transport-inner">
@@ -64,46 +64,47 @@
       </div>
 
       <div class="jumpbar" aria-label="Twelve original source blocks">
-        <div class="jumpbar-title"><span>12 SOURCE BLOCKS</span><small>SEEK ANYWHERE / ACTIVITY SHOWN ON PROVISIONAL COLLECTOR CLOCK</small></div>
+        <div class="jumpbar-title"><span>12 SOURCE BLOCKS</span><small>SEEK ANYWHERE / ENGAGEMENT ON PROVISIONAL COLLECTOR CLOCK</small></div>
         <div id="blockNav" class="block-nav" role="group" aria-label="Choose one of twelve 15-second audio blocks"></div>
       </div>
 
       <div class="lanes-heading">
-        <div><span class="micro-kicker">LIVE / FOLLOWING THE SAME SOURCE CLOCK</span><h2>All nine, in lockstep.</h2></div>
+        <div><span class="micro-kicker">LIVE / FOLLOWING THE SAME SOURCE CLOCK</span><h2>Nine ways of hearing the same sale room.</h2></div>
         <div class="lanes-heading-right"><span class="breathing-dot" aria-hidden="true"></span><span id="cueText">SOURCE BLOCK 01 · 00:00–00:15</span></div>
       </div>
-      <p class="lane-intro">Each row displays the <strong>unchanged words</strong> from a single published model. Highlighting and suggestions are separate interpretations. Horizontal text panning is for legibility, <em>not</em> word-accurate karaoke.</p>
+      <p class="lane-intro">Each ticker displays one actual transcription configuration if its source-matched result exists. Same 15-second source blocks, independent decodes, different domain context. <em>Panning is visual only—not word-level alignment.</em></p>
 
       <section class="ticker-group" aria-labelledby="asrHeading">
-        <div class="group-top"><div class="group-heading"><span class="group-number">01</span><h3 id="asrHeading">Original model outputs</h3><span class="group-type">MEASURED ASR</span></div><p>Three independently produced transcripts, untouched.</p></div>
+        <div class="group-top"><div class="group-heading"><span class="group-number">01</span><h3 id="asrHeading">No domain vocabulary</h3><span class="group-type">CONTROL / MEASURED ASR</span></div><p>Three baseline decodes without domain hints.</p></div>
         <div id="rawTickers" class="ticker-rows"></div>
       </section>
 
       <section class="ticker-group ticker-group-diff" aria-labelledby="diffHeading">
-        <div class="group-top"><div class="group-heading"><span class="group-number">02</span><h3 id="diffHeading">Model disagreements</h3><span class="group-type">DERIVED WORD COMPARISON</span></div><p>Words absent from both other models glow amber. Disagreement ≠ error.</p></div>
+        <div class="group-top"><div class="group-heading"><span class="group-number">02</span><h3 id="diffHeading">Compact TCG vocabulary</h3><span class="group-type">PROMPTED / MEASURED ASR</span></div><p>Same models, same audio, with a short Pokémon and livestream-sales glossary.</p></div>
         <div id="diffTickers" class="ticker-rows"></div>
       </section>
 
       <section class="ticker-group ticker-group-domain" aria-labelledby="domainHeading">
-        <div class="group-top"><div class="group-heading"><span class="group-number">03</span><h3 id="domainHeading">Domain hypothesis watch</h3><span class="group-type">REVIEW-ONLY RETRIEVAL</span></div><p>Commercial-context words and cross-model phonetic suggestions; no substitutions.</p></div>
+        <div class="group-top"><div class="group-heading"><span class="group-number">03</span><h3 id="domainHeading">Source-bounded domain context</h3><span class="group-type">CONTEXTUAL / MEASURED ASR</span></div><p>Same models, with a predeclared contextual glossary. No pricing values or sales claims injected.</p></div>
         <div id="domainTickers" class="ticker-rows"></div>
       </section>
 
       <div class="inspector" aria-label="Current block research interpretation">
-        <div class="inspector-left"><span class="micro-kicker">RESEARCH INSPECTOR <span>/ CURRENT SOURCE BLOCK</span></span><h3 id="inspectorHeading">What deserves a second listen?</h3><p id="inspectorBody">The original audio and three recorded transcripts are loading.</p></div>
-        <div class="inspector-right"><span class="inspector-label">REVIEW SIGNAL</span><strong id="inspectorTag">—</strong><button type="button" id="zekromJump" class="inspector-jump">Jump to 02:15 hypothesis <span aria-hidden="true">↗</span></button></div>
+        <div class="inspector-left"><span class="micro-kicker">RESEARCH INSPECTOR <span>/ CURRENT SOURCE BLOCK</span></span><h3 id="inspectorHeading">What would an executive learn?</h3><p id="inspectorBody">The nine-lane source comparison and independently observed audience signals are loading.</p></div>
+        <div class="inspector-right"><span class="inspector-label">REVIEW SIGNAL</span><strong id="inspectorTag">—</strong><button type="button" id="zekromJump" class="inspector-jump">Jump to commercial highlight <span aria-hidden="true">↗</span></button></div>
       </div>
     </div>
   </section>
 
   <section class="methodology">
-    <div class="shell method-grid"><div><span class="micro-kicker">REPRODUCIBILITY / IN PLAIN SIGHT</span><h2>Three voices from models.<br><em>Six views from analysis.</em></h2></div>
+    <div class="shell method-grid"><div><span class="micro-kicker">REPRODUCIBILITY / IN PLAIN SIGHT</span><h2>Nine outputs from models.<br><em>Evidence from the room.</em></h2></div>
       <div class="method-text">
-        <p><strong>The evidence.</strong> A 180-second source excerpt from the November 17, 2026 @HUATZAITCG livestream, divided into twelve contiguous 15-second blocks. Three previously published outputs came from faster-whisper base.en, Singlish2English-small, and Coats Whisper large-v2 NSC. Text is aligned only to those blocks. The page does not run an additional speech model.</p>
-        <p><strong>The derived layers.</strong> Group 02 compares token overlap across the three models without rewriting anything. Group 03 marks descriptive words such as “box” and “chat” and, for one block, surfaces a possible <em>Zekrom</em> reference suggested by cross-model phonetic retrieval. It is a hypothesis, not proof that a particular Pokémon was spoken, shown, or sold. A “Throh” false lead was also observed in the research experiment and is not promoted to an entity.</p>
-        <p><strong>Uncertainty stays visible.</strong> No independently listened human-gold transcript, word-level timing, proven audience-event/video synchronization, card-printing identity, sale, bid, or exact price is established here. All named-entity proposals require source listening and review before an inference is accepted.</p>
-        <p class="provenance" id="provenance">Checking source and model digests…</p>
-        <div class="method-links"><a href="../../singlish-compare/">View the original three-model shootout</a><a href="https://github.com/HumanLAIer/hl-livestream-pilot/pull/173">Read the retrieval experiment</a></div>
+        <p><strong>The source.</strong> We selected a three-minute window for observed TCG/product and buyer-price questions rather than maximum comment volume alone. The November 17 @HUATZAITCG archive contains original video and public engagement records; exact media bytes are rehashed before inference. Media-to-chat placement derives from an FFmpeg process clock and remains provisional, not broadcast-time synchronization.</p>
+        <p><strong>The nine-way experiment.</strong> Three pinned ASR engines—faster-whisper base.en, Singlish2English-small and Coats Whisper large-v2 NSC—each run under three different decoding conditions: control, a compact TCG glossary, and a source-bounded domain vocabulary. Every populated ticker must be backed by an actual model result tied to the same twelve source audio fingerprints. A blank ticker is <em>not</em> simulated.</p>
+        <p><strong>What business leaders can inspect.</strong> Whether a product name, pack/ETB distinction, shipping or price is consistently heard; which model/context settings change the words; the cost and time of processing; and separately observed buyer questions. Observed questions are <strong>not</strong> completed transactions or verified revenue. Even unanimous model agreement is not human-gold accuracy.</p>
+        <p><strong>Release standard.</strong> ASR outputs remain uncorrected. Candidate names, bids, grades, numerical amounts and causal chat-to-speech claims are unverified until source listening and reference alignment. No independent word timestamps or grounded sales ledger are supplied here.</p>
+        <p class="provenance" id="provenance">Checking selected source, audio and model fingerprints…</p>
+        <div class="method-links"><a href="../../singlish-compare/">Earlier high-engagement three-model experiment</a><a href="https://github.com/HumanLAIer/hl-livestream-pilot/pull/175">Commercial source-selection evidence</a></div>
       </div>
     </div>
   </section>

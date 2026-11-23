@@ -41,7 +41,7 @@
     D.review.unshift({
       sid:FEATURED_ID,key:'featured-source-nov17-audio',
       title:'Nov 17 · original source media + ASR · '+Math.round(duration)+' seconds',
-      video:FEATURED.source.videoFile||null,audio:FEATURED.source.audioFile,
+      video:null,audio:FEATURED.source.audioFile,
       poster:FEATURED.source.poster||null,storyboard:null,
       videoStartMediaSec:FEATURED.source.videoFile?0:null,
       videoDurationSec:FEATURED.source.videoDurationSeconds||null,

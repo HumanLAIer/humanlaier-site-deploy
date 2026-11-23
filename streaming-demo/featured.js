@@ -61,7 +61,9 @@
     for(const e of d.chatEvidence){
       if(typeof e.actor!=="string" || !/^@[A-Za-z0-9_.]{1,36}$/.test(e.actor) ||
          typeof e.text!=="string" || e.text.length>240 ||
-         e.timebase!=="PROVISIONAL_RECORDER_PROCESS_OBSERVATION")throw Error("Unexpected chat evidence");
+         e.timebase!=="PROVISIONAL_RECORDER_PROCESS_OBSERVATION" ||
+         typeof e.sourceTextSha256!=="string" ||
+         !/^[a-f0-9]{64}$/.test(e.sourceTextSha256))throw Error("Unexpected chat evidence");
     }
   }
   function highlight(){
@@ -79,7 +81,7 @@
     });
     const selected=blocks[block];
     if(selected && !rows.matches(":focus-within"))
-      selected.scrollIntoView({block:"nearest",behavior:"instant"});
+      selected.scrollIntoView({block:"nearest",behavior:"auto"});
   }
   function renderTranscript(){
     if(!data)return;
@@ -90,7 +92,6 @@
     for(const c of data.clips){
       const button=make("button","featured-asr-block");
       button.type="button";
-      button.setAttribute("role","listitem");
       button.setAttribute("aria-label","Seek original audio "+format(c.start)+" through "+format(c.end)+
         ", transcript block "+(c.index+1));
       const clock=make("span","featured-asr-clock",format(c.start)+"–"+format(c.end));

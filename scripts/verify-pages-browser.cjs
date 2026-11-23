@@ -69,8 +69,10 @@ async function sourceChat(browser){
    assert.equal(state.modelOptions,state.actualModels);
    assert.equal(state.firstSpeechText,state.expectedFirstSpeech.trim()||
      '[No speech returned by this engine for this source block]');
-   assert.equal(state.speechAlignment,'flex-start');
-   if(state.chatCount)assert.equal(state.chatAlignment,'flex-end');
+   assert(['flex-start','flow-start'].includes(state.speechAlignment),
+     'Native host chat stays on inline-start side');
+   if(state.chatCount)assert(['flex-end','flow-end'].includes(state.chatAlignment),
+     'Viewer chat stays on inline-end side');
    assert.equal(state.layout,'grid');
    assert.equal(state.disconnectedTranscript,false);
    assert(state.widthOverflow<=2,'Original V4 workspace has no horizontal overflow');

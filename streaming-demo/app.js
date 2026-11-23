@@ -7,48 +7,30 @@
   const $ = id => document.getElementById(id);
   const D = window.HL_SIGNAL_DATA;
 
-  // A separate, genuinely source-matched 180s audio recording, not the Nov17
-  // participation video. Only three original viewer comment excerpts are
-  // publicly available here; 22 comments / 46 actions are AGGREGATE counts.
+  // The original V4 renderer is always retained. The optional source adapter
+  // adds one audio-only capture when a separately verified, immutable source
+  // is available. Text, segment count, model inventory and chunk length are
+  // DATA, never layout assumptions.
   const FEATURED_ID='source-nov17-original-audio-180';
   const FEATURED=window.HL_FEATURED_SOURCE;
-  const featuredReady=!!(D && FEATURED &&
-    FEATURED.schema==='hl-featured-source-chat-v1' &&
-    FEATURED.evidenceStatus==='SOURCE_MATCHED_PUBLIC_UNREVIEWED_NINE_DECODES' &&
-    FEATURED.source?.sessionId==='20261117T142835_038897Z_huatzaitcg' &&
-    FEATURED.source?.sourcePart==='part_000019.ts' &&
-    FEATURED.source?.sourcePartOffsetSeconds===30 &&
-    FEATURED.source?.sourcePartSha256==='58e8dd7b568a65203d9a5c204f72f1a3538da58951c7a3f178844547c5fc91de' &&
-    FEATURED.source?.audioSha256==='ce403fdf33f4bd26f678f3cbedac5a0d8eb2accb620b8e56ce1d45e80962196b' &&
-    FEATURED.source?.durationSeconds===180 &&
-    FEATURED.provenance?.humanGoldAvailable===false &&
-    FEATURED.provenance?.wordTimingsVerified===false &&
-    FEATURED.provenance?.eventMediaClockCalibrated===false &&
-    FEATURED.provenance?.originalASRTextUnmodified===true &&
-    FEATURED.counts?.comments===22 &&
-    FEATURED.counts?.deliberateEvents===46 &&
-    FEATURED.counts?.uniqueActors===30 &&
-    Array.isArray(FEATURED.transcriptBlocks)&&FEATURED.transcriptBlocks.length===12 &&
-    Array.isArray(FEATURED.chatExcerpts)&&FEATURED.chatExcerpts.length===3 &&
-    FEATURED.transcriptBlocks.every((r,i)=>r.start===i*15&&r.end===(i+1)*15&&
-      /^[a-f0-9]{64}$/.test(r.originalWavSha256)&&r.texts&&
-      ['production-base.en--control','coats-large-v2--control','singlish-small--control',
-       'production-base.en--focused','coats-large-v2--focused','singlish-small--focused']
-       .every(id=>typeof r.texts[id]==='string')) &&
-    FEATURED.chatExcerpts.every(r=>/^@[A-Za-z0-9_.]{1,36}$/.test(r.handle)&&
-      typeof r.text==='string'&&r.text.length<=240&&
-      r.timebase==='PROVISIONAL_RECORDER_PROCESS_OBSERVATION'&&
-      Number.isFinite(r.estimatedAudioSec)&&r.estimatedAudioSec>=0&&r.estimatedAudioSec<180&&
-      /^[a-f0-9]{64}$/.test(r.sourceTextSha256)));
+  const featuredReady=!!(D&&FEATURED&&
+    FEATURED.schema==='hl-featured-source-chat-v2'&&
+    FEATURED.source?.sessionId==='20261117T142835_038897Z_huatzaitcg'&&
+    FEATURED.source?.sourcePartSha256==='58e8dd7b568a65203d9a5c204f72f1a3538da58951c7a3f178844547c5fc91de'&&
+    FEATURED.source?.audioSha256==='ce403fdf33f4bd26f678f3cbedac5a0d8eb2accb620b8e56ce1d45e80962196b'&&
+    Array.isArray(FEATURED.transcriptBlocks)&&FEATURED.transcriptBlocks.length>0&&
+    Array.isArray(FEATURED.models)&&FEATURED.models.length>0&&
+    FEATURED.models.includes(FEATURED.defaultModel));
   if(featuredReady){
-    const commentHandles=Object.fromEntries(FEATURED.chatExcerpts.map(r=>[r.handle,r.handle]));
+    const duration=FEATURED.source.durationSeconds;
+    const handles=Object.fromEntries(FEATURED.chatExcerpts.map(e=>[e.handle,e.handle]));
     D.sessions.unshift({
-      id:FEATURED_ID,label:'01 · Featured source audio + host ASR · Nov 17',
-      startUTC:null,duration:180,identityScheme:'direct_tiktok_account_fields_v1',
-      accountLabels:commentHandles,
+      id:FEATURED_ID,label:'Nov 17 · original audio + host ASR',
+      startUTC:null,duration,identityScheme:'direct_tiktok_account_fields_v1',
+      accountLabels:handles,
       stats:{records:0,sourceRecords:0,comments:0,chatters:0,likes:0,gifts:0,
         giftProgressEvents:0,eventKinds:{}},
-      bins:Array.from({length:6},(_,i)=>[i*30,0,0,0,0,0,0]),
+      bins:Array.from({length:Math.ceil(duration/30)},(_,i)=>[i*30,0,0,0,0,0,0]),
       comments:[],interactions:[],roomEvents:[],markers:[],showcaseMoments:[],
       derivedSpeechEvents:[],
       sourceMediaInventory:{segments:0,bytes:0,playablePreviews:1,approvedPosterStills:0,
@@ -57,16 +39,16 @@
       clockEvidence:{eventMediaAlignment:'NOT_VERIFIED',eventWallclock:'NOT_KNOWN_FOR_SOURCE_AUDIO'}
     });
     D.review.unshift({
-      sid:FEATURED_ID,key:'featured-source-nov17-180',
-      title:'Nov 17 · source-derived original audio · 03:00',
+      sid:FEATURED_ID,key:'featured-source-nov17-audio',
+      title:'Nov 17 · original source audio · '+Math.round(duration)+' seconds',
       video:null,audio:FEATURED.source.audioFile,poster:null,storyboard:null,
-      videoStartMediaSec:null,videoDurationSec:null,audioStartMediaSec:0,audioDurationSec:180,
-      mediaClockStatus:'UNCALIBRATED_INDEPENDENT_SOURCE',
-      transcript:FEATURED.transcriptBlocks.map(r=>[r.start,r.end,r.texts['production-base.en--control']]),
-      transcriptEvidence:'UNREVIEWED_ACTUAL_ASR_15_SECOND_AUDIO_BLOCKS'
+      videoStartMediaSec:null,videoDurationSec:null,audioStartMediaSec:0,
+      audioDurationSec:duration,mediaClockStatus:'UNCALIBRATED_INDEPENDENT_SOURCE',
+      transcript:FEATURED.transcriptBlocks.map(b=>[b.start,b.end,b.texts[FEATURED.defaultModel]??'']),
+      transcriptEvidence:'SOURCE_MATCHED_ASR_UNREVIEWED'
     });
     D.defaultSession=FEATURED_ID;
-    D.alignmentBySession[FEATURED_ID]={status:'PROVISIONAL',method:'NO_CALIBRATED_EVENT_MEDIA_MAPPING',
+    D.alignmentBySession[FEATURED_ID]={status:'PROVISIONAL',method:'AUDIO_CHAT_NOT_CALIBRATED',
       verifiedAnchorCount:0,offsetSeconds:0};
   }
   const clamp = (v,a,b) => Math.max(a,Math.min(b,Number.isFinite(+v)?+v:a));
@@ -245,14 +227,17 @@
     video.hidden=track!=='video';audio.hidden=track!=='audio';
     const still=track==='events'&&!state.source?.video&&!!state.source?.poster;
     $('posterPlayer').hidden=!(still||(track==='audio'&&state.source?.storyboard));
-    $('mediaEmpty').hidden=track!=='events';
-    $('featuredAudioSlate').hidden=!(isFeatured()&&track==='audio');
-    $('mediaViewport').classList.toggle('featured-audio-active',isFeatured()&&track==='audio');
+    $('mediaEmpty').hidden=track!=='events'&&!(isFeatured()&&track==='audio');
     $('sourceTrack').querySelector('option[value="audio"]').textContent=isFeatured()?'Original recorded audio':'Enhanced audio only';
-    $('sourceLabel').textContent=isFeatured()&&track==='audio'? 'ORIGINAL SOURCE AUDIO · 180s · ASR UNREVIEWED':
+    $('sourceLabel').textContent=isFeatured()&&track==='audio'? 'ORIGINAL SOURCE AUDIO · UNREVIEWED ASR':
       track==='video'?'ORIGINAL VIDEO · SINGLE TRANSPORT':
       track==='audio'?'ENHANCED AUDIO · SINGLE TRANSPORT':
       still?'ARCHIVED SOURCE STILL · EVENT REPLAY':'EVENT-ONLY REPLAY';
+    if(isFeatured()&&track==='audio'){
+      $('mediaEmpty').textContent='Source-derived original audio · '+
+        Math.round(FEATURED.source.durationSeconds)+' seconds. Host ASR appears in the existing Conversation pane. '+
+        'Viewer positions are independently estimated, not verified replies.';
+    }
     if(track==='events'){
       state.eventT=clamp(atEvent==null?state.eventT:atEvent,0,session().duration);
       $('mediaEmpty').textContent=still?
@@ -459,17 +444,21 @@
     const mode=$('conversationMode').value,variant=$('featuredModel').value;
     const source=FEATURED.transcriptBlocks;
     const rows=[];
+    const duration=FEATURED.source.durationSeconds;
     if(mode!=='activity'){
       for(const r of source){
-        const transcript=String(r.texts[variant]??'');
+        const transcript=typeof r.texts[variant]==='string'?r.texts[variant]:
+          '[No recorded output from this engine for this passage]';
         if(r.start>now+range||r.end<now-range)continue;
         if(filter && !transcript.toLowerCase().includes(filter))continue;
         rows.push({kind:'speech',t:r.start,end:r.end,text:transcript});
       }
       for(const e of FEATURED.chatExcerpts){
-        if(Math.abs(e.estimatedAudioSec-now)>range)continue;
-        if(filter && !(e.text+' '+e.handle).toLowerCase().includes(filter))continue;
-        rows.push({kind:'chat',t:e.estimatedAudioSec,text:e.text,handle:e.handle});
+        const placed=e.estimatedAudioSec!==null;
+        if(placed&&Math.abs(e.estimatedAudioSec-now)>range)continue;
+        if(filter&&!(e.text+' '+e.handle).toLowerCase().includes(filter))continue;
+        rows.push({kind:'chat',t:placed?e.estimatedAudioSec:duration+1,
+          text:e.text,handle:e.handle,unplaced:!placed});
       }
     }
     rows.sort((a,b)=>a.t-b.t||(a.kind==='speech'?-1:1));
@@ -480,7 +469,7 @@
       wrap.dataset.time=String(item.t);
       const bubble=elem('div','message-bubble');
       const head=elem('div','message-head'),sender=elem('span','message-sender');
-      sender.textContent=item.kind==='speech'?'HOST AUDIO · ASR UNREVIEWED':
+      sender.textContent=item.kind==='speech'?'SOURCE SPEECH · ASR':
         'VIEWER · '+item.handle;
       if(item.kind==='speech'){
         const seek=elem('button','message-time',
@@ -491,7 +480,7 @@
         head.append(sender,seek);
       }else{
         const estimated=elem('span','message-time source-estimated',
-          '≈ '+fmt(item.t)+' *');
+          item.unplaced?'No audio position':('≈ '+fmt(item.t)+' *'));
         estimated.title='Provisional media placement derived from collector process observation; NOT verified';
         head.append(sender,estimated);
       }
@@ -499,22 +488,29 @@
         item.text.trim()||'[No speech returned by this engine for this source block]'));
       if(item.kind==='chat'){
         bubble.append(elem('small','message-subline',
-          '* Collector comment · audio offset not calibrated · not a verified reply'));
+          item.unplaced?'Collector comment · no reviewed audio position':
+            '* Collector comment · audio offset not calibrated · not a verified reply'));
       }
       wrap.append(bubble);frag.append(wrap);
       nodes.push({element:wrap,kind:item.kind,t:item.t,end:item.end??item.t});
     }
     if(!rows.length)frag.append(elem('p','conversation-empty',
       mode==='activity'?
-        '46 deliberate events were counted in the original collector, but individual action records are not present in this approved public 180-second export. Do not infer timestamps or actors.':
+        (FEATURED.counts.deliberateEvents??'Some')+' deliberate events were counted, '+
+        'but individual actions are not included in this public source excerpt.':
         'No published speech or viewer excerpt matches this filter.'));
     list.replaceChildren(frag);
     state.messageNodes=nodes;
     $('clearParticipant').hidden=true;
     $('conversationNote').textContent=
-      'Host ASR uses 12 actual source-audio blocks. Three independently observed public viewer comments have PROVISIONAL media positions. Transcript wording, speaker, audio/chat ordering and replies are not human-verified. 22 total comments and 46 total actions exist as aggregate counts only here.';
+      'Stream speech uses '+FEATURED.transcriptBlocks.length+' actual audio-timed ASR passages. '+
+      FEATURED.chatExcerpts.length+' independent public comments may have PROVISIONAL positions. '+
+      'Words, speaker and conversation sync are not human-verified. No inferred replies.';
     $('conversationFooter').textContent=
-      '12 original audio blocks · 3 actual public comment excerpts (of 22) · 46 event notifications counted but NOT individually published · no verified audio/chat sync';
+      FEATURED.transcriptBlocks.length+' source-audio ASR passages · '+
+      FEATURED.chatExcerpts.length+' exact public comment excerpts'+
+      (FEATURED.counts.comments===null?'':' of '+FEATURED.counts.comments+' total')+
+      ' · aggregate actions only · no verified audio/chat sync';
     if(!state.conversationFollow)list.scrollTop=prior;
     highlightConversation(false);
   }
@@ -2230,8 +2226,16 @@
     $('graphMoment').setAttribute('aria-pressed','false');
     $('graphInspector').textContent='Select a node to inspect actual recorded contributions.';
     $('chatScope').value=isFeatured()?'all':'near';$('chatSearch').value='';$('graphSearch').value='';
-    $('featuredModelBar').hidden=!isFeatured();
-    $('featuredClockNote').hidden=!isFeatured();
+    $('featuredModelLabel').hidden=!isFeatured();
+    $('featuredModel').hidden=!isFeatured();
+    if(isFeatured()){
+      const selector=$('featuredModel');selector.replaceChildren();
+      for(const id of FEATURED.models){
+        const option=elem('option','',FEATURED.labels[id]||id);
+        option.value=id;selector.append(option);
+      }
+      selector.value=FEATURED.defaultModel;
+    }
     $('sessionSelect').value=id;
     const s=session();
     const identity=s.identityScheme==='direct_tiktok_account_fields_v1'?
@@ -2246,9 +2250,14 @@
       ' Original R2 archive contains '+number(mediaInventory.segments)+
       ' segment objects (not automatically embedded as playable media).':'';
     $('inventoryStats').textContent=isFeatured()?
-      'Original 180s audio from exact Nov 17 TS source SHA. 12 source-matched ASR blocks, all unreviewed. '+
-      'Collector totals: 22 comments, 46 deliberate events, 30 accounts; only 3 exact public comments are exported here. '+
-      'No calibrated source-audio UTC or event/video correspondence; graph activity is unavailable for this excerpt.':
+      'Original '+Math.round(FEATURED.source.durationSeconds)+'s recording, '+
+      FEATURED.transcriptBlocks.length+' source-matched ASR segments ('+
+      Math.round(FEATURED.coverageSeconds)+'s timed coverage; recognition unreviewed). '+
+      'Collector counts: '+(FEATURED.counts.comments??'unknown')+' comments, '+
+      (FEATURED.counts.deliberateEvents??'unknown')+' deliberate events, '+
+      (FEATURED.counts.uniqueActors??'unknown')+' accounts; '+
+      FEATURED.chatExcerpts.length+' verbatim public comments are individually published. '+
+      'No calibrated source/audio-to-chat clock, transaction evidence, or event-level participant graph.':
       number(s.stats.records)+' published deliberate-action records from '+
       number(s.stats.sourceRecords||s.stats.records)+' collector source records; '+
       number(s.stats.comments)+' comments; '+identity+'. '+videoHint+
@@ -2303,11 +2312,11 @@
     $('chatSearch').addEventListener('input',renderChat);
     $('featuredModel').addEventListener('change',()=>{
       if(isFeatured()){
-        const variant=$('featuredModel').value;
-        if(FEATURED.transcriptBlocks.every(b=>typeof b.texts[variant]==='string')){
-          state.source.transcript=FEATURED.transcriptBlocks.map(b=>[b.start,b.end,b.texts[variant]]);
-          state.lastFocusedConversation=null;renderChat();
-        }
+        const model=$('featuredModel').value;
+        if(!FEATURED.models.includes(model))return;
+        state.source.transcript=FEATURED.transcriptBlocks.map(b=>
+          [b.start,b.end,b.texts[model]??'']);
+        state.lastFocusedConversation=null;renderChat();
       }
     });
     $('conversationMode').addEventListener('change',renderChat);

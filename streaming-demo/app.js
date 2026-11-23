@@ -7,10 +7,10 @@
   const $ = id => document.getElementById(id);
   const D = window.HL_SIGNAL_DATA;
 
-  // The original V4 renderer is always retained. The optional source adapter
-  // adds one audio-only capture when a separately verified, immutable source
-  // is available. Text, segment count, model inventory and chunk length are
-  // DATA, never layout assumptions.
+  // Preserve V4 and default to an actual activity-backed recording. The
+  // separately sourced 180s ASR/video study has aggregate activity counts
+  // but no individual viewer/action event log, so it must not default to
+  // a blank Constellation. Do not merge the two independent capture clocks.
   const FEATURED_ID='source-nov17-original-audio-180';
   const FEATURED=window.HL_FEATURED_SOURCE;
   const featuredReady=!!(D&&FEATURED&&
@@ -24,8 +24,8 @@
   if(featuredReady){
     const duration=FEATURED.source.durationSeconds;
     const handles=Object.fromEntries(FEATURED.chatExcerpts.map(e=>[e.handle,e.handle]));
-    D.sessions.unshift({
-      id:FEATURED_ID,label:'Nov 17 · original audio + host ASR',
+    D.sessions.push({
+      id:FEATURED_ID,label:'Host ASR excerpt · activity log not published (180s)',
       startUTC:null,duration,identityScheme:'direct_tiktok_account_fields_v1',
       accountLabels:handles,
       stats:{records:0,sourceRecords:0,comments:0,chatters:0,likes:0,gifts:0,
@@ -38,7 +38,7 @@
       mediaCoveragePct:null,
       clockEvidence:{eventMediaAlignment:'NOT_VERIFIED',eventWallclock:'NOT_KNOWN_FOR_SOURCE_AUDIO'}
     });
-    D.review.unshift({
+    D.review.push({
       sid:FEATURED_ID,key:'featured-source-nov17-audio',
       title:'Nov 17 · original source media + ASR · '+Math.round(duration)+' seconds',
       video:FEATURED.source.videoFile||null,audio:FEATURED.source.audioFile,
@@ -50,9 +50,26 @@
       transcript:FEATURED.transcriptBlocks.map(b=>[b.start,b.end,b.texts[FEATURED.defaultModel]??'']),
       transcriptEvidence:'SOURCE_MATCHED_ASR_UNREVIEWED'
     });
-    D.defaultSession=FEATURED_ID;
+    // The ASR excerpt remains selectable; it is not a source of graph nodes.
     D.alignmentBySession[FEATURED_ID]={status:'PROVISIONAL',method:'AUDIO_CHAT_NOT_CALIBRATED',
       verifiedAnchorCount:0,offsetSeconds:0};
+  }
+  // Fallback selection is based on actual published, attributed records,
+  // never on aggregate engagement counts or the existence of a transcript.
+  const containsIndividualActivity=s=>!!s&&Array.isArray(s.comments)&&
+    Array.isArray(s.interactions)&&
+    s.comments.length+s.interactions.length>0&&
+    new Set([...s.comments.map(r=>r[1]),...s.interactions.map(r=>r[2])]
+      .filter(id=>id&&s.accountLabels?.[id])).size>=2;
+  if(!D.sessions.some(s=>s.id===D.defaultSession&&containsIndividualActivity(s))){
+    const candidates=D.sessions.filter(containsIndividualActivity)
+      .filter(s=>(D.review||[]).some(m=>m.sid===s.id&&(m.video||m.audio)))
+      .sort((a,b)=>{
+        const kinds=s=>new Set(['comment',...s.interactions.map(r=>r[1])]).size;
+        return kinds(b)*100+(b.comments.length+b.interactions.length)-
+          (kinds(a)*100+(a.comments.length+a.interactions.length));
+      });
+    if(candidates.length)D.defaultSession=candidates[0].id;
   }
   const clamp = (v,a,b) => Math.max(a,Math.min(b,Number.isFinite(+v)?+v:a));
   const fmt = value => { const t=Math.max(0,Math.floor(Number(value)||0));return [Math.floor(t/3600),Math.floor(t%3600/60),t%60].map(x=>String(x).padStart(2,'0')).join(':'); };

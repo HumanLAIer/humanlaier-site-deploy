@@ -138,8 +138,6 @@
         <details id="conversationOptions" class="conversation-options">
           <summary>Filters &amp; activity feed</summary>
           <div class="conversation-options-content">
-            <label id="featuredModelLabel" for="featuredModel" hidden>TRANSCRIPTION SOURCE · ORIGINAL AUDIO</label>
-            <select id="featuredModel" aria-label="Select actual source ASR engine and decoding context" hidden></select>
             <label for="chatScope">TIME WINDOW</label>
             <select id="chatScope" aria-label="Choose combined conversation time range">
               <option value="near">Around playhead ±90 seconds</option>
@@ -160,6 +158,10 @@
         <p id="conversationNote" class="conversation-note">Speech/chat ordering is best-estimate only, not evidence of replies. ASR and speaker attribution are unverified.</p>
       </details>
 <div id="conversationList" class="conversation-scroll conversation-thread" tabindex="0" aria-label="Chronological recorded chat and reaction notifications, with independently clocked machine speech"></div>
+      <div id="transcriptChooser" class="transcript-chooser" hidden>
+        <label id="featuredModelLabel" for="featuredModel">TRANSCRIPT</label>
+        <select id="featuredModel" aria-label="Select actual source ASR engine and decoding context"></select>
+      </div>
       <footer id="conversationFooter" class="pane-foot">Actual comments only · observed platform handles, not verified real-world identities.</footer>
     </article>
 

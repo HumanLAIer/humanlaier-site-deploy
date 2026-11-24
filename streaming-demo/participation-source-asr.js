@@ -11,17 +11,43 @@ window.HL_PARTICIPATION_ASR=(()=>{
     asr:'assets/nov17-participation-asr.json',
     mediaSha256:'a823a0c53babe333e51500dff9f8364bcdd351e3a24868786c8afa519174bfbf',
     mediaClock:'SOURCE_MEDIA_LOCAL_UNCALIBRATED_TO_COLLECTOR',
-    minSpeechSpanFraction:0.65
+    minSpeechSpanFraction:0.65,
+    defaultTrack:'sing-ctx',
+    singlishRevision:'0835ed29d2f8893e4fcf63d5ac531dcb086b6ee1',
+    focusedPromptSha256:'1f332bf0ae7df5ac7f6cd4188987ef378dcd96ce6f8f4be94dcac0c6b4e2849d'
   });
-  function normalize(raw){
+  function normalizeTrack(raw){
+    // Explicit English recognition, not translation or automatic language
+    // detection. Keep the prior accidental Malay output out of the catalogue.
+    if(!raw||raw.language!=='en'||raw.languageSelection!=='explicit-en'||
+       raw.task!=='transcribe')
+      throw Error('Showcase requires explicit English/Singlish transcription, never language autodetection or translation');
+    const isSing=raw.model==='singlish-small';
+    if(isSing){
+      if(raw.trackId!==contract.defaultTrack||
+         raw.repository!=='ivabojic/whisper-small-sing2eng-transcribe'||
+         raw.revision!==contract.singlishRevision||
+         raw.phase!=='focused'||raw.promptSha256!==contract.focusedPromptSha256||
+         raw.timingStatus!=='15S_BLOCK_ONLY_NO_VERIFIED_WORD_TIMES'||
+         !Array.isArray(raw.blocks)||raw.blocks.length!==8||
+         raw.blocks.some((b,i)=>b.index!==i||b.start!==i*15||
+           b.end!==(i+1)*15||!/^[a-f0-9]{64}$/.test(b.wavSha256)||
+           typeof b.text!=='string'||b.text.length>12000))
+        throw Error('Sing/CTX must use the exact pinned nine-ticker focused configuration and source blocks');
+      const actual=raw.blocks.filter(b=>b.text.trim()).map(b=>[b.start,b.end,b.text]);
+      if(JSON.stringify(actual)!==JSON.stringify(raw.utterances))
+        throw Error('Sing/CTX passages must preserve verbatim source-block output');
+    }else if(!/^faster-whisper\/[a-z0-9._-]{2,40}$/.test(raw.model||'')||
+             !/^[a-z0-9-]{2,50}$/.test(raw.trackId||'')||
+             raw.trackId===contract.defaultTrack){
+      throw Error('Unrecognized source transcript engine');
+    }
     if(!raw||raw.schema!=='hl-source-asr-public-v1'||
        raw.captureId!==contract.captureId||raw.media!==contract.video||
        raw.mediaSha256!==contract.mediaSha256||
        !Number.isFinite(raw.mediaDurationSeconds)||
        raw.mediaDurationSeconds<118||raw.mediaDurationSeconds>122||
        raw.clock!==contract.mediaClock||raw.humanReviewed!==false||
-       typeof raw.model!=='string'||
-       !/^faster-whisper\/[a-z0-9._-]{2,40}$/.test(raw.model)||
        !Array.isArray(raw.utterances)||raw.utterances.length<2||
        raw.utterances.length>3000)
       throw Error('Default showcase ASR must match its approved original MP4 and evidence clock');
@@ -47,9 +73,23 @@ window.HL_PARTICIPATION_ASR=(()=>{
        lastEnd<raw.mediaDurationSeconds*contract.minSpeechSpanFraction||
        characters<32)
       throw Error('Showcase ASR is truncated; recorded source speech coverage is inadequate');
-    return {rows,sourceSha256:raw.mediaSha256,model:raw.model,
-      language:String(raw.language||'unknown'),humanReviewed:false,
-      coverageEndSeconds:lastEnd};
+    return {id:raw.trackId,rows,sourceSha256:raw.mediaSha256,model:raw.model,
+      label:isSing?'Sing / CTX (default)':raw.model.replace('faster-whisper/','')+' · unprompted',
+      language:'en',task:'transcribe',languageSelection:'explicit-en',
+      phase:isSing?'focused':'control',
+      timingStatus:isSing?'15S_BLOCK_ONLY_NO_VERIFIED_WORD_TIMES':'ASR_SEGMENT_TIMES_UNREVIEWED',
+      humanReviewed:false,coverageEndSeconds:lastEnd};
+  }
+  function normalize(raw){
+    const selected=normalizeTrack(raw);
+    if(selected.id!==contract.defaultTrack||selected.model!=='singlish-small')
+      throw Error('Default showcase engine must remain Sing / CTX');
+    if(!Array.isArray(raw.alternatives)||raw.alternatives.length>12)
+      throw Error('Invalid same-source transcript catalogue');
+    const tracks=[selected,...raw.alternatives.map(normalizeTrack)];
+    if(new Set(tracks.map(t=>t.id)).size!==tracks.length)
+      throw Error('Duplicate transcript track identity');
+    return {...selected,tracks};
   }
   function verifyActivityAndMedia(parsed){
     const d=window.HL_SIGNAL_DATA;
@@ -86,11 +126,18 @@ window.HL_PARTICIPATION_ASR=(()=>{
     review.transcript=parsed.rows;
     review.transcriptEvidence='SAME_SOURCE_MACHINE_ASR_UNREVIEWED';
     review.transcriptModel=parsed.model;
+    review.transcriptTrackId=parsed.id;
+    review.transcriptDefaultTrack=parsed.id;
+    review.transcriptTracks=parsed.tracks;
+    review.transcriptLanguage=parsed.language;
+    review.transcriptTimingStatus=parsed.timingStatus;
     review.transcriptMediaSha256=parsed.sourceSha256;
     media.transcript=parsed.rows;
     media.transcriptEvidence=review.transcriptEvidence;
     return {captureId:contract.captureId,segments:parsed.rows.length,
       model:parsed.model,mediaSha256:parsed.sourceSha256,
+      trackId:parsed.id,language:parsed.language,task:parsed.task,
+      tracks:parsed.tracks.map(t=>({id:t.id,model:t.model,segments:t.rows.length})),
       humanReviewed:false,calibratedToCollector:false};
   }
   return Object.freeze({contract,normalize,attach});

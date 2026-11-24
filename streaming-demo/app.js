@@ -291,10 +291,26 @@
     }else{
       $('mediaFootnote').textContent='No source-media excerpt exists for this capture; collector evidence remains available.';
     }
+    renderTranscriptOptions();
     chooseAlignmentForSource();
     selectTrack(r?.video?'video':r?.audio?'audio':'events');
     renderTranscript();
     renderHostShoutouts();
+  }
+  function renderTranscriptOptions(){
+    const selector=$('featuredModel'),bar=$('transcriptChooser');
+    const tracks=isFeatured()?FEATURED.models.map(id=>({id,label:FEATURED.labels[id]||id})):
+      (state.source?.transcriptTracks||[]);
+    selector.replaceChildren();
+    bar.hidden=tracks.length<2;
+    for(const track of tracks){
+      const option=elem('option','',track.label||track.id);
+      option.value=track.id;selector.append(option);
+    }
+    if(tracks.length){
+      const preferred=isFeatured()?FEATURED.defaultModel:state.source.transcriptTrackId;
+      selector.value=tracks.some(t=>t.id===preferred)?preferred:tracks[0].id;
+    }
   }
   function renderSources(){
     const picks=findReview(),sel=$('sourceSelect');sel.replaceChildren();
@@ -680,7 +696,10 @@
         bubble.append(head,elem('p','message-text',
           String(item.row[2]||'(empty machine transcription)')));
         bubble.append(elem('div','message-subline',
-          'Machine transcript · speaker attribution and collector/media sync unverified'));
+          (state.source?.transcriptTimingStatus==='15S_BLOCK_ONLY_NO_VERIFIED_WORD_TIMES'?
+            'Machine ASR · 15s source block, not word timing':
+            'Machine ASR · segment timing unreviewed')+
+          ' · speaker and collector/media sync unverified'));
       }else if(item.kind==='reaction'){
         const icons={
           like:'♥',gift:'✦',gift_progress:'◌',follow:'+',share:'↗',
@@ -2361,16 +2380,6 @@
     $('chatScope').value=isFeatured()||session().comments.length<=300?'all':'near';
     $('actionScope').value=session().interactions.length<=160?'all':'near';
     $('chatSearch').value='';$('graphSearch').value='';
-    $('featuredModelLabel').hidden=!isFeatured();
-    $('featuredModel').hidden=!isFeatured();
-    if(isFeatured()){
-      const selector=$('featuredModel');selector.replaceChildren();
-      for(const id of FEATURED.models){
-        const option=elem('option','',FEATURED.labels[id]||id);
-        option.value=id;selector.append(option);
-      }
-      selector.value=FEATURED.defaultModel;
-    }
     $('sessionSelect').value=id;
     const s=session();
     const identity=s.identityScheme==='direct_tiktok_account_fields_v1'?
@@ -2462,6 +2471,17 @@
         state.source.transcript=FEATURED.transcriptBlocks.map(b=>
           [b.start,b.end,b.texts[model]??'']);
         state.lastFocusedConversation=null;renderChat();
+      }else{
+        const track=state.source?.transcriptTracks?.find(t=>t.id===$('featuredModel').value);
+        if(!track)return;
+        // Switch evidence, not source transport. Do not restart playback,
+        // replace events or synthesize new participant edges.
+        state.source.transcript=track.rows;
+        state.source.transcriptModel=track.model;
+        state.source.transcriptTrackId=track.id;
+        state.source.transcriptTimingStatus=track.timingStatus;
+        state.lastFocusedConversation=null;
+        renderChat();
       }
     });
     $('conversationMode').addEventListener('change',renderChat);

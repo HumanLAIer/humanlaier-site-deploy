@@ -38,6 +38,7 @@ async function verify(){
   'streaming-lab/coats-guarded-nov22/index.html','streaming-lab/coats-guarded-nov22/app.js','streaming-lab/coats-guarded-nov22/styles.css','streaming-lab/coats-guarded-nov22/paired-results.json',
   'streaming-lab/speaker-roles-nov22/index.html','streaming-lab/speaker-roles-nov22/app.js','streaming-lab/speaker-roles-nov22/styles.css','streaming-lab/speaker-roles-nov22/role-data.json',
   'streaming-lab/speaker-roles-persistent-nov22/index.html','streaming-lab/speaker-roles-persistent-nov22/app.js','streaming-lab/speaker-roles-persistent-nov22/replay.js','streaming-lab/speaker-roles-persistent-nov22/styles.css',
+  'streaming-lab/spectral-intelligence-nov22/index.html','streaming-lab/spectral-intelligence-nov22/app.js','streaming-lab/spectral-intelligence-nov22/styles.css','streaming-lab/spectral-intelligence-nov22/comparison.json','streaming-lab/spectral-intelligence-nov22/export-manifest.json','streaming-lab/spectral-intelligence-nov22/profile-A.wav','streaming-lab/spectral-intelligence-nov22/profile-B.wav','streaming-lab/spectral-intelligence-nov22/profile-C.wav','streaming-lab/spectral-intelligence-nov22/profile-D.wav','streaming-lab/spectral-intelligence-nov22/profile-E.wav','streaming-lab/spectral-intelligence-nov22/profile-F.wav','streaming-lab/spectral-intelligence-nov22/profile-G.wav','streaming-lab/spectral-intelligence-nov22/profile-H.wav',
   'streaming-demo/nine-tickers/styles.css','streaming-demo/assets/nov17-participation.mp4']){
    const x=await get('/'+name);
    assert.equal(x.status,200,'Missing production file: '+name);
@@ -97,6 +98,7 @@ async function verify(){
    assert.match(mp4.headers.get('content-range')||'',/^bytes 0-31\/\d+$/);
  }
  for(let i=1;i<=3;i++){const a=await get('/streaming-lab/ten-tickers-nov22/dialogue-'+i+'.wav',{Range:'bytes=0-31'});assert.equal(a.status,206);assert.equal(a.bytes.toString('ascii',0,4),'RIFF');}
+ for(const p of 'ABCDEFGH'){const a=await get('/streaming-lab/spectral-intelligence-nov22/profile-'+p+'.wav',{Range:'bytes=0-31'});assert.equal(a.status,206);assert.equal(a.bytes.toString('ascii',0,4),'RIFF');}
  const originalVideo=await get('/streaming-demo/assets/nov17-participation.mp4',
    {Range:'bytes=0-31'});
  assert.equal(originalVideo.status,206,'Original V4 source MP4 must support HTTP byte-range seeking');

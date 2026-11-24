@@ -40,6 +40,10 @@ jobs:
           node --check streaming-lab/speaker-roles-persistent-nov22/app.js
           node --check streaming-lab/speaker-roles-persistent-nov22/replay.js
           node scripts/verify-persistent-speaker-roles.cjs
+      - name: Verify exact matched DSP audio, sources and ASR evidence
+        run: |
+          node --check streaming-lab/spectral-intelligence-nov22/app.js
+          node scripts/verify-dsp-screen.cjs
       - name: Validate main demo evidence before preparing a website artifact
         run: node scripts/verify-recorded-activity.cjs
       - name: Build exact static site allowlist
@@ -120,6 +124,7 @@ jobs:
           node scripts/verify-coats-guard-browser.cjs
           node scripts/verify-speaker-roles-browser.cjs
           node scripts/verify-persistent-speaker-roles-browser.cjs
+          node scripts/verify-dsp-screen-browser.cjs
       - name: Check independent nine-ticker research screen layout
         run: |
           mkdir -p .private/nine-layout-qa
@@ -235,3 +240,4 @@ jobs:
           node scripts/verify-coats-guard-browser.cjs
           node scripts/verify-speaker-roles-browser.cjs
           node scripts/verify-persistent-speaker-roles-browser.cjs
+          node scripts/verify-dsp-screen-browser.cjs

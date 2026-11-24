@@ -86,16 +86,16 @@ jobs:
           if ! command -v google-chrome >/dev/null 2>&1; then
             npx playwright install --with-deps chrome
           fi
-      - name: Build exact Pages artifact for independent bakeoff acceptance
-        run: node scripts/build-pages.cjs
+      - name: Stage independent research-only artifact (no V4 transcript dependency)
+        run: node scripts/build-research-pages.cjs
       - name: Test independent bakeoff real media in Chrome
         env:
           HL_TEST_TARGET: bakeoff
-          HL_TEST_WEB_ROOT: .pages-build
+          HL_TEST_WEB_ROOT: .research-build
         run: node scripts/verify-pages-browser.cjs
       - name: Test lab wrapper with nine real source lanes and retrieval evidence
         env:
-          HL_TEST_WEB_ROOT: .pages-build
+          HL_TEST_WEB_ROOT: .research-build
         run: |
           node streaming-demo/verify-range-server.cjs > /tmp/streaming-lab-range.log 2>&1 &
           sleep 2

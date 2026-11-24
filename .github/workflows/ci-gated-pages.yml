@@ -18,13 +18,15 @@ jobs:
       - name: Syntax-check shipped JavaScript
         run: |
           set -euo pipefail
-          for src in js/*.js singlish-compare/app.js streaming-demo/*.js streaming-demo/nine-tickers/app.js streaming-lab/*.js scripts/*.cjs; do
+          for src in js/*.js singlish-compare/app.js streaming-demo/*.js streaming-demo/nine-tickers/app.js streaming-lab/*.js streaming-lab/nine-tickers-nov22/*.js scripts/*.cjs; do
             node --check "$src"
           done
       - name: Verify independent Singlish archive
         run: node scripts/verify-singlish-contracts.cjs
       - name: Verify independent research preview and source-only constraints
         run: node scripts/verify-streaming-lab.cjs
+      - name: Verify exact Nov22 source audio, transcript coverage, and original study preservation
+        run: node scripts/verify-nov22-nine.cjs
       - name: Validate main demo evidence before preparing a website artifact
         run: node scripts/verify-recorded-activity.cjs
       - name: Build exact static site allowlist
@@ -100,6 +102,7 @@ jobs:
           node streaming-demo/verify-range-server.cjs > /tmp/streaming-lab-range.log 2>&1 &
           sleep 2
           node scripts/verify-streaming-lab-browser.cjs
+          node scripts/verify-nov22-nine-browser.cjs
       - name: Check independent nine-ticker research screen layout
         run: |
           mkdir -p .private/nine-layout-qa
@@ -208,4 +211,6 @@ jobs:
       - name: Smoke-test shareable research preview without changing main demo
         env:
           HL_SITE_PUBLIC_BASE: https://humanlaier.com
-        run: node scripts/verify-streaming-lab-browser.cjs
+        run: |
+          node scripts/verify-streaming-lab-browser.cjs
+          node scripts/verify-nov22-nine-browser.cjs

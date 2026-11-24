@@ -29,7 +29,10 @@ async function verify(){
    'streaming-demo/featured-bootstrap.js','streaming-demo/nine-tickers/comparison.json',
    'streaming-demo/participation-source-asr.js','streaming-demo/assets/nov17-participation-asr.json',
    'streaming-lab/index.html','streaming-lab/lab.js','streaming-lab/lab.css','streaming-lab/catalogue-review.json',
-   'streaming-demo/assets/nov17-participation.mp4']){
+   'streaming-lab/nine-tickers-nov22/index.html','streaming-lab/nine-tickers-nov22/app.js',
+   'streaming-lab/nine-tickers-nov22/styles.css','streaming-lab/nine-tickers-nov22/comparison.json',
+   'streaming-lab/nine-tickers-nov22/part-1.flac','streaming-lab/nine-tickers-nov22/part-2.flac',
+   'streaming-lab/nine-tickers-nov22/part-3.flac','streaming-demo/assets/nov17-participation.mp4']){
    const x=await get('/'+name);
    assert.equal(x.status,200,'Missing production file: '+name);
    assert.equal(x.bytes.length,m.assets[name].bytes,'Wrong production asset size: '+name);
@@ -76,6 +79,13 @@ async function verify(){
  assert.equal(video.bytes.length,32,'Unexpected MP4 range length');
  assert.equal(video.bytes.toString('ascii',4,8),'ftyp','Wrong MP4 source bytes');
  assert.match(video.headers.get('content-range')||'',/^bytes 0-31\/\d+$/);
+ for(let i=1;i<=3;i++){
+   const audio=await get('/streaming-lab/nine-tickers-nov22/part-'+i+'.flac',{Range:'bytes=0-31'});
+   assert.equal(audio.status,206,'FLAC range seeking unavailable');
+   assert.equal(audio.bytes.length,32);
+   assert.equal(audio.bytes.toString('ascii',0,4),'fLaC');
+   assert.match(audio.headers.get('content-range')||'',/^bytes 0-31\/\d+$/);
+ }
  const originalVideo=await get('/streaming-demo/assets/nov17-participation.mp4',
    {Range:'bytes=0-31'});
  assert.equal(originalVideo.status,206,'Original V4 source MP4 must support HTTP byte-range seeking');

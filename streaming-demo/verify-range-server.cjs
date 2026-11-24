@@ -7,7 +7,7 @@ const root=path.resolve(process.env.HL_TEST_WEB_ROOT||process.cwd());
 const mime={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8',
   '.css':'text/css; charset=utf-8','.json':'application/json; charset=utf-8',
   '.svg':'image/svg+xml','.jpg':'image/jpeg','.png':'image/png',
-  '.mp4':'video/mp4','.mp3':'audio/mpeg'};
+  '.mp4':'video/mp4','.mp3':'audio/mpeg','.flac':'audio/flac'};
 http.createServer((req,res)=>{
   let file;
   try{

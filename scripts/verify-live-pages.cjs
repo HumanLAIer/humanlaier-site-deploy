@@ -34,6 +34,7 @@ async function verify(){
    'streaming-lab/nine-tickers-nov22/part-1.flac','streaming-lab/nine-tickers-nov22/part-2.flac',
    'streaming-lab/nine-tickers-nov22/part-3.flac',
   'streaming-lab/nine-tickers-nov22/video-manifest.json','streaming-lab/nine-tickers-nov22/part-1.mp4','streaming-lab/nine-tickers-nov22/part-2.mp4','streaming-lab/nine-tickers-nov22/part-3.mp4',
+  'streaming-lab/ten-tickers-nov22/index.html','streaming-lab/ten-tickers-nov22/app.js','streaming-lab/ten-tickers-nov22/styles.css','streaming-lab/ten-tickers-nov22/comparison.json','streaming-lab/ten-tickers-nov22/export-manifest.json','streaming-lab/ten-tickers-nov22/dialogue-1.wav','streaming-lab/ten-tickers-nov22/dialogue-2.wav','streaming-lab/ten-tickers-nov22/dialogue-3.wav',
   'streaming-demo/nine-tickers/styles.css','streaming-demo/assets/nov17-participation.mp4']){
    const x=await get('/'+name);
    assert.equal(x.status,200,'Missing production file: '+name);
@@ -92,6 +93,7 @@ async function verify(){
    assert.equal(mp4.bytes.length,32);assert.equal(mp4.bytes.toString('ascii',4,8),'ftyp');
    assert.match(mp4.headers.get('content-range')||'',/^bytes 0-31\/\d+$/);
  }
+ for(let i=1;i<=3;i++){const a=await get('/streaming-lab/ten-tickers-nov22/dialogue-'+i+'.wav',{Range:'bytes=0-31'});assert.equal(a.status,206);assert.equal(a.bytes.toString('ascii',0,4),'RIFF');}
  const originalVideo=await get('/streaming-demo/assets/nov17-participation.mp4',
    {Range:'bytes=0-31'});
  assert.equal(originalVideo.status,206,'Original V4 source MP4 must support HTTP byte-range seeking');

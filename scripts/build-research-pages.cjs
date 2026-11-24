@@ -1,0 +1,47 @@
+#!/usr/bin/env node
+'use strict';
+// Build ONLY the independent nine-ticker / Streaming Lab research surfaces
+// for the research acceptance suite. The full production Pages artifact still
+// uses build-pages.cjs, whose default V4 contract is mandatory and fail-closed.
+const fs=require('node:fs');
+const path=require('node:path');
+const assert=require('node:assert/strict');
+const root=path.resolve(__dirname,'..');
+const destination=path.join(root,'.research-build');
+if(fs.existsSync(destination))fs.rmSync(destination,{recursive:true,force:true});
+const directories=['streaming-demo/nine-tickers','streaming-lab'];
+for(const rel of directories){
+  const source=path.join(root,rel),target=path.join(destination,rel);
+  assert(fs.existsSync(source),'Research source missing: '+rel);
+  fs.mkdirSync(path.dirname(target),{recursive:true});
+  fs.cpSync(source,target,{
+    recursive:true,force:false,errorOnExist:true,dereference:false,
+    filter:file=>{
+      if(fs.lstatSync(file).isSymbolicLink())
+        throw Error('Research artifact refuses symbolic links: '+file);
+      return !/(^|\/)(?:node_modules|\.private)(\/|$)/.test(
+        path.relative(root,file).split(path.sep).join('/'));
+    }
+  });
+}
+for(const rel of [
+  'streaming-demo/nine-tickers/index.html',
+  'streaming-demo/nine-tickers/app.js',
+  'streaming-demo/nine-tickers/styles.css',
+  'streaming-demo/nine-tickers/comparison.json',
+  'streaming-demo/nine-tickers/video-manifest.json',
+  'streaming-demo/nine-tickers/commercial-180.mp4',
+  'streaming-demo/nine-tickers/commercial-180.mp3',
+  'streaming-lab/index.html',
+  'streaming-lab/lab.js','streaming-lab/lab.css'
+])assert(fs.existsSync(path.join(destination,rel)),
+  'Research acceptance missing source asset: '+rel);
+assert(!fs.existsSync(path.join(destination,'streaming-demo/app.js')),
+  'Independent research QA must not depend on the client V4 demo');
+assert(!fs.existsSync(path.join(destination,'streaming-demo/assets/nov17-participation-asr.json')),
+  'Research QA must not depend on the client host transcript');
+console.log('INDEPENDENT_RESEARCH_ARTIFACT_READY '+JSON.stringify({
+  output:'.research-build',products:directories,
+  originalVideoBytes:fs.statSync(path.join(destination,
+    'streaming-demo/nine-tickers/commercial-180.mp4')).size
+}));

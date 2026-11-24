@@ -26,6 +26,15 @@ const isTest=relative=>/(^|\/)(?:verify-[^/]+\.cjs|__source-chat-qa[^/]*|\.priva
 const sha=file=>crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
 const releaseSha=(process.env.GITHUB_SHA||cp.execFileSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'}).trim()).trim();
 assert.match(releaseSha,/^[0-9a-f]{40}$/);
+// Even a standalone packaging attempt must reject a comments-only default.
+// This check deliberately validates the *source* rather than presence of
+// a copied JSON filename. No failed or incomplete showcase reaches Pages.
+const evidence=cp.spawnSync(process.execPath,['scripts/verify-recorded-activity.cjs'],{
+  cwd:root,encoding:'utf8',timeout:30000
+});
+if(evidence.error||evidence.status!==0)
+  throw Error('Cannot package incomplete source/video/ASR/Constellation evidence: '+
+    (evidence.stderr||evidence.stdout||evidence.error?.message||evidence.status));
 if(fs.existsSync(dest))fs.rmSync(dest,{recursive:true,force:true});
 fs.mkdirSync(dest,{recursive:true});
 for(const entry of allow){
@@ -73,13 +82,27 @@ for(const asset of ['index.html','streaming-demo/index.html',
   'streaming-lab/index.html','streaming-lab/lab.js','streaming-lab/lab.css',
   'streaming-demo/nine-tickers/video-manifest.json',
   'streaming-demo/nine-tickers/commercial-180.mp4',
-  'streaming-demo/nine-tickers/commercial-180.mp3']){
+  'streaming-demo/nine-tickers/commercial-180.mp3',
+  'streaming-demo/assets/nov17-participation.mp4']){
   const filepath=path.join(dest,asset);
   checks[asset]={sha256:sha(filepath),bytes:fs.statSync(filepath).size};
 }
+const originalMedia=checks['streaming-demo/assets/nov17-participation.mp4'];
+const originalAsr=JSON.parse(fs.readFileSync(
+  path.join(dest,'streaming-demo/assets/nov17-participation-asr.json'),'utf8'));
+assert.equal(originalAsr.mediaSha256,originalMedia.sha256,
+  'Original source video hash must match original source ASR at package time');
 const manifest={schema:'hl-pages-release-v1',repository:'HumanLAIer/humanlaier-site-deploy',
   commit:releaseSha,domain:'humanlaier.com',builtAt:new Date().toISOString(),
-  sourceAudioVideoClockCalibrated:false,assets:checks};
+  sourceAudioVideoClockCalibrated:false,
+  primaryShowcase:{
+    captureId:originalAsr.captureId,media:originalAsr.media,
+    mediaSha256:originalMedia.sha256,
+    transcriptPassages:originalAsr.utterances.length,
+    transcriptModel:originalAsr.model,
+    humanReviewed:false,collectorClockCalibrated:false
+  },
+  assets:checks};
 fs.writeFileSync(path.join(dest,'release.json'),JSON.stringify(manifest,null,2)+'\n');
 assert(!fs.existsSync(path.join(dest,'.github')));
 assert(!fs.existsSync(path.join(dest,'scripts')));

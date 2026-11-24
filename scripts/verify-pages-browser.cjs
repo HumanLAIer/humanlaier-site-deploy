@@ -329,9 +329,17 @@ async function sourceChat(browser){
    const oldCaptures=await page.locator('#sessionSelect option').evaluateAll(els=>
      els.map(e=>e.value).filter(v=>v&&v!=='source-nov17-original-audio-180'));
    assert(oldCaptures.length>=3,'Original archived captures must be retained');
-   await page.locator('#sessionSelect').selectOption(oldCaptures[0]);
-   await page.waitForTimeout(350);
-   assert.equal(await page.locator('#featuredModel').isHidden(),true);
+   await page.locator('#sessionSelect').selectOption('nov17-participation');
+   await page.waitForFunction(()=>document.getElementById('featuredModel').value==='sing-ctx' &&
+     !document.getElementById('transcriptChooser').hidden,null,{timeout:10000});
+   assert.equal(await page.locator('#featuredModel').isHidden(),false,
+     'Returning to main demo must expose its own source-bound transcript choices');
+   const noChoiceCapture=oldCaptures.find(id=>id!=='nov17-participation');
+   assert(noChoiceCapture,'Independent historical capture remains available');
+   await page.locator('#sessionSelect').selectOption(noChoiceCapture);
+   await page.waitForFunction(()=>document.getElementById('transcriptChooser').hidden,null,{timeout:10000});
+   assert.equal(await page.locator('#featuredModel').isHidden(),true,
+     'Do not carry a transcript catalogue into an unrelated archived capture');
    assert((await page.locator('#sourceSelect option').count())>0,'Original capture media remains available');
    assert.deepEqual(observeResult.errors,[],'V4 runtime script errors');
    assert.deepEqual(observeResult.bad,[],'V4 critical local assets must not be HTTP errors');

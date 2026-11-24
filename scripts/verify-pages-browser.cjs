@@ -607,16 +607,33 @@ async function independentOptionalResearchAndMutableSpeech(browser){
      'Longer transcript must not expand the conversation or the dock');
    // Controlled browser-only mutation of the original flex growth rule:
    // prove the same geometry assertion catches the reported unbounded chat.
-   const broken=await page.addStyleTag({content:
-     '#conversationList{flex:1!important;max-height:none!important;min-height:330px!important}'});
+   // Mutate the existing same-origin CSSOM in the isolated test browser.
+   // No inline style tag or weakening of the production CSP is necessary.
+   const mutation=await page.evaluate(()=>{
+     const sheet=[...document.styleSheets].find(s=>s.href&&
+       new URL(s.href).pathname.endsWith('/streaming-demo/ux.css'));
+     if(!sheet)throw Error('Original V4 stylesheet unavailable for regression probe');
+     const index=sheet.insertRule(
+       '#conversationList{flex:1!important;max-height:none!important;min-height:330px!important}',
+       sheet.cssRules.length);
+     const style=getComputedStyle(document.getElementById('conversationList'));
+     return {index,applied:style.flexGrow==='1'&&style.maxHeight==='none'};
+   });
    try{
+     assert(mutation.applied,'Original unbounded sizing mutation must actually apply');
      const bad=await conversationGeometry(page);
      assert.throws(()=>requireConversationGeometry(bad,'regressed flex sizing'),
        /conversation height budget violated|long conversation must overflow internally/,
        'The old flex:1/unbounded rule must be detected by the real browser gate');
      console.log('V4_UNBOUNDED_CHAT_MUTATION_REJECTED '+JSON.stringify({
        height:bad.height,content:bad.content,expected:bad.expected}));
-   }finally{await broken.evaluate(el=>el.remove());}
+   }finally{
+     await page.evaluate(index=>{
+       const sheet=[...document.styleSheets].find(s=>s.href&&
+         new URL(s.href).pathname.endsWith('/streaming-demo/ux.css'));
+       sheet.deleteRule(index);
+     },mutation.index);
+   }
    await assertConversationScrolling(page,'restored after flex mutation');
    console.log('ARBITRARY_SOURCE_ASR_RESEGMENTATION_BROWSER_PASS '+JSON.stringify({
      count:result.count,comments:result.comments,accounts:result.accounts,markers:result.markers,

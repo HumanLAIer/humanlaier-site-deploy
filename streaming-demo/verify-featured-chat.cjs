@@ -117,8 +117,10 @@ assert(app.includes("Original source video unavailable in this browser"),
   'Video playback errors must fall back to original audio, not silent failure');
 assert(boot.includes("readJson('nine-tickers/video-manifest.json',5000)"),
   'Optional research video manifest must remain separate and validated');
-assert(app.includes('for(const id of FEATURED.models)'),
-  'Model selector should be driven by actual available models');
+assert(app.includes('FEATURED.models.map(id=>')&&app.includes('state.source?.transcriptTracks||[]'),
+  'Model selector must be driven by actual available source-bound models');
+assert(page.indexOf('id="transcriptChooser"')>page.indexOf('id="conversationList"'),
+  'Source transcript selector belongs directly below the conversation');
 assert(app.includes('[No recorded output from this engine for this passage]'),
   'Partial model outputs must degrade cleanly');
 assert(!app.includes('r.start===i*15'),'UI must not assume 15s blocks');

@@ -27,6 +27,8 @@ jobs:
         run: node scripts/verify-streaming-lab.cjs
       - name: Verify exact Nov22 source audio, transcript coverage, and original study preservation
         run: node scripts/verify-nov22-nine.cjs
+      - name: Verify all ten real dialogue/raw lanes and audio receipts
+        run: node scripts/verify-dialogue-ten.cjs
       - name: Validate main demo evidence before preparing a website artifact
         run: node scripts/verify-recorded-activity.cjs
       - name: Build exact static site allowlist
@@ -103,6 +105,7 @@ jobs:
           sleep 2
           node scripts/verify-streaming-lab-browser.cjs
           node scripts/verify-nov22-nine-browser.cjs
+          node scripts/verify-nov22-ten-browser.cjs
       - name: Check independent nine-ticker research screen layout
         run: |
           mkdir -p .private/nine-layout-qa
@@ -214,3 +217,4 @@ jobs:
         run: |
           node scripts/verify-streaming-lab-browser.cjs
           node scripts/verify-nov22-nine-browser.cjs
+          node scripts/verify-nov22-ten-browser.cjs

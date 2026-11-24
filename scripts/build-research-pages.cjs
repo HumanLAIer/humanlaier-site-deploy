@@ -43,7 +43,7 @@ for(const rel of [
   'streaming-demo/nine-tickers/commercial-180.mp4',
   'streaming-demo/nine-tickers/commercial-180.mp3',
   'streaming-lab/index.html',
-  'streaming-lab/lab.js','streaming-lab/lab.css'
+  'streaming-lab/lab.js','streaming-lab/lab.css','streaming-lab/catalogue-review.json'
 ])assert(fs.existsSync(path.join(destination,rel)),
   'Research acceptance missing source asset: '+rel);
 assert(!fs.existsSync(path.join(destination,'streaming-demo/app.js')),

@@ -1,0 +1,29 @@
+name: Editorial preview integrity
+on:
+  pull_request:
+    paths:
+      - 'editorial/**'
+      - 'scripts/stage-editorial-previews.cjs'
+      - 'scripts/stage-editorial-previews.test.cjs'
+      - 'scripts/build-pages.cjs'
+      - '.github/workflows/editorial-preview-integrity.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'editorial/**'
+      - 'scripts/stage-editorial-previews.cjs'
+      - 'scripts/stage-editorial-previews.test.cjs'
+      - 'scripts/build-pages.cjs'
+      - '.github/workflows/editorial-preview-integrity.yml'
+permissions:
+  contents: read
+jobs:
+  editorial-preview:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test scripts/stage-editorial-previews.test.cjs
+      - run: node scripts/stage-editorial-previews.cjs

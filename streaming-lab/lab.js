@@ -248,6 +248,7 @@
   const draftKey="hl-reference-development-v1:"+EXPECTED_PART;
   let drafts={};
   let reviewEnd=null;
+  let listenGeneration=0;
   function player(){
     try{return $("sourceFrame").contentDocument?.getElementById("video")||null}catch(_){return null}
   }
@@ -328,8 +329,12 @@
   }
   function stopListening(message){
     const p=player();
-    if(reviewEnd!==null&&p)p.pause();
+    // Invalidate the pending play() before pausing; an aborted request must
+    // not overwrite this stop or a later listening session's status.
+    const wasListening=reviewEnd!==null;
     reviewEnd=null;
+    ++listenGeneration;
+    if(wasListening&&p)p.pause();
     $("listenBlock").textContent="Listen to block";
     if(message)$("listenStatus").textContent=message;
   }
@@ -339,10 +344,14 @@
     if(!state.data||!p||!Number.isFinite(p.duration)||p.readyState<1){
       $("listenStatus").textContent="Original source video is not ready. Try again after it loads.";return;
     }
+    const generation=++listenGeneration;
     p.pause();p.currentTime=i*15;reviewEnd=(i+1)*15;
     $("listenBlock").textContent="Stop listening";
     $("listenStatus").textContent="Listening to "+clock(i*15)+"–"+clock(reviewEnd)+" · source video audio.";
-    p.play().catch(()=>stopListening("Playback blocked or unavailable. Try listening again."));
+    p.play().catch(()=>{
+      if(generation===listenGeneration&&reviewEnd!==null)
+        stopListening("Playback blocked or unavailable. Try listening again.");
+    });
   }
   $("annotationBlock").addEventListener("change",()=>{stopListening();showDraft()});
   for(const [id,delta] of [["prevBlock",-1],["nextBlock",1]]){

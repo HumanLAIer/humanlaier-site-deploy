@@ -87,6 +87,35 @@ const root=(process.env.HL_SITE_PUBLIC_BASE||"http://127.0.0.1:18764").replace(/
         },null,{timeout:15000});
         await page.locator("#listenBlock").click();
         assert.match(await page.locator("#listenStatus").textContent(),/stopped/);
+        assert(await page.evaluate(()=>document.getElementById("sourceFrame").contentDocument.getElementById("video").paused));
+        // Deterministically exercise cancellation of an unresolved play()
+        // request, including a stale rejection after starting another block.
+        // The real-playback assertion above is still mandatory.
+        const race=await page.evaluate(async()=>{
+          const v=document.getElementById("sourceFrame").contentDocument.getElementById("video");
+          const original=v.play,button=document.getElementById("listenBlock");
+          const status=document.getElementById("listenStatus");
+          const rejects=[];
+          v.play=()=>new Promise((_,reject)=>rejects.push(reject));
+          try{
+            button.click();button.click();
+            rejects[0](new DOMException("Playback interrupted","AbortError"));
+            await Promise.resolve();await Promise.resolve();
+            const stopped=status.textContent;
+            button.click();button.click();button.click();
+            rejects[1](new DOMException("Previous playback interrupted","AbortError"));
+            await Promise.resolve();await Promise.resolve();
+            const restarted=status.textContent;
+            rejects[2](new DOMException("Current playback blocked","NotAllowedError"));
+            await Promise.resolve();await Promise.resolve();
+            return {stopped,restarted,blocked:status.textContent,button:button.textContent};
+          }finally{v.play=original}
+        });
+        assert.match(race.stopped,/stopped/);
+        assert.match(race.restarted,/Listening to/);
+        assert.match(race.blocked,/Playback blocked or unavailable/);
+        assert.equal(race.button,"Listen to block");
+        console.log("LAB_LISTEN_CANCELLATION_RACE_PASS "+JSON.stringify({viewport:size,staleRejectionIgnored:true,currentFailureReported:true}));
         await page.locator("#referenceText").fill("SYNTHETIC browser QA draft only");
         await page.locator("#referenceStatus").selectOption("draft");
         await page.locator("#reviewerName").fill("Browser QA");

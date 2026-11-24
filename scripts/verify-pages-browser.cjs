@@ -42,6 +42,9 @@ async function sourceChat(browser){
    const evidence=await page.evaluate(()=>{
      const selected=document.getElementById('sessionSelect').value;
      const capture=window.HL_SHOWCASE_DATA.sessions.find(s=>s.id===selected);
+     const selectedSource=window.HL_SIGNAL_DATA.review.find(s=>s.sid===selected);
+     const actualSpeech=[...document.querySelectorAll('#conversationList .message-row.speech')];
+     const actualChat=[...document.querySelectorAll('#conversationList .message-row.chat')];
      const kinds={};
      for(const r of capture.events)kinds[r[1]]=(kinds[r[1]]||0)+1;
      const graph=document.querySelectorAll('#networkNodes g[data-actor]');
@@ -53,7 +56,15 @@ async function sourceChat(browser){
        markerCount:Number(markerCanvas.dataset.recordedMarkerCount),
        markerKinds:markerCanvas.dataset.recordedMarkerKinds.split(','),
        observedActions:document.querySelectorAll('#actionEventList button.evidence-event').length,
-       publicComments:document.querySelectorAll('#conversationList .message-row.chat').length,
+       publicComments:actualChat.length,
+       speechCount:actualSpeech.length,
+       speechOriginalSegments:selectedSource?.transcript?.length||0,
+       speechLabel:actualSpeech[0]?.querySelector('.message-sender')?.textContent,
+       speechText:actualSpeech[0]?.querySelector('.message-text')?.textContent,
+       speechOriginalText:selectedSource?.transcript?.[0]?.[2],
+       speechSide:actualSpeech[0]?getComputedStyle(actualSpeech[0]).justifyContent:null,
+       viewerSide:actualChat[0]?getComputedStyle(actualChat[0]).justifyContent:null,
+       transcriptEvidence:selectedSource?.transcriptEvidence,
        actionScope:document.getElementById('actionScope').value,
        eventLayerOptions:[...document.getElementById('graphEventKind').options]
          .map(o=>({kind:o.value,label:o.textContent})),
@@ -79,6 +90,19 @@ async function sourceChat(browser){
    assert.equal(evidence.observedActions,
      evidence.sourceRecords-evidence.kindCounts.comment,'All 53 original action records must be selectable');
    assert.equal(evidence.publicComments,evidence.kindCounts.comment);
+   assert(evidence.speechCount>=2,'Default source-backed V4 MUST render actual host/stream ASR');
+   assert.equal(evidence.speechCount,evidence.speechOriginalSegments,
+     'Do not drop real captured source-media ASR segments from native Conversation');
+   assert.equal(evidence.speechText?.trim(),evidence.speechOriginalText?.trim(),
+     'Default host-side bubble must contain ORIGINAL ASR words, not synthetic text');
+   assert(evidence.speechLabel?.includes('STREAM SPEECH'),
+     'Speech must occupy the V4 group-chat stream, not a separate transcript mass');
+   assert(['flex-start','flow-start'].includes(evidence.speechSide),
+     'Source speech must use original left-side chat bubbles');
+   assert(['flex-end','flow-end'].includes(evidence.viewerSide),
+     'Viewer comments must remain on original right-side chat bubbles');
+   assert.equal(evidence.transcriptEvidence,'SAME_SOURCE_MACHINE_ASR_UNREVIEWED',
+     'Original default ASR must explicitly be unreviewed, not human-verified');
    assert.equal(evidence.actionScope,'all');
    assert(evidence.statline.includes('observed accounts')&&evidence.video.includes('nov17-participation.mp4')&&
      !evidence.videoHidden&&evidence.layout==='grid');

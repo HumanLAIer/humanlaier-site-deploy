@@ -1,0 +1,23 @@
+/* Canonical Nov17 stylesheet owns the layout. Only longer navigation and edition-specific notes differ. */
+.blocks{grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:max(24px,calc((100% - 33px)/12));overflow-x:auto;scrollbar-width:none;overscroll-behavior-x:contain}
+.blocks::-webkit-scrollbar{display:none}
+.block-btn.boundary{border-left:2px solid var(--gold)}
+.notes-panel details{margin:8px 0;border-top:1px solid var(--line);padding-top:6px}
+.notes-panel details summary{padding:3px 0;border:0;cursor:pointer;white-space:normal}
+.notes-panel select{max-width:100%;background:var(--surface);color:var(--text);border:1px solid var(--line)}
+.notes-panel .evidence-line{border-bottom:1px solid var(--line);padding:5px 0;overflow-wrap:anywhere}
+.notes-panel .evidence-line small{color:var(--muted)}
+.notes-panel .table-scroll{overflow:auto}
+.notes-panel table{border-collapse:collapse;font-size:10px}
+.notes-panel th,.notes-panel td{text-align:left;vertical-align:top;padding:4px;border:1px solid var(--line)}
+.notes-panel dd{margin:0 0 6px;overflow-wrap:anywhere;font-family:var(--mono)}
+.notes-panel dt{font-weight:700}
+#repText{overflow-wrap:anywhere}
+@media(max-width:540px){.blocks{grid-auto-columns:max(19px,calc((100% - 33px)/12))}}
+
+/* Preserve canonical dashboard geometry; ten rows share the same ticker pane. */
+.tickers{grid-template-rows:27px repeat(10,minmax(0,1fr))}
+.ticker-set.stock{--accent:#a6adb1;--tint:#23323c}
+.ticker-set.stock .ticker-model{border-left-color:#a6adb1}
+@media(max-height:650px) and (min-width:861px){.tickers{grid-template-rows:23px repeat(10,minmax(0,1fr))}}
+@media(max-width:860px){.tickers{height:440px;grid-template-rows:27px repeat(10,minmax(0,1fr))}}

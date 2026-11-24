@@ -186,6 +186,142 @@
       parent.append(row);
     }
   }
+  // Each unprompted engine gets one vote. The selected text is verbatim,
+  // never an invented consensus splice or a verified correction.
+  function rawTokens(value){
+    return value.normalize("NFKC").toLowerCase().match(/[\p{L}\p{N}]+(?:['’][\p{L}\p{N}]+)*/gu)||[];
+  }
+  function editDistance(a,b){
+    let previous=Array.from({length:b.length+1},(_,i)=>i);
+    for(let i=1;i<=a.length;i++){
+      const row=[i];
+      for(let j=1;j<=b.length;j++)row[j]=Math.min(previous[j]+1,row[j-1]+1,previous[j-1]+(a[i-1]===b[j-1]?0:1));
+      previous=row;
+    }
+    return previous[b.length]/Math.max(a.length,b.length,1);
+  }
+  function renderHL(clip){
+    const choices=MODELS.map(([name,label])=>({name,label,text:clip.texts[name+"--control"]}));
+    const lists=choices.map(x=>rawTokens(x.text));
+    const costs=lists.map((a,i)=>lists.reduce((sum,b,j)=>sum+(i===j?0:editDistance(a,b)),0)/2);
+    const best=costs.indexOf(Math.min(...costs));
+    const selected=choices[best];
+    $("hlText").textContent=selected.text||"(Empty model output)";
+    $("hlLane").textContent=selected.label+" · RAW";
+    $("hlBlock").textContent=clock(clip.start)+"–"+clock(clip.end);
+    $("hlMeta").textContent="Verbatim raw-engine medoid · mean token distance "+costs[best].toFixed(2)+" · not accuracy or correction";
+  }
+  const draftKey="hl-reference-development-v1:"+EXPECTED_PART;
+  let drafts={};
+  let reviewEnd=null;
+  function player(){
+    try{return $("sourceFrame").contentDocument?.getElementById("video")||null}catch(_){return null}
+  }
+  function draftStatus(message){$("annotationStatus").textContent=message}
+  function countDrafts(){
+    $("annotationCount").textContent=Object.keys(drafts).length+"/12";
+  }
+  function showDraft(){
+    const index=Number($("annotationBlock").value);
+    const row=drafts[index];
+    $("referenceText").value=row?.text||"";
+    $("referenceStatus").value=row?.reviewStatus||"draft";
+    if(row?.reviewer)$("reviewerName").value=row.reviewer;
+    $("prevBlock").disabled=index===0;
+    $("nextBlock").disabled=index===11;
+    $("listenStatus").textContent="Selected "+clock(index*15)+"–"+clock((index+1)*15)+" · original source audio.";
+  }
+  function initializeDrafts(){
+    drafts={};
+    try{
+      const loaded=JSON.parse(localStorage.getItem(draftKey)||"{}");
+      if(loaded&&typeof loaded==="object"&&!Array.isArray(loaded)){
+        for(const [key,row] of Object.entries(loaded)){
+          if(/^(?:[0-9]|1[01])$/.test(key)&&row&&typeof row.text==="string"&&
+             row.text.length<=4000&&["draft","listened","unintelligible"].includes(row.reviewStatus))
+            drafts[key]={text:row.text,reviewStatus:row.reviewStatus,reviewer:String(row.reviewer||"").slice(0,100)};
+        }
+      }
+    }catch(_){draftStatus("Local storage unavailable. Drafts remain in memory until exported.")}
+    $("annotationBlock").replaceChildren();
+    for(let i=0;i<12;i++){
+      const option=node("option",String(i+1).padStart(2,"0")+" · "+clock(i*15)+"–"+clock((i+1)*15));
+      option.value=String(i);$("annotationBlock").append(option);
+    }
+    showDraft();countDrafts();
+  }
+  function saveDraft(){
+    if(!state.data)return false;
+    const index=Number($("annotationBlock").value);
+    const text=$("referenceText").value.trim(), reviewStatus=$("referenceStatus").value;
+    const reviewer=$("reviewerName").value.trim();
+    if(reviewStatus==="listened"&&(!text||!reviewer)){
+      draftStatus("Listened/transcribed status requires actual words and a reviewer name. Use draft or unintelligible otherwise.");
+      return false;
+    }
+    if(reviewStatus==="unintelligible"&&!reviewer){
+      draftStatus("Unintelligible review requires a reviewer name.");return false;
+    }
+    drafts[index]={text,reviewStatus,reviewer};
+    try{
+      localStorage.setItem(draftKey,JSON.stringify(drafts));
+      draftStatus("Saved locally. This is a development reference draft, never held-out gold.");
+    }catch(_){draftStatus("Saved in memory only. Export before closing this page.")}
+    countDrafts();return true;
+  }
+  function exportDrafts(){
+    if(!state.data||!saveDraft())return;
+    const source=state.data.source;
+    const rows=Object.entries(drafts).sort((a,b)=>Number(a[0])-Number(b[0])).map(([index,row])=>{
+      const clip=state.data.clips[Number(index)];
+      const offset=Number(source.sourcePartOffsetSeconds)||0;
+      return {index:Number(index),sessionId:source.sessionId,part:source.sourcePart,
+        partSha256:source.sourcePartSha256,wavSha256:clip.wavSha256,
+        startMs:Math.round((offset+clip.start)*1000),endMs:Math.round((offset+clip.end)*1000),
+        videoStartMs:clip.start*1000,videoEndMs:clip.end*1000,
+        text:row.text,reviewStatus:row.reviewStatus,reviewer:row.reviewer};
+    });
+    const doc={schema:"hl-development-reference-draft-v1",split:"development_only",
+      sourcePartSha256:EXPECTED_PART,domainPackSha256:EXPECTED_PACK,
+      heldOut:false,humanGoldAvailable:false,referenceRequiresIndependentVerification:true,rows};
+    const url=URL.createObjectURL(new Blob([JSON.stringify(doc,null,2)+"\n"],{type:"application/json"}));
+    const a=node("a");a.href=url;a.download="hl-nine-ticker-reference-draft.json";a.click();
+    setTimeout(()=>URL.revokeObjectURL(url),2000);
+    draftStatus("Reference draft exported. Not eligible for the held-out benchmark.");
+  }
+  function setBlind(){
+    document.querySelector(".workspace").classList.toggle("blind-review",$("blindReview").checked);
+  }
+  function stopListening(message){
+    const p=player();
+    if(reviewEnd!==null&&p)p.pause();
+    reviewEnd=null;
+    $("listenBlock").textContent="Listen to block";
+    if(message)$("listenStatus").textContent=message;
+  }
+  function listenBlock(){
+    if(reviewEnd!==null){stopListening("Source listening stopped.");return}
+    const p=player(), i=Number($("annotationBlock").value);
+    if(!state.data||!p||!Number.isFinite(p.duration)||p.readyState<1){
+      $("listenStatus").textContent="Original source video is not ready. Try again after it loads.";return;
+    }
+    p.pause();p.currentTime=i*15;reviewEnd=(i+1)*15;
+    $("listenBlock").textContent="Stop listening";
+    $("listenStatus").textContent="Listening to "+clock(i*15)+"–"+clock(reviewEnd)+" · source video audio.";
+    p.play().catch(()=>stopListening("Playback blocked or unavailable. Try listening again."));
+  }
+  $("annotationBlock").addEventListener("change",()=>{stopListening();showDraft()});
+  for(const [id,delta] of [["prevBlock",-1],["nextBlock",1]]){
+    $(id).addEventListener("click",()=>{
+      if(!state.data)return;
+      stopListening();$("annotationBlock").value=String(Math.max(0,Math.min(11,Number($("annotationBlock").value)+delta)));
+      showDraft();
+    });
+  }
+  $("saveReference").addEventListener("click",saveDraft);
+  $("exportReference").addEventListener("click",exportDrafts);
+  $("listenBlock").addEventListener("click",listenBlock);
+  $("blindReview").addEventListener("change",setBlind);
   function renderClip(index){
     if(!state.data||index<0||index>=state.data.clips.length)return;
     const clip=state.data.clips[index], source=state.data.source;
@@ -195,14 +331,19 @@
       "/12 · "+source.sourcePart+" · original ASR preserved";
     renderCandidates(clip);
     renderTranscripts(clip);
+    renderHL(clip);
   }
   function updateSourceClock(){
-    if(!state.data||$("reviewPanel").hidden)return;
+    if(!state.data)return;
     let seconds=0;
     try{
       const frame=$("sourceFrame");
       const player=frame.contentDocument&&frame.contentDocument.getElementById("video");
-      if(player&&Number.isFinite(player.currentTime)) seconds=player.currentTime;
+      if(player&&Number.isFinite(player.currentTime)){
+        seconds=player.currentTime;
+        if(reviewEnd!==null&&!player.seeking&&seconds>=reviewEnd)
+          stopListening("Selected source block finished. Enter only what you heard.");
+      }
     }catch(_){
       $("labStatus").textContent="Playback context unavailable; choose original nine-ticker study.";
       return;
@@ -218,7 +359,7 @@
     if(open){
       updateSourceClock();
       $("closeReview").focus();
-    }else $("openReview").focus();
+    }else {stopListening();$("blindReview").checked=false;setBlind();$("openReview").focus()}
   }
   function checkData(d){
     if(!d||d.schema!=="hl-commercial-nine-public-v1"||
@@ -250,6 +391,7 @@
         $("packDigest").textContent=d.domainPackSha256;
         $("sourceStatus").textContent="SOURCE-PINNED · NINE ASR LANES UNCHANGED";
         $("labStatus").textContent="12 × 15-second blocks · public unreviewed evidence";
+        initializeDrafts();
         renderClip(0);
         updateSourceClock();
       }).catch(()=>{
@@ -257,6 +399,7 @@
         $("candidateList").replaceChildren(node("div",
           "Published source data unavailable; no candidate assertions.","empty"));
         $("sourceStatus").textContent="SOURCE CONTRACT ERROR";
+        $("hlText").textContent="Source contract unavailable; no provisional transcript."
       });
   }
   $("openReview").addEventListener("click",()=>openReview($("reviewPanel").hidden));

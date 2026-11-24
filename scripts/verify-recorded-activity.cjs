@@ -4,6 +4,7 @@
 // represented by one collector-clock tick; aggregate engagement counts cannot
 // silently become graph nodes or attributed events.
 const fs=require('node:fs');
+const crypto=require('node:crypto');
 const vm=require('node:vm');
 const assert=require('node:assert/strict');
 const root='streaming-demo/';
@@ -46,6 +47,46 @@ assert(D&&D.schema==='hl-v4-public-tool-bridge-v1');
 const actual=D.sessions.find(s=>s.id==='nov17-participation');
 assert(actual);
 assert.equal(D.defaultSession,source.id,'Activity-first baseline must be the published default');
+// The same event-rich default now MUST contain host/stream speech transcribed
+// from that exact original MP4, not a different research recording.
+const asr=JSON.parse(read('assets/nov17-participation-asr.json'));
+assert.equal(asr.schema,'hl-source-asr-public-v1');
+assert.equal(asr.captureId,source.id);
+assert.equal(asr.media,'assets/nov17-participation.mp4');
+assert.equal(asr.clock,'SOURCE_MEDIA_LOCAL_UNCALIBRATED_TO_COLLECTOR');
+assert.equal(asr.humanReviewed,false);
+assert(asr.utterances.length>=2,'The video audibly contains speech; release must include original-source ASR');
+const videoBytes=fs.readFileSync(root+asr.media);
+const originalSha=crypto.createHash('sha256').update(videoBytes).digest('hex');
+assert.equal(originalSha,asr.mediaSha256,'Source ASR must use this EXACT public MP4, not a mismatched excerpt');
+assert.equal(originalSha,'a823a0c53babe333e51500dff9f8364bcdd351e3a24868786c8afa519174bfbf',
+  'Do not silently replace the source video after deriving this transcript');
+assert(asr.mediaDurationSeconds>118&&asr.mediaDurationSeconds<122);
+vm.runInNewContext(read('participation-source-asr.js'),context,{timeout:4000});
+const decoded=context.window.HL_PARTICIPATION_ASR.normalize(asr);
+assert.equal(decoded.rows.length,asr.utterances.length);
+const attached=context.window.HL_PARTICIPATION_ASR.attach(asr);
+assert.equal(attached.calibratedToCollector,false);
+const hydratedReview=context.window.HL_SIGNAL_DATA.review.find(m=>m.sid===source.id);
+assert.equal(hydratedReview.video,asr.media);
+assert.equal(hydratedReview.transcript.length,asr.utterances.length);
+assert.equal(hydratedReview.transcriptEvidence,'SAME_SOURCE_MACHINE_ASR_UNREVIEWED');
+for(let i=0;i<asr.utterances.length;i++){
+  const [start,end,text]=asr.utterances[i];
+  assert(Number.isFinite(start)&&Number.isFinite(end)&&start>=0&&end>start&&
+    end<=asr.mediaDurationSeconds+1);
+  assert(text.trim(),'No blank source speech passages');
+  assert.equal(JSON.stringify(hydratedReview.transcript[i]),
+    JSON.stringify([start,end,text]),'Source ASR words and local times must survive unchanged');
+}
+const amended=structuredClone(asr);
+amended.utterances=amended.utterances.slice(0,3).map((r,i)=>
+  [r[0],r[1],'Updated source model passage '+i]);
+assert.equal(context.window.HL_PARTICIPATION_ASR.normalize(amended).rows.length,3,
+  'No hardcoded transcript block count or model wording');
+const tampered=structuredClone(asr);tampered.utterances[0]=[0,800,'Invented'];
+assert.throws(()=>context.window.HL_PARTICIPATION_ASR.normalize(tampered),
+  'Reject invalid source media timings');
 assert.equal(actual.comments.length,byKind.get('comment'));
 assert.equal(actual.comments.length+actual.interactions.length,source.events.length,
   'All original individual event markers must pass through V4 adapter intact');
@@ -112,5 +153,7 @@ console.log('SOURCE_ACTIVITY_CONSTELLATION_CONTRACT_PASS '+JSON.stringify({
   observedKinds:Object.fromEntries(byKind),originalLinks:source.links.length,
   likeExample:{capture:'nov15-citrus',participants:5,likeUnits:46,
     likeNotifications:6,likingAccounts:4,oneAccount:{notifications:3,units:20}},
+  mainSourceASR:{segments:asr.utterances.length,mediaSha256:originalSha,
+    model:asr.model,language:asr.language,humanReviewed:false},
   roomSignalsUnpublished:true,mediaEventAlignmentVerified:false
 }));

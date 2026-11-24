@@ -23,12 +23,10 @@
       if(!response.ok)throw Error(path+' HTTP '+response.status);
       return response.json();
     });
-  Promise.all([
+  const comparisonTask=Promise.all([
     readJson('nine-tickers/comparison.json'),
     readJson('nine-tickers/video-manifest.json').catch(error=>{
-      // Video is optional. Transcript changes and unavailable video cannot
-      // prevent the existing original-audio + V4 playback experience.
-      console.warn('Video manifest unavailable; retaining original audio:',error.message);
+      console.warn('Separate 180s research video unavailable; retaining source audio:',error.message);
       return null;
     })
   ]).then(([data,videoManifest])=>{
@@ -36,11 +34,25 @@
     try{
       window.HL_FEATURED_SOURCE=window.HL_SOURCE_ADAPTER.attachVideo(normalized,videoManifest);
     }catch(error){
-      console.warn('Video source validation failed; retaining verified audio:',error.message);
+      console.warn('180s research video validation failed:',error.message);
       window.HL_FEATURED_SOURCE=normalized;
     }
   }).catch(error=>{
     window.HL_FEATURED_SOURCE=null;
-    console.warn('Original ASR unavailable; preserved archived V4 remains playable:',error.message);
-  }).finally(()=>{clearTimeout(timeout);launch();});
+    console.warn('Separate 180s source study unavailable:',error.message);
+  });
+  const participationTask=readJson('assets/nov17-participation-asr.json')
+    .then(raw=>{
+      if(!window.HL_PARTICIPATION_ASR?.attach)
+        throw Error('Same-source participation ASR adapter missing');
+      const accepted=window.HL_PARTICIPATION_ASR.attach(raw);
+      console.info('Actual original V4 source ASR ready:',accepted.segments,
+        'media-local passages',accepted.model);
+    }).catch(error=>{
+      // Do not invent speech, splice in the OTHER recording, or prevent the
+      // already sourced 140 activity events from being browsed.
+      console.error('Original Nov17 host ASR failed to load:',error.message);
+    });
+  Promise.allSettled([comparisonTask,participationTask])
+    .finally(()=>{clearTimeout(timeout);launch();});
 })();

@@ -1,0 +1,174 @@
+{
+  "schema": "hl-source-asr-public-v1",
+  "captureId": "nov17-participation",
+  "media": "assets/nov17-participation.mp4",
+  "mediaSha256": "a823a0c53babe333e51500dff9f8364bcdd351e3a24868786c8afa519174bfbf",
+  "mediaDurationSeconds": 120,
+  "clock": "SOURCE_MEDIA_LOCAL_UNCALIBRATED_TO_COLLECTOR",
+  "model": "faster-whisper/small",
+  "language": "ms",
+  "languageProbability": 0.7636,
+  "humanReviewed": false,
+  "utterances": [
+    [
+      0,
+      4,
+      "Ya, macam itu lebih menyenangkan"
+    ],
+    [
+      4,
+      6,
+      "1,2,3,4,5"
+    ],
+    [
+      6,
+      10,
+      "Sebelum kita selesai, kamu beritahu nombor"
+    ],
+    [
+      10,
+      12,
+      "Jadi kita boleh..."
+    ],
+    [
+      12,
+      14,
+      "Jalan cepat"
+    ],
+    [
+      14,
+      18,
+      "Okey, baiklah, mari kita pergi"
+    ],
+    [
+      18,
+      20,
+      "Kita pergi"
+    ],
+    [
+      20,
+      22,
+      "Fuekoko"
+    ],
+    [
+      22,
+      26,
+      "Tidak lagi, mari kita selesai dulu"
+    ],
+    [
+      26,
+      34,
+      "Apabila saya berjaya selesai, kemudian nombor yang kelihatan akan menjadi nombor yang saya memilih"
+    ],
+    [
+      34,
+      38,
+      "Baiklah, lebih menyenangkan"
+    ],
+    [
+      38,
+      44,
+      "Terima kasih, jika chat boleh menyesuaikan RGB dulu"
+    ],
+    [
+      44,
+      49,
+      "Ya, jika anda boleh menyebabkan box dengan RGB"
+    ],
+    [
+      49,
+      53,
+      "Ayo, J.Y."
+    ],
+    [
+      53,
+      55,
+      "Ambrion"
+    ],
+    [
+      55,
+      57,
+      "SIR"
+    ],
+    [
+      59,
+      61,
+      "Mari"
+    ],
+    [
+      65,
+      67,
+      "Zekrom"
+    ],
+    [
+      69,
+      71,
+      "Mari kita selesai"
+    ],
+    [
+      71,
+      73,
+      "Sama-sama"
+    ],
+    [
+      73,
+      75,
+      "Yoga"
+    ],
+    [
+      75,
+      77,
+      "Yoga"
+    ],
+    [
+      77,
+      79,
+      "Yang lain"
+    ],
+    [
+      79,
+      81,
+      "Bagaimana box lain?"
+    ],
+    [
+      83,
+      94.26,
+      "Akhirnya, 4."
+    ],
+    [
+      94.74,
+      98.24,
+      "4."
+    ],
+    [
+      98.24,
+      101.36,
+      "1, 2, 3, 4, 5 dan 6"
+    ],
+    [
+      101.36,
+      103.38,
+      "Kita terima mandi"
+    ],
+    [
+      103.38,
+      108.3,
+      "1."
+    ],
+    [
+      108.3,
+      110,
+      "2."
+    ],
+    [
+      110,
+      112.88,
+      "1."
+    ],
+    [
+      112.88,
+      117.88,
+      "Terima kasih kerana menonton."
+    ]
+  ]
+}

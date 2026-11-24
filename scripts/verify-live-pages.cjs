@@ -36,6 +36,7 @@ async function verify(){
   'streaming-lab/nine-tickers-nov22/video-manifest.json','streaming-lab/nine-tickers-nov22/part-1.mp4','streaming-lab/nine-tickers-nov22/part-2.mp4','streaming-lab/nine-tickers-nov22/part-3.mp4',
   'streaming-lab/ten-tickers-nov22/index.html','streaming-lab/ten-tickers-nov22/app.js','streaming-lab/ten-tickers-nov22/styles.css','streaming-lab/ten-tickers-nov22/comparison.json','streaming-lab/ten-tickers-nov22/export-manifest.json','streaming-lab/ten-tickers-nov22/dialogue-1.wav','streaming-lab/ten-tickers-nov22/dialogue-2.wav','streaming-lab/ten-tickers-nov22/dialogue-3.wav',
   'streaming-lab/coats-guarded-nov22/index.html','streaming-lab/coats-guarded-nov22/app.js','streaming-lab/coats-guarded-nov22/styles.css','streaming-lab/coats-guarded-nov22/paired-results.json',
+  'streaming-lab/speaker-roles-nov22/index.html','streaming-lab/speaker-roles-nov22/app.js','streaming-lab/speaker-roles-nov22/styles.css','streaming-lab/speaker-roles-nov22/role-data.json',
   'streaming-demo/nine-tickers/styles.css','streaming-demo/assets/nov17-participation.mp4']){
    const x=await get('/'+name);
    assert.equal(x.status,200,'Missing production file: '+name);

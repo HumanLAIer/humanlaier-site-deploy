@@ -21,6 +21,7 @@ const required=[
   'streaming-lab/nine-tickers-nov22/video-manifest.json','streaming-lab/nine-tickers-nov22/part-1.mp4','streaming-lab/nine-tickers-nov22/part-2.mp4','streaming-lab/nine-tickers-nov22/part-3.mp4',
   'streaming-lab/ten-tickers-nov22/index.html','streaming-lab/ten-tickers-nov22/app.js','streaming-lab/ten-tickers-nov22/styles.css','streaming-lab/ten-tickers-nov22/comparison.json','streaming-lab/ten-tickers-nov22/export-manifest.json','streaming-lab/ten-tickers-nov22/dialogue-1.wav','streaming-lab/ten-tickers-nov22/dialogue-2.wav','streaming-lab/ten-tickers-nov22/dialogue-3.wav',
   'streaming-lab/coats-guarded-nov22/index.html','streaming-lab/coats-guarded-nov22/app.js','streaming-lab/coats-guarded-nov22/styles.css','streaming-lab/coats-guarded-nov22/paired-results.json',
+  'streaming-lab/speaker-roles-nov22/index.html','streaming-lab/speaker-roles-nov22/app.js','streaming-lab/speaker-roles-nov22/styles.css','streaming-lab/speaker-roles-nov22/role-data.json',
   'streaming-demo/nine-tickers/styles.css',
   'streaming-demo/nine-tickers/video-manifest.json',
   'streaming-demo/nine-tickers/commercial-180.mp4',
@@ -63,7 +64,7 @@ assert.equal(fs.readFileSync(path.join(dest,'CNAME'),'utf8').trim(),'humanlaier.
 // A new release always gets a new JavaScript/CSS URL, even when the source
 // HTML or its fixed historical query strings are unchanged.
 for(const page of ['index.html','thanks.html','streaming-demo/index.html',
-                   'streaming-demo/nine-tickers/index.html','streaming-lab/index.html','streaming-lab/nine-tickers-nov22/index.html','streaming-lab/ten-tickers-nov22/index.html','streaming-lab/coats-guarded-nov22/index.html',
+                   'streaming-demo/nine-tickers/index.html','streaming-lab/index.html','streaming-lab/nine-tickers-nov22/index.html','streaming-lab/ten-tickers-nov22/index.html','streaming-lab/coats-guarded-nov22/index.html','streaming-lab/speaker-roles-nov22/index.html',
                    'singlish-compare/index.html']){
   const filepath=path.join(dest,page);
   const html=fs.readFileSync(filepath,'utf8').replace(
@@ -91,6 +92,7 @@ for(const asset of ['index.html','streaming-demo/index.html',
   'streaming-lab/nine-tickers-nov22/video-manifest.json','streaming-lab/nine-tickers-nov22/part-1.mp4','streaming-lab/nine-tickers-nov22/part-2.mp4','streaming-lab/nine-tickers-nov22/part-3.mp4',
   'streaming-lab/ten-tickers-nov22/index.html','streaming-lab/ten-tickers-nov22/app.js','streaming-lab/ten-tickers-nov22/styles.css','streaming-lab/ten-tickers-nov22/comparison.json','streaming-lab/ten-tickers-nov22/export-manifest.json','streaming-lab/ten-tickers-nov22/dialogue-1.wav','streaming-lab/ten-tickers-nov22/dialogue-2.wav','streaming-lab/ten-tickers-nov22/dialogue-3.wav',
   'streaming-lab/coats-guarded-nov22/index.html','streaming-lab/coats-guarded-nov22/app.js','streaming-lab/coats-guarded-nov22/styles.css','streaming-lab/coats-guarded-nov22/paired-results.json',
+  'streaming-lab/speaker-roles-nov22/index.html','streaming-lab/speaker-roles-nov22/app.js','streaming-lab/speaker-roles-nov22/styles.css','streaming-lab/speaker-roles-nov22/role-data.json',
   'streaming-demo/nine-tickers/styles.css',
   'streaming-demo/nine-tickers/video-manifest.json',
   'streaming-demo/nine-tickers/commercial-180.mp4',

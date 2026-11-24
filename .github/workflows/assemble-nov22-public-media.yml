@@ -1,0 +1,46 @@
+name: Assemble verified Nov22 public assets onto research feature branch
+on:
+  push:
+    branches: [ops/nov22-lossless-media-stage]
+    paths: [.github/workflows/assemble-nov22-public-media.yml]
+permissions:
+  contents: write
+concurrency:
+  group: assemble-nov22-public-media
+  cancel-in-progress: false
+jobs:
+  assemble:
+    if: github.repository == 'HumanLAIer/humanlaier-site-deploy' && github.ref == 'refs/heads/ops/nov22-lossless-media-stage'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Reassemble approved media and verify exact bytes
+        run: |
+          set -euo pipefail
+          dest="$(mktemp -d)"
+          for n in 1 2; do
+            test "$(find .media-transfer -name "part-$n.*" | wc -l)" = 11
+            cat .media-transfer/part-$n.* > "$dest/part-$n.flac"
+          done
+          cp streaming-lab/nine-tickers-nov22/{comparison.json,part-3.flac} "$dest/"
+          (cd "$dest"
+          echo '8669a3403f609db40ee427842d4446852c292c0e21b7284850d43edcd8e486e6  comparison.json' | sha256sum -c -
+          echo '55dcb8c92c35cff9fd5665b32632455812e2c29b6866a7f0d57d00d54404017c  part-1.flac' | sha256sum -c -
+          echo '1b52e1e254d33488477f741a5811f026a57177b4063fcbd13849737eec424035  part-2.flac' | sha256sum -c -
+          echo 'e3d8eda5eb16fb5c8089ddf5e7b17827f087b755053c7f75c08e753e7ae92cc6  part-3.flac' | sha256sum -c -)
+          expected=22b2c4bdc6baf0dabc7cec69d34e01179f871894
+          test "$(git ls-remote origin refs/heads/feat/nov22-nine-ticker-edition | cut -f1)" = "$expected"
+          git checkout --detach "$expected"
+          cp "$dest"/* streaming-lab/nine-tickers-nov22/
+          node --check streaming-lab/nine-tickers-nov22/app.js
+          node scripts/verify-nov22-nine.cjs
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add streaming-lab/nine-tickers-nov22/{comparison.json,part-1.flac,part-2.flac,part-3.flac}
+          git diff --cached --name-only
+          git commit -m "Add exact full Nov22 source audio and all nine retained transcript lanes"
+          git push origin HEAD:refs/heads/feat/nov22-nine-ticker-edition
+          echo "HL_NOV22_ASSEMBLED $(git rev-parse HEAD)"

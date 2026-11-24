@@ -24,7 +24,7 @@ const root=(process.env.HL_SITE_PUBLIC_BASE||"http://127.0.0.1:18764").replace(/
           return frame?.contentDocument?.querySelectorAll(".ticker-row").length===9 &&
             frame.contentDocument.getElementById("video")?.getAttribute("src")==="commercial-180.mp4";
         },null,{timeout:22000});
-        await page.waitForFunction(()=>document.getElementById("labStatus")?.textContent?.includes("12 × 15-second"),null,{timeout:18000});
+        await page.waitForFunction(()=>document.getElementById("labStatus")?.textContent?.includes("75,673-record retrieval report"),null,{timeout:18000});
         assert.equal(await page.locator("#reviewPanel").isVisible(),false);
         assert.equal(await page.locator("#openReview").getAttribute("aria-expanded"),"false");
         const source=await page.evaluate(()=>{
@@ -62,6 +62,8 @@ const root=(process.env.HL_SITE_PUBLIC_BASE||"http://127.0.0.1:18764").replace(/
         assert.match(text,/Umbreon\?/);
         for(const cue of ["mombreon","momebrion","um bombion"]) assert(text.includes(cue));
         assert.match(text,/LISTEN TO VERIFY/);
+        assert.match(text,/2\/3 engines · 0 exact/);
+        assert.match(text,/FULL CATALOGUE/);
         await page.locator("#phaseSelect").selectOption("compact");
         assert((await page.locator(".transcript").count())===3);
         assert((await page.locator("#sourceTranscripts").textContent()).includes("momebrion"));
@@ -70,6 +72,8 @@ const root=(process.env.HL_SITE_PUBLIC_BASE||"http://127.0.0.1:18764").replace(/
         const block=data.clips[3];
         const raw=Object.entries(block.texts).filter(([id])=>id.endsWith("--control")).map(([,t])=>t);
         assert(raw.includes(await page.locator("#hlText").textContent()),"HL baseline must equal one original raw lane");
+        const report=await (await page.request.get(root+"/streaming-lab/catalogue-review.json")).json();
+        assert.equal(await page.locator("#hlText").textContent(),block.texts[report.rows[3].lane]);
         assert.match(await page.locator("#hlMeta").textContent(),/not accuracy or correction/);
         await page.locator("#annotationBlock").selectOption("3");
         await page.locator("#blindReview").check();

@@ -1,0 +1,49 @@
+name: Stage approved Nov22 public video once
+on:
+  push:
+    branches: [research/nov22-video-layout-parity]
+    paths: [.github/workflows/stage-nov22-video-once.yml]
+permissions:
+  contents: write
+concurrency:
+  group: stage-nov22-video-once
+  cancel-in-progress: false
+jobs:
+  stage:
+    if: github.repository == 'HumanLAIer/humanlaier-site-deploy'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Transfer exactly the approved public video artifact
+        env:
+          TRANSFER_URL: 'https://sdmntprcentralus.oaiusercontent.com/files/00000000-2208-81f5-8f30-bcfab7ad569e/raw?se=2026-11-24T09%3A10%3A11Z&sp=r&sv=2026-06-06&sr=b&scid=f290043d-882e-581e-858e-84df9fefba93&skoid=add8ee7d-5fc7-451e-b06e-a82b2276cf62&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-11-24T01%3A09%3A00Z&ske=2026-11-25T01%3A09%3A00Z&sks=b&skv=2026-06-06&sig=QZ4ltrYqW3nAZKIoERUwf01Ay6c7rH91blFKdtRFuOo%3D'
+        run: |
+          set -euo pipefail
+          echo "::add-mask::$TRANSFER_URL"
+          curl --fail --silent --show-error --location --retry 1 --max-time 180 "$TRANSFER_URL" -o /tmp/nov22-public.zip
+          echo '9e131f3cb57e4036a7a7063ab7fb2ce2c0f0f6d38f1785bd9ad5f29cc6eda0bb  /tmp/nov22-public.zip' | sha256sum -c -
+          dir=streaming-lab/nine-tickers-nov22
+          python3 - <<'PY'
+          import zipfile, hashlib
+          from pathlib import Path
+          target=Path('streaming-lab/nine-tickers-nov22')
+          expected={
+            'part-1.mp4':'3ae89dfda321cd21f0b18228845add54e042454fa530c3ac514a8df74cf655ef',
+            'part-2.mp4':'bb099eaa5d8698d490a636550f5c8bff008b3087981dacf514ed3e5ddf13c7bc',
+            'part-3.mp4':'2994430954eb731ae0aee21cad4ccebd86a9068f78c69e7ddd6b2b395042079c',
+            'video-manifest.json':'37779680b025e15785342dc06ea03f9efd8c672b75bb451d2c9a1175b3a5237b',
+          }
+          with zipfile.ZipFile('/tmp/nov22-public.zip') as z:
+            assert set(z.namelist())==set(expected)
+            for name,h in expected.items():
+              data=z.read(name)
+              assert hashlib.sha256(data).hexdigest()==h,name
+              (target/name).write_bytes(data)
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$dir"/part-*.mp4 "$dir"/video-manifest.json
+          git rm '.github/workflows/stage-nov22-video-once.yml'
+          git commit -m 'Stage exact source-verified Nov22 MP4s and manifest'
+          git push origin HEAD:research/nov22-video-layout-parity

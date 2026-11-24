@@ -55,6 +55,21 @@ assert.equal(asr.captureId,source.id);
 assert.equal(asr.media,'assets/nov17-participation.mp4');
 assert.equal(asr.clock,'SOURCE_MEDIA_LOCAL_UNCALIBRATED_TO_COLLECTOR');
 assert.equal(asr.humanReviewed,false);
+assert.equal(asr.trackId,'sing-ctx');
+assert.equal(asr.model,'singlish-small');
+assert.equal(asr.language,'en');
+assert.equal(asr.languageSelection,'explicit-en');
+assert.equal(asr.task,'transcribe');
+assert.equal(asr.phase,'focused');
+assert.equal(asr.revision,'0835ed29d2f8893e4fcf63d5ac531dcb086b6ee1');
+assert.equal(asr.promptSha256,'1f332bf0ae7df5ac7f6cd4188987ef378dcd96ce6f8f4be94dcac0c6b4e2849d');
+assert.equal(asr.timingStatus,'15S_BLOCK_ONLY_NO_VERIFIED_WORD_TIMES');
+assert.deepEqual(asr.alternatives.map(t=>t.trackId),['base-en','small-en']);
+for(const t of asr.alternatives){
+  assert.equal(t.mediaSha256,asr.mediaSha256);
+  assert.equal(t.language,'en');
+  assert.equal(t.task,'transcribe');
+}
 assert(asr.utterances.length>=2,'The video audibly contains speech; release must include original-source ASR');
 const videoBytes=fs.readFileSync(root+asr.media);
 const originalSha=crypto.createHash('sha256').update(videoBytes).digest('hex');
@@ -65,12 +80,17 @@ assert(asr.mediaDurationSeconds>118&&asr.mediaDurationSeconds<122);
 vm.runInNewContext(read('participation-source-asr.js'),context,{timeout:4000});
 const decoded=context.window.HL_PARTICIPATION_ASR.normalize(asr);
 assert.equal(decoded.rows.length,asr.utterances.length);
+assert.equal(decoded.tracks.length,3);
+assert.equal(decoded.tracks[0].id,'sing-ctx');
 const attached=context.window.HL_PARTICIPATION_ASR.attach(asr);
 assert.equal(attached.calibratedToCollector,false);
 const hydratedReview=context.window.HL_SIGNAL_DATA.review.find(m=>m.sid===source.id);
 assert.equal(hydratedReview.video,asr.media);
 assert.equal(hydratedReview.transcript.length,asr.utterances.length);
 assert.equal(hydratedReview.transcriptEvidence,'SAME_SOURCE_MACHINE_ASR_UNREVIEWED');
+assert.equal(hydratedReview.transcriptTrackId,'sing-ctx');
+assert.equal(hydratedReview.transcriptTracks.length,3);
+assert.equal(hydratedReview.transcriptLanguage,'en');
 for(let i=0;i<asr.utterances.length;i++){
   const [start,end,text]=asr.utterances[i];
   assert(Number.isFinite(start)&&Number.isFinite(end)&&start>=0&&end>start&&
@@ -79,19 +99,21 @@ for(let i=0;i<asr.utterances.length;i++){
   assert.equal(JSON.stringify(hydratedReview.transcript[i]),
     JSON.stringify([start,end,text]),'Source ASR words and local times must survive unchanged');
 }
-// Model updates may change language, text and SEGMENT COUNT, but must still
-// represent the same media and cover the audibly spoken timeline.
+// Future alternatives may resegment or use a different English model.
+// The selected default is explicitly Sing/CTX until a deliberate policy change.
 const parser=context.window.HL_PARTICIPATION_ASR;
 const amended=structuredClone(asr);
-amended.model='faster-whisper/large-v3';
-amended.utterances=[
-  asr.utterances[0],
-  asr.utterances[Math.floor(asr.utterances.length/2)],
-  asr.utterances.at(-1)
+const alternate=amended.alternatives[0];
+alternate.model='faster-whisper/large-v3';
+alternate.utterances=[
+  alternate.utterances[0],
+  alternate.utterances[Math.floor(alternate.utterances.length/2)],
+  alternate.utterances.at(-1)
 ].map((r,i)=>[r[0],r[1],'Entirely different model wording '+i]);
-assert.equal(parser.normalize(amended).rows.length,3,
-  'No fixed 32-segment layout, model, wording or uniform time chunk');
-assert.equal(parser.normalize(amended).model,'faster-whisper/large-v3');
+const parsedAmended=parser.normalize(amended);
+assert.equal(parsedAmended.tracks[1].rows.length,3);
+assert.equal(parsedAmended.tracks[1].model,'faster-whisper/large-v3');
+assert.equal(parsedAmended.id,'sing-ctx');
 function rejectChange(label,mutate){
   const changed=structuredClone(asr);
   mutate(changed);
@@ -99,6 +121,16 @@ function rejectChange(label,mutate){
     'Reject '+label+' before loading the default V4');
 }
 rejectChange('missing ASR',r=>{r.utterances=[];});
+rejectChange('wrong language',r=>{r.language='ms';});
+rejectChange('automatic language selection',r=>{r.languageSelection='auto';});
+rejectChange('translation instead of transcription',r=>{r.task='translate';});
+rejectChange('wrong focused prompt',r=>{r.promptSha256='f'.repeat(64);});
+rejectChange('wrong Singlish revision',r=>{r.revision='f'.repeat(40);});
+rejectChange('substituted primary engine',r=>{r.model='faster-whisper/base.en';});
+rejectChange('altered source block text',r=>{r.blocks[0].text+=' invented';});
+rejectChange('other-source alternative',r=>{r.alternatives[0].mediaSha256='f'.repeat(64);});
+rejectChange('wrong-language alternative',r=>{r.alternatives[0].language='ms';});
+rejectChange('duplicate track identity',r=>{r.alternatives[1].trackId=r.alternatives[0].trackId;});
 rejectChange('partial ASR with no meaningful speech span',r=>{
   r.utterances=r.utterances.slice(0,3);
 });
@@ -212,9 +244,13 @@ console.log('SOURCE_ACTIVITY_CONSTELLATION_CONTRACT_PASS '+JSON.stringify({
   likeExample:{capture:'nov15-citrus',participants:5,likeUnits:46,
     likeNotifications:6,likingAccounts:4,oneAccount:{notifications:3,units:20}},
   mainSourceASR:{segments:asr.utterances.length,mediaSha256:originalSha,
-    model:asr.model,language:asr.language,humanReviewed:false},
+    model:asr.model,language:asr.language,trackId:asr.trackId,
+    phase:asr.phase,tracks:decoded.tracks.map(t=>({id:t.id,model:t.model,segments:t.rows.length})),
+    humanReviewed:false},
   negativeContracts:['empty','truncated','wrong-media-hash','wrong-capture',
     'wrong-video-path','false-clock','false-review','bad-timing',
-    'default-mismatch','missing-events'],
+    'default-mismatch','missing-events','wrong-language','autodetect','translation',
+    'wrong-prompt','wrong-revision','wrong-default-engine','altered-block-text',
+    'cross-source-alternative','wrong-language-alternative','duplicate-track'],
   roomSignalsUnpublished:true,mediaEventAlignmentVerified:false
 }));

@@ -99,7 +99,12 @@ const manifest={schema:'hl-pages-release-v1',repository:'HumanLAIer/humanlaier-s
     captureId:originalAsr.captureId,media:originalAsr.media,
     mediaSha256:originalMedia.sha256,
     transcriptPassages:originalAsr.utterances.length,
-    transcriptModel:originalAsr.model,
+    transcriptModel:originalAsr.model,transcriptTrack:originalAsr.trackId,
+    transcriptLanguage:originalAsr.language,transcriptTask:originalAsr.task,
+    transcriptRevision:originalAsr.revision,transcriptPromptSha256:originalAsr.promptSha256,
+    transcriptTracks:[originalAsr,...originalAsr.alternatives].map(t=>({
+      id:t.trackId,model:t.model,passages:t.utterances.length
+    })),
     humanReviewed:false,collectorClockCalibrated:false
   },
   assets:checks};

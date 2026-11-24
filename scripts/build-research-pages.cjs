@@ -24,7 +24,17 @@ for(const rel of directories){
     }
   });
 }
+// The research page shares ONLY the published wordmark with V4; copy that
+// precise image, not the V4 media, transcripts, data or app.
+for(const rel of ['streaming-demo/assets/human-laier-dark.svg']){
+  const source=path.join(root,rel),target=path.join(destination,rel);
+  assert(fs.existsSync(source),'Shared research logo missing: '+rel);
+  assert(!fs.lstatSync(source).isSymbolicLink(),'Research logo cannot be a symlink');
+  fs.mkdirSync(path.dirname(target),{recursive:true});
+  fs.copyFileSync(source,target);
+}
 for(const rel of [
+  'streaming-demo/assets/human-laier-dark.svg',
   'streaming-demo/nine-tickers/index.html',
   'streaming-demo/nine-tickers/app.js',
   'streaming-demo/nine-tickers/styles.css',

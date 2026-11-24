@@ -16,7 +16,7 @@ jobs:
         shell: bash
         run: |
           set +x
-          URL='https://sdmntprcentralus.oaiusercontent.com/files/00000000-0698-81f5-b1ab-7ea47576aaff/raw?se=2026-11-24T18%3A17%3A48Z&sp=r&sv=2026-06-06&sr=b&scid=1b7d4809-d6ee-571e-b997-dc2f0f276c6a&skoid=add8ee7d-5fc7-451e-b06e-a82b2276cf62&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-11-24T01%3A06%3A25Z&ske=2026-11-25T01%3A06%3A25Z&sks=b&skv=2026-06-06&sig=/AG/l2W62aBrDLo01LifED0OvOEQ0Q1yURy55vbBU5E%3D'
+          URL='https://sdmntprcentralus.oaiusercontent.com/files/00000000-60c4-81f5-bbd9-c22262c06c26/raw?se=2026-11-24T18%3A18%3A35Z&sp=r&sv=2026-06-06&sr=b&scid=c0319741-7c80-5915-854e-4fa195cdd42f&skoid=add8ee7d-5fc7-451e-b06e-a82b2276cf62&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-11-24T01%3A02%3A22Z&ske=2026-11-25T01%3A02%3A22Z&sks=b&skv=2026-06-06&sig=lFtDB23bPOI0zkUkR1vZ53BE680YUeu64czYxoUymco%3D'
           echo "::add-mask::$URL"
           curl --silent --show-error --fail --location --retry 2 --max-time 120 "$URL" -o /tmp/hl-ten.zip
           echo 'dd2da1c19286ae19a8c9d32b214f67deccaa70d7c77b434991fdacee3d00f674  /tmp/hl-ten.zip' | sha256sum -c -
@@ -34,11 +34,11 @@ jobs:
           node scripts/stage-dialogue-ten.cjs /tmp/hl-ten 3360ecbfde664065459bfc5934772a271a0f3cd9f80b62f78219f48d265b060a
           node scripts/verify-dialogue-ten.cjs
           node --check streaming-lab/ten-tickers-nov22/app.js
-      - name: Commit verified public assets and remove one-shot transfer
+      - name: Commit verified public assets (workflow edits by repository administrator)
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git rm .github/workflows/stage-nov22-dialogue-ten-once.yml
-          git add streaming-lab scripts .github/workflows/ci-gated-pages.yml
+          git restore .github/workflows/ci-gated-pages.yml
+          git add streaming-lab scripts
           git commit -m 'Stage exact ten-lane results and dialogue audio for protected release'
           git push origin HEAD:research/nov22-dialogue-ten-layout

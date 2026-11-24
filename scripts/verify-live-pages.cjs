@@ -28,7 +28,7 @@ async function verify(){
  for(const name of ['index.html','streaming-demo/index.html','streaming-demo/app.js',
    'streaming-demo/featured-bootstrap.js','streaming-demo/nine-tickers/comparison.json',
    'streaming-demo/participation-source-asr.js','streaming-demo/assets/nov17-participation-asr.json',
-   'streaming-lab/index.html','streaming-lab/lab.js','streaming-lab/lab.css',
+   'streaming-lab/index.html','streaming-lab/lab.js','streaming-lab/lab.css','streaming-lab/catalogue-review.json',
    'streaming-demo/assets/nov17-participation.mp4']){
    const x=await get('/'+name);
    assert.equal(x.status,200,'Missing production file: '+name);

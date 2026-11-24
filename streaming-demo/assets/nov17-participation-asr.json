@@ -5,170 +5,339 @@
   "mediaSha256": "a823a0c53babe333e51500dff9f8364bcdd351e3a24868786c8afa519174bfbf",
   "mediaDurationSeconds": 120,
   "clock": "SOURCE_MEDIA_LOCAL_UNCALIBRATED_TO_COLLECTOR",
-  "model": "faster-whisper/small",
-  "language": "ms",
-  "languageProbability": 0.7636,
+  "model": "singlish-small",
+  "repository": "ivabojic/whisper-small-sing2eng-transcribe",
+  "revision": "0835ed29d2f8893e4fcf63d5ac531dcb086b6ee1",
+  "phase": "focused",
+  "promptSha256": "1f332bf0ae7df5ac7f6cd4188987ef378dcd96ce6f8f4be94dcac0c6b4e2849d",
+  "language": "en",
+  "languageSelection": "explicit-en",
+  "task": "transcribe",
+  "timingStatus": "15S_BLOCK_ONLY_NO_VERIFIED_WORD_TIMES",
   "humanReviewed": false,
   "utterances": [
     [
       0,
-      4,
-      "Ya, macam itu lebih menyenangkan"
+      15,
+      "yes like that more fun ah okay lah one two three four five and six so before before we finish ah you all just say the number so we can do very fast ya"
     ],
     [
-      4,
-      6,
-      "1,2,3,4,5"
+      15,
+      30,
+      "okay like let's go here we go foo go go haven't yet haven't yet let me finish let me finish first when i about to finish then we say then the number of"
     ],
     [
-      6,
-      10,
-      "Sebelum kita selesai, kamu beritahu nombor"
+      30,
+      45,
+      "will be the number that i choose okay like that more fun see see if chad can guess the r g v first ya"
     ],
     [
-      10,
-      12,
-      "Jadi kita boleh..."
+      45,
+      60,
+      "see you can get the the box with the r g b come on j y umbreon eh where your s i r ah brother"
     ],
     [
-      12,
-      14,
-      "Jalan cepat"
-    ],
-    [
-      14,
-      18,
-      "Okey, baiklah, mari kita pergi"
-    ],
-    [
-      18,
-      20,
-      "Kita pergi"
-    ],
-    [
-      20,
-      22,
-      "Fuekoko"
-    ],
-    [
-      22,
-      26,
-      "Tidak lagi, mari kita selesai dulu"
-    ],
-    [
-      26,
-      34,
-      "Apabila saya berjaya selesai, kemudian nombor yang kelihatan akan menjadi nombor yang saya memilih"
-    ],
-    [
-      34,
-      38,
-      "Baiklah, lebih menyenangkan"
-    ],
-    [
-      38,
-      44,
-      "Terima kasih, jika chat boleh menyesuaikan RGB dulu"
-    ],
-    [
-      44,
-      49,
-      "Ya, jika anda boleh menyebabkan box dengan RGB"
-    ],
-    [
-      49,
-      53,
-      "Ayo, J.Y."
-    ],
-    [
-      53,
-      55,
-      "Ambrion"
-    ],
-    [
-      55,
-      57,
-      "SIR"
-    ],
-    [
-      59,
-      61,
-      "Mari"
-    ],
-    [
-      65,
-      67,
-      "Zekrom"
-    ],
-    [
-      69,
-      71,
-      "Mari kita selesai"
-    ],
-    [
-      71,
-      73,
-      "Sama-sama"
-    ],
-    [
-      73,
+      60,
       75,
-      "Yoga"
+      "come on sacrum sacrum k lah let's go almost the end the yoga the end"
     ],
     [
       75,
-      77,
-      "Yoga"
+      90,
+      "next one what is the next box number"
     ],
     [
-      77,
-      79,
-      "Yang lain"
+      90,
+      105,
+      "four okay like let's go ah number four here we go one two three four five and six let's go brother"
     ],
     [
-      79,
-      81,
-      "Bagaimana box lain?"
-    ],
-    [
-      83,
-      94.26,
-      "Akhirnya, 4."
-    ],
-    [
-      94.74,
-      98.24,
-      "4."
-    ],
-    [
-      98.24,
-      101.36,
-      "1, 2, 3, 4, 5 dan 6"
-    ],
-    [
-      101.36,
-      103.38,
-      "Kita terima mandi"
-    ],
-    [
-      103.38,
-      108.3,
-      "1."
-    ],
-    [
-      108.3,
-      110,
-      "2."
-    ],
-    [
-      110,
-      112.88,
-      "1."
-    ],
-    [
-      112.88,
-      117.88,
-      "Terima kasih kerana menonton."
+      105,
+      120,
+      "i jio you di yao ga and you must eat for the popular food"
     ]
+  ],
+  "blocks": [
+    {
+      "index": 0,
+      "start": 0,
+      "end": 15,
+      "wavSha256": "b81e62a5e2dce87a2d269b6a1f70052223bb8e3e35fb07bd862a27ce8ac404e7",
+      "text": "yes like that more fun ah okay lah one two three four five and six so before before we finish ah you all just say the number so we can do very fast ya"
+    },
+    {
+      "index": 1,
+      "start": 15,
+      "end": 30,
+      "wavSha256": "436a8bf8991b24c5bb3bcc39af1b99f192b790b50388b84f7a90e93b324d1b1e",
+      "text": "okay like let's go here we go foo go go haven't yet haven't yet let me finish let me finish first when i about to finish then we say then the number of"
+    },
+    {
+      "index": 2,
+      "start": 30,
+      "end": 45,
+      "wavSha256": "e89e284a3fe6aca59ca9f0663bbdc84a64911dd751b1e1648ac839670737cba7",
+      "text": "will be the number that i choose okay like that more fun see see if chad can guess the r g v first ya"
+    },
+    {
+      "index": 3,
+      "start": 45,
+      "end": 60,
+      "wavSha256": "51a21e9da708ba91781605ea45024ec245fc1c256e45154dae44f6f2e371dd94",
+      "text": "see you can get the the box with the r g b come on j y umbreon eh where your s i r ah brother"
+    },
+    {
+      "index": 4,
+      "start": 60,
+      "end": 75,
+      "wavSha256": "4803622f82e7687346cec8449ea8f355abf512511df2a4bec8735c428b7a4edd",
+      "text": "come on sacrum sacrum k lah let's go almost the end the yoga the end"
+    },
+    {
+      "index": 5,
+      "start": 75,
+      "end": 90,
+      "wavSha256": "ad90699683898517c24077a99a2b89abf931b28fac9e7e00453e4dba50f90aa3",
+      "text": "next one what is the next box number"
+    },
+    {
+      "index": 6,
+      "start": 90,
+      "end": 105,
+      "wavSha256": "d59d3996e1688c0a3f318906d15f11c5e710b49900aca863df041bb8ed021a2b",
+      "text": "four okay like let's go ah number four here we go one two three four five and six let's go brother"
+    },
+    {
+      "index": 7,
+      "start": 105,
+      "end": 120,
+      "wavSha256": "7a6b57ba84114edc75adeba50afbb33d464a3146948b6d8d096ec69014249f7d",
+      "text": "i jio you di yao ga and you must eat for the popular food"
+    }
+  ],
+  "trackId": "sing-ctx",
+  "alternatives": [
+    {
+      "schema": "hl-source-asr-public-v1",
+      "captureId": "nov17-participation",
+      "media": "assets/nov17-participation.mp4",
+      "mediaSha256": "a823a0c53babe333e51500dff9f8364bcdd351e3a24868786c8afa519174bfbf",
+      "mediaDurationSeconds": 120,
+      "clock": "SOURCE_MEDIA_LOCAL_UNCALIBRATED_TO_COLLECTOR",
+      "model": "faster-whisper/base.en",
+      "language": "en",
+      "languageSelection": "explicit-en",
+      "task": "transcribe",
+      "humanReviewed": false,
+      "utterances": [
+        [
+          0,
+          2,
+          "Yes, but they're more fun"
+        ],
+        [
+          3.52,
+          10.68,
+          "You like one two three four five and six so before before we finish our your just say the number so we can"
+        ],
+        [
+          12.56,
+          16,
+          "Do very fast. Yeah, okay, like let's go"
+        ],
+        [
+          17.48,
+          19.48,
+          "Here we go"
+        ],
+        [
+          20.2,
+          22.2,
+          "For a coco"
+        ],
+        [
+          23.44,
+          25.72,
+          "Ebony, Ebony, let me finish let me finish this"
+        ],
+        [
+          25.72,
+          32.72,
+          "When I'm about to finish, then we say then the number that appears will be the number that I choose."
+        ],
+        [
+          32.72,
+          36.72,
+          "Do you want them more fun?"
+        ],
+        [
+          36.72,
+          42.72,
+          "See, you can check and guess the RGB first."
+        ],
+        [
+          42.72,
+          48.72,
+          "See, you can get the box with the RGB."
+        ],
+        [
+          48.72,
+          51.72,
+          "Come on, JY."
+        ],
+        [
+          51.72,
+          56.8,
+          "I'm really on the way on s.i.a. Brother"
+        ],
+        [
+          60,
+          62,
+          "Come on"
+        ],
+        [
+          65.04,
+          67.04,
+          "Circum sacrum"
+        ],
+        [
+          69.72,
+          75.64,
+          "Okay, let's go almost the end the yoga the yoga"
+        ],
+        [
+          77.64,
+          79.64,
+          "Next one what is the next box?"
+        ],
+        [
+          81.72,
+          93.46,
+          "Number four, okay, like let's go number four"
+        ],
+        [
+          97.64,
+          102.44,
+          "Here we go one two three four five and six let's go brother"
+        ],
+        [
+          107.28,
+          109.28,
+          "I tell you"
+        ],
+        [
+          109.28,
+          117.64,
+          "Thank you much for the popular vote."
+        ]
+      ],
+      "trackId": "base-en"
+    },
+    {
+      "schema": "hl-source-asr-public-v1",
+      "captureId": "nov17-participation",
+      "media": "assets/nov17-participation.mp4",
+      "mediaSha256": "a823a0c53babe333e51500dff9f8364bcdd351e3a24868786c8afa519174bfbf",
+      "mediaDurationSeconds": 120,
+      "clock": "SOURCE_MEDIA_LOCAL_UNCALIBRATED_TO_COLLECTOR",
+      "model": "faster-whisper/small.en",
+      "language": "en",
+      "languageSelection": "explicit-en",
+      "task": "transcribe",
+      "humanReviewed": false,
+      "utterances": [
+        [
+          0,
+          2,
+          "Yes, a little bit more fun."
+        ],
+        [
+          4,
+          6,
+          "1, 2, 3, 4, 5, and 6."
+        ],
+        [
+          6,
+          10,
+          "So before we finish, you'll just say the number."
+        ],
+        [
+          10,
+          14,
+          "So we can do very fast."
+        ],
+        [
+          15,
+          16,
+          "Okay, let's go."
+        ],
+        [
+          18,
+          19,
+          "Here we go."
+        ],
+        [
+          20,
+          21,
+          "Fue, coco."
+        ],
+        [
+          23,
+          26,
+          "Ebony, Ebony, let me finish first."
+        ],
+        [
+          27,
+          29,
+          "When I'm about to finish, then we say,"
+        ],
+        [
+          29,
+          41.36,
+          "the number that appears will be the number that I choose see if Chad can guess"
+        ],
+        [
+          41.36,
+          49.2,
+          "the RGB first yeah you can get the box with the RGB"
+        ],
+        [
+          49.2,
+          70.8,
+          "come on JY I'm Brian well si our brother come on sacrum sacrum okay let's go"
+        ],
+        [
+          70.8,
+          81.36,
+          "almost the end the yoga the yoga next one what is the next box"
+        ],
+        [
+          88.92,
+          99.8,
+          "number four okay like let's go number four here we go one two three four five"
+        ],
+        [
+          99.8,
+          103.04,
+          "Five and six. Let's go, brother!"
+        ],
+        [
+          107.64,
+          108.64,
+          "I'll tell you."
+        ],
+        [
+          111.24,
+          112.24,
+          "The yoga."
+        ],
+        [
+          116.04,
+          118.04,
+          "Thank you much for the popular food."
+        ]
+      ],
+      "trackId": "small-en"
+    }
   ]
 }

@@ -51,6 +51,21 @@ async function verify(){
  assert.equal(asr.mediaSha256,showcase.mediaSha256);
  assert.equal(asr.captureId,showcase.captureId);
  assert.equal(asr.utterances.length,showcase.transcriptPassages);
+ assert.equal(asr.trackId,'sing-ctx');
+ assert.equal(asr.model,'singlish-small');
+ assert.equal(asr.language,'en');
+ assert.equal(asr.task,'transcribe');
+ assert.equal(asr.languageSelection,'explicit-en');
+ assert.equal(asr.revision,'0835ed29d2f8893e4fcf63d5ac531dcb086b6ee1');
+ assert.equal(asr.promptSha256,'1f332bf0ae7df5ac7f6cd4188987ef378dcd96ce6f8f4be94dcac0c6b4e2849d');
+ assert.equal(showcase.transcriptTrack,asr.trackId);
+ assert.equal(showcase.transcriptLanguage,asr.language);
+ assert.equal(showcase.transcriptTask,asr.task);
+ assert.equal(showcase.transcriptRevision,asr.revision);
+ assert.equal(showcase.transcriptPromptSha256,asr.promptSha256);
+ assert.deepEqual(showcase.transcriptTracks,[asr,...asr.alternatives].map(t=>({
+   id:t.trackId,model:t.model,passages:t.utterances.length
+ })));
  const home=await get('/');
  assert.equal(home.status,200);
  assert(home.bytes.toString('utf8').includes('humanlaier'),

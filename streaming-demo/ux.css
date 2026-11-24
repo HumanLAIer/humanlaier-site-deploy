@@ -523,3 +523,8 @@ select{max-width:100%}
   .featured-asr-clock{font-size:9px}
   .featured-chat-line{flex-wrap:wrap;gap:3px 8px}
 }
+/* A small native control below the scrollable chat, never a new panel. */
+.transcript-chooser:not([hidden]){display:flex;align-items:center;gap:8px;padding:5px 10px;border-top:1px solid var(--line);background:#f9fbfa;flex:none;min-width:0}
+.transcript-chooser[hidden]{display:none}
+.transcript-chooser label{font:700 10px var(--mono);color:#405a66;flex:none}
+.transcript-chooser select{flex:1;min-width:0;min-height:26px;font-size:12px}

@@ -69,6 +69,12 @@ async function sourceChat(browser){
        sourceStatus:document.getElementById('conversationList').dataset.showcaseState,
        incompleteNote:document.getElementById('conversationNote').textContent,
        criticalVideoSha:window.HL_PARTICIPATION_ASR?.contract?.mediaSha256,
+       speechTrack:selectedSource?.transcriptTrackId,
+       speechModel:selectedSource?.transcriptModel,
+       speechLanguage:selectedSource?.transcriptLanguage,
+       selectorValue:document.getElementById('featuredModel').value,
+       selectorOptions:[...document.getElementById('featuredModel').options].map(o=>o.value),
+       selectorVisible:!document.getElementById('transcriptChooser').hidden,
        actionScope:document.getElementById('actionScope').value,
        eventLayerOptions:[...document.getElementById('graphEventKind').options]
          .map(o=>({kind:o.value,label:o.textContent})),
@@ -109,6 +115,12 @@ async function sourceChat(browser){
      'Original default ASR must explicitly be unreviewed, not human-verified');
    assert.equal(evidence.readiness,'ready',
      'Critical source video, ASR and recorded activity must pass the default integrity contract');
+   assert.equal(evidence.speechTrack,'sing-ctx');
+   assert.equal(evidence.speechModel,'singlish-small');
+   assert.equal(evidence.speechLanguage,'en');
+   assert.equal(evidence.selectorValue,'sing-ctx');
+   assert.deepEqual(evidence.selectorOptions,['sing-ctx','base-en','small-en']);
+   assert(evidence.selectorVisible);
    assert.equal(evidence.sourceStatus,'ready',
      'Never claim an incomplete default recording is a complete showcase');
    assert.equal(evidence.criticalVideoSha,
@@ -118,6 +130,42 @@ async function sourceChat(browser){
    assert.equal(evidence.actionScope,'all');
    assert(evidence.statline.includes('observed accounts')&&evidence.video.includes('nov17-participation.mp4')&&
      !evidence.videoHidden&&evidence.layout==='grid');
+   // Change only the actual source-bound transcript: video transport,
+   // viewer comments, markers and network identities must not change.
+   const switchProof=await page.evaluate(()=>{
+     const selector=document.getElementById('featuredModel');
+     const thread=document.getElementById('conversationList');
+     const chooser=document.getElementById('transcriptChooser');
+     const source=window.HL_SIGNAL_DATA.review.find(s=>s.sid==='nov17-participation');
+     const video=document.getElementById('videoPlayer');
+     const prior={src:video.currentSrc,t:video.currentTime,paused:video.paused};
+     const snapshots=[];
+     for(const track of source.transcriptTracks){
+       selector.value=track.id;
+       selector.dispatchEvent(new Event('change',{bubbles:true}));
+       const rows=[...thread.querySelectorAll('.message-row.speech .message-text')]
+         .map(el=>el.textContent);
+       snapshots.push({id:track.id,rows,expected:track.rows.map(r=>r[2]),
+         comments:thread.querySelectorAll('.message-row.chat').length,
+         actors:document.querySelectorAll('#networkNodes g[data-actor]').length,
+         marks:Number(document.getElementById('signals').dataset.recordedMarkerCount),
+         sameSrc:video.currentSrc===prior.src,sameTime:video.currentTime===prior.t,
+         samePaused:video.paused===prior.paused});
+     }
+     selector.value='sing-ctx';selector.dispatchEvent(new Event('change',{bubbles:true}));
+     return {snapshots,below:!!(thread.compareDocumentPosition(chooser)&Node.DOCUMENT_POSITION_FOLLOWING),
+       selected:selector.value,track:source.transcriptTrackId};
+   });
+   assert(switchProof.below,'Compact source selector must be below conversation');
+   assert.equal(switchProof.selected,'sing-ctx');
+   assert.equal(switchProof.track,'sing-ctx');
+   for(const t of switchProof.snapshots){
+     assert.deepEqual(t.rows,t.expected,'Render every verbatim selected transcript passage');
+     assert.equal(t.comments,87);assert.equal(t.actors,42);assert.equal(t.marks,140);
+     assert(t.sameSrc&&t.sameTime&&t.samePaused,'Transcript switch must not restart or seek source media');
+   }
+   console.log('SAME_SOURCE_TRANSCRIPT_SWITCH_PASS '+JSON.stringify(
+     switchProof.snapshots.map(t=>({id:t.id,segments:t.rows.length,comments:t.comments,accounts:t.actors,markers:t.marks}))));
    // All source event kinds remain selectable for inspection and true
    // incident playback, rather than being represented by aggregate labels.
    await page.locator('#graphEventKind').selectOption('gift');
@@ -281,9 +329,17 @@ async function sourceChat(browser){
    const oldCaptures=await page.locator('#sessionSelect option').evaluateAll(els=>
      els.map(e=>e.value).filter(v=>v&&v!=='source-nov17-original-audio-180'));
    assert(oldCaptures.length>=3,'Original archived captures must be retained');
-   await page.locator('#sessionSelect').selectOption(oldCaptures[0]);
-   await page.waitForTimeout(350);
-   assert.equal(await page.locator('#featuredModel').isHidden(),true);
+   await page.locator('#sessionSelect').selectOption('nov17-participation');
+   await page.waitForFunction(()=>document.getElementById('featuredModel').value==='sing-ctx' &&
+     !document.getElementById('transcriptChooser').hidden,null,{timeout:10000});
+   assert.equal(await page.locator('#featuredModel').isHidden(),false,
+     'Returning to main demo must expose its own source-bound transcript choices');
+   const noChoiceCapture=oldCaptures.find(id=>id!=='nov17-participation');
+   assert(noChoiceCapture,'Independent historical capture remains available');
+   await page.locator('#sessionSelect').selectOption(noChoiceCapture);
+   await page.waitForFunction(()=>document.getElementById('transcriptChooser').hidden,null,{timeout:10000});
+   assert.equal(await page.locator('#featuredModel').isHidden(),true,
+     'Do not carry a transcript catalogue into an unrelated archived capture');
    assert((await page.locator('#sourceSelect option').count())>0,'Original capture media remains available');
    assert.deepEqual(observeResult.errors,[],'V4 runtime script errors');
    assert.deepEqual(observeResult.bad,[],'V4 critical local assets must not be HTTP errors');
@@ -323,12 +379,21 @@ async function sourceEvidenceFailureMatrix(browser){
    path.join(__dirname,'../streaming-demo/assets/nov17-participation-asr.json'),'utf8'));
  const invalidSha={...original,mediaSha256:'f'.repeat(64)};
  const truncated={...original,utterances:original.utterances.slice(0,3)};
+ const wrongLanguage={...original,language:'ms'};
+ const wrongTask={...original,task:'translate'};
+ const wrongPrompt={...original,promptSha256:'f'.repeat(64)};
  const cases=[
    {name:'missing-asset',intercept:route=>route.abort('failed')},
    {name:'wrong-video-hash',intercept:route=>route.fulfill({
      status:200,contentType:'application/json',body:JSON.stringify(invalidSha)})},
    {name:'truncated-speech',intercept:route=>route.fulfill({
-     status:200,contentType:'application/json',body:JSON.stringify(truncated)})}
+     status:200,contentType:'application/json',body:JSON.stringify(truncated)})},
+   {name:'wrong-language',intercept:route=>route.fulfill({
+     status:200,contentType:'application/json',body:JSON.stringify(wrongLanguage)})},
+   {name:'translation-not-transcription',intercept:route=>route.fulfill({
+     status:200,contentType:'application/json',body:JSON.stringify(wrongTask)})},
+   {name:'wrong-ctx-prompt',intercept:route=>route.fulfill({
+     status:200,contentType:'application/json',body:JSON.stringify(wrongPrompt)})}
  ];
  for(const item of cases){
    const page=await browser.newPage({viewport:{width:1300,height:800}});
@@ -385,11 +450,14 @@ async function independentOptionalResearchAndMutableSpeech(browser){
  // New engines can split/join utterances and replace every word without
  // changing the current recording, event identity, group-chat layout, or
  // the number of public viewer accounts.
- const revised={...asr,model:'faster-whisper/large-v3',utterances:[
-   asr.utterances[0],
-   asr.utterances[Math.floor(asr.utterances.length/2)],
-   asr.utterances.at(-1)
- ].map((r,i)=>[r[0],r[1],'Completely revised same-source speech '+i])};
+ const revised=structuredClone(asr);
+ const alternative=revised.alternatives[0];
+ alternative.model='faster-whisper/large-v3';
+ alternative.utterances=[
+   alternative.utterances[0],
+   alternative.utterances[Math.floor(alternative.utterances.length/2)],
+   alternative.utterances.at(-1)
+ ].map((r,i)=>[r[0],r[1],'Completely revised same-source speech '+i]);
  const page=await browser.newPage({viewport:{width:1250,height:780}});
  try{
    await page.route('**/assets/nov17-participation-asr.json*',route=>route.fulfill({
@@ -397,9 +465,12 @@ async function independentOptionalResearchAndMutableSpeech(browser){
    await page.goto(origin+'/streaming-demo/',{waitUntil:'domcontentloaded',timeout:35000});
    await page.waitForFunction(()=>
      window.HL_DEMO_READINESS?.status==='ready'&&
-     document.querySelectorAll('.message-row.speech').length===3&&
+     document.getElementById('featuredModel')?.value==='sing-ctx'&&
      document.querySelectorAll('#networkNodes g[data-actor]').length===42,
      null,{timeout:25000});
+   await page.locator('#featuredModel').selectOption('base-en');
+   await page.waitForFunction(()=>document.querySelectorAll('.message-row.speech').length===3,
+     null,{timeout:10000});
    const result=await page.evaluate(()=>({
      count:document.querySelectorAll('.message-row.speech').length,
      first:document.querySelector('.message-row.speech .message-text')?.textContent,
@@ -407,7 +478,7 @@ async function independentOptionalResearchAndMutableSpeech(browser){
      accounts:document.querySelectorAll('#networkNodes g[data-actor]').length,
      markers:Number(document.getElementById('signals').dataset.recordedMarkerCount),
      sourceVideo:document.getElementById('videoPlayer').currentSrc,
-     model:window.HL_DEMO_READINESS.details?.model,
+     model:window.HL_SIGNAL_DATA.review.find(s=>s.sid==='nov17-participation')?.transcriptModel,
      state:document.getElementById('conversationList').dataset.showcaseState
    }));
    assert.equal(result.count,3);

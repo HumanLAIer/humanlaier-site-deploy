@@ -1,0 +1,664 @@
+{
+  "schema": "hl-nine-ticker-full-catalogue-review-v1",
+  "sourceComparisonSha256": "141f0c9ee47f7c49d5bc1f546814fff12c740de69f59dde27c23bdd85f8178be",
+  "sourcePartSha256": "58e8dd7b568a65203d9a5c204f72f1a3538da58951c7a3f178844547c5fc91de",
+  "domainPackSha256": "dacb6b79f22ad3b7c16ecabe5ffb2c61af38c17e21381f21b850fb739e61d2a0",
+  "catalogueRecords": 75673,
+  "artifactId": 14880109151,
+  "workflowRunId": 45306608923,
+  "ledgerSha256": "4b530fd6aff9b8d366894c6fffcd8bb5d81ffab7d7073a350713aa73f31cce3c",
+  "heldOut": false,
+  "humanGoldAvailable": false,
+  "rows": [
+    {
+      "i": 0,
+      "wav": "19993f8d6ed83a958d12694ad8454505f1f7c2cb292fa234f7e32b0f48fd60f3",
+      "lane": "coats-large-v2--control",
+      "distance": 0.33077,
+      "n": 0,
+      "truncated": 0,
+      "c": []
+    },
+    {
+      "i": 1,
+      "wav": "58ee4ff5c7acb2b68a4b748d956289c49730403e4953f5a150fb853421ef9f4d",
+      "lane": "coats-large-v2--control",
+      "distance": 0.29217,
+      "n": 1,
+      "truncated": 4,
+      "c": [
+        {
+          "name": "Sylveon VMAX",
+          "type": "card_printing",
+          "id": null,
+          "engines": 2,
+          "exact": 2,
+          "e": [
+            [
+              "production-base.en--focused",
+              14,
+              26,
+              "Sylveon VMAX",
+              "exact",
+              1,
+              "tcgdex:tcgdex_cards:en:swsh7-211",
+              true
+            ],
+            [
+              "coats-large-v2--focused",
+              18,
+              30,
+              "Sylveon VMAX",
+              "exact",
+              1,
+              "tcgdex:tcgdex_cards:en:swsh7-211",
+              true
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "i": 2,
+      "wav": "b949dde7ca0d730deaee12f5d149f3a6bc8f81c840b0cded46ddd63696dffae7",
+      "lane": "coats-large-v2--control",
+      "distance": 0.25,
+      "n": 2,
+      "truncated": 9,
+      "c": [
+        {
+          "name": "Beautifly",
+          "type": "pokemon_species",
+          "id": "pokeapi:species:267",
+          "engines": 3,
+          "exact": 0,
+          "e": [
+            [
+              "production-base.en--control",
+              15,
+              24,
+              "beautiful",
+              "fuzzy",
+              0.8889,
+              "pokeapi:species:267:en",
+              true
+            ],
+            [
+              "singlish-small--control",
+              18,
+              27,
+              "beautiful",
+              "fuzzy",
+              0.8889,
+              "pokeapi:species:267:en",
+              true
+            ],
+            [
+              "coats-large-v2--control",
+              19,
+              28,
+              "beautiful",
+              "fuzzy",
+              0.8889,
+              "pokeapi:species:267:en",
+              true
+            ]
+          ]
+        },
+        {
+          "name": "Beautifly",
+          "type": "card_printing",
+          "id": null,
+          "engines": 3,
+          "exact": 0,
+          "e": [
+            [
+              "production-base.en--control",
+              15,
+              24,
+              "beautiful",
+              "fuzzy",
+              0.8889,
+              "tcgdex:tcgdex_cards:en:B1-005",
+              true
+            ],
+            [
+              "singlish-small--control",
+              18,
+              27,
+              "beautiful",
+              "fuzzy",
+              0.8889,
+              "tcgdex:tcgdex_cards:en:B1-005",
+              true
+            ],
+            [
+              "coats-large-v2--control",
+              19,
+              28,
+              "beautiful",
+              "fuzzy",
+              0.8889,
+              "tcgdex:tcgdex_cards:en:B1-005",
+              true
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "i": 3,
+      "wav": "22677da4f08cdd94f714293effab30b1b263e606df7adfafeae60aa55f6629c3",
+      "lane": "coats-large-v2--control",
+      "distance": 0.40909,
+      "n": 1,
+      "truncated": 0,
+      "c": [
+        {
+          "name": "Umbreon",
+          "type": "pokemon_species",
+          "id": "pokeapi:species:197",
+          "engines": 2,
+          "exact": 0,
+          "e": [
+            [
+              "production-base.en--focused",
+              60,
+              68,
+              "mombreon",
+              "phonetic",
+              0.76,
+              "pokeapi:species:197:en",
+              false
+            ],
+            [
+              "singlish-small--compact",
+              33,
+              42,
+              "momebrion",
+              "phonetic",
+              0.725,
+              "pokeapi:species:197:en",
+              false
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "i": 4,
+      "wav": "402d34eedfc11aef165bbd1e6fb74da0d969e52511502aef8bc9b8a784ee73fa",
+      "lane": "coats-large-v2--control",
+      "distance": 0.24274,
+      "n": 0,
+      "truncated": 1,
+      "c": []
+    },
+    {
+      "i": 5,
+      "wav": "cc9f47f7fcf8356ade283f55549a74b835d1de165e99dbca5465a08de7cf77b3",
+      "lane": "coats-large-v2--control",
+      "distance": 0.20968,
+      "n": 0,
+      "truncated": 0,
+      "c": []
+    },
+    {
+      "i": 6,
+      "wav": "3fc0b141a202b9624a0822c2dd414feb0da62cb66343944d2a66f12488dd9ae1",
+      "lane": "coats-large-v2--control",
+      "distance": 0.36111,
+      "n": 4,
+      "truncated": 5,
+      "c": [
+        {
+          "name": "Sylveon VMAX",
+          "type": "card_printing",
+          "id": null,
+          "engines": 3,
+          "exact": 3,
+          "e": [
+            [
+              "production-base.en--focused",
+              0,
+              12,
+              "Sylveon VMAX",
+              "exact",
+              1,
+              "tcgdex:tcgdex_cards:en:swsh7-211",
+              true
+            ],
+            [
+              "singlish-small--focused",
+              0,
+              12,
+              "Sylveon vmax",
+              "exact",
+              1,
+              "tcgdex:tcgdex_cards:en:swsh7-211",
+              true
+            ],
+            [
+              "coats-large-v2--focused",
+              0,
+              12,
+              "Sylveon VMAX",
+              "exact",
+              1,
+              "tcgdex:tcgdex_cards:en:swsh7-211",
+              true
+            ]
+          ]
+        },
+        {
+          "name": "Sylveon",
+          "type": "pokemon_species",
+          "id": "pokeapi:species:700",
+          "engines": 3,
+          "exact": 2,
+          "e": [
+            [
+              "production-base.en--focused",
+              0,
+              7,
+              "Sylveon",
+              "exact",
+              1,
+              "pokeapi:species:700:en",
+              true
+            ],
+            [
+              "singlish-small--focused",
+              30,
+              39,
+              "s sylveon",
+              "fuzzy",
+              0.875,
+              "pokeapi:species:700:en",
+              true
+            ],
+            [
+              "coats-large-v2--control",
+              32,
+              39,
+              "Sylveon",
+              "exact",
+              1,
+              "pokeapi:species:700:en",
+              true
+            ]
+          ]
+        },
+        {
+          "name": "Sylveon",
+          "type": "card_printing",
+          "id": null,
+          "engines": 3,
+          "exact": 2,
+          "e": [
+            [
+              "production-base.en--focused",
+              0,
+              7,
+              "Sylveon",
+              "exact",
+              1,
+              "tcgdex:tcgdex_cards:en:A3b-033",
+              true
+            ],
+            [
+              "singlish-small--focused",
+              30,
+              39,
+              "s sylveon",
+              "fuzzy",
+              0.875,
+              "tcgdex:tcgdex_cards:en:A3b-033",
+              true
+            ],
+            [
+              "coats-large-v2--control",
+              32,
+              39,
+              "Sylveon",
+              "exact",
+              1,
+              "tcgdex:tcgdex_cards:en:A3b-033",
+              true
+            ]
+          ]
+        },
+        {
+          "name": "Leafeon",
+          "type": "pokemon_species",
+          "id": "pokeapi:species:470",
+          "engines": 2,
+          "exact": 0,
+          "e": [
+            [
+              "singlish-small--compact",
+              88,
+              94,
+              "lephan",
+              "phonetic",
+              0.7231,
+              "pokeapi:species:470:en",
+              false
+            ],
+            [
+              "coats-large-v2--focused",
+              79,
+              88,
+              "a Leafeon",
+              "fuzzy",
+              0.875,
+              "pokeapi:species:470:en",
+              true
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "i": 7,
+      "wav": "e3a8bf987e22cf16ace6e005fb0e61878d1ec97c9eee7e4da7baedf1c494c9a8",
+      "lane": "singlish-small--control",
+      "distance": 0.84375,
+      "n": 0,
+      "truncated": 0,
+      "c": []
+    },
+    {
+      "i": 8,
+      "wav": "ae9e3f1bf134d81bb884441ec7d0554ad5c3f1e3bffae09f76dcc01e8e15e93f",
+      "lane": "singlish-small--control",
+      "distance": 0.5,
+      "n": 3,
+      "truncated": 5,
+      "c": [
+        {
+          "name": "Sylveon",
+          "type": "pokemon_species",
+          "id": "pokeapi:species:700",
+          "engines": 3,
+          "exact": 3,
+          "e": [
+            [
+              "production-base.en--focused",
+              100,
+              107,
+              "Sylveon",
+              "exact",
+              1,
+              "pokeapi:species:700:en",
+              true
+            ],
+            [
+              "singlish-small--focused",
+              101,
+              108,
+              "sylveon",
+              "exact",
+              1,
+              "pokeapi:species:700:en",
+              true
+            ],
+            [
+              "coats-large-v2--focused",
+              82,
+              89,
+              "Sylveon",
+              "exact",
+              1,
+              "pokeapi:species:700:en",
+              true
+            ]
+          ]
+        },
+        {
+          "name": "Sylveon",
+          "type": "card_printing",
+          "id": null,
+          "engines": 3,
+          "exact": 3,
+          "e": [
+            [
+              "production-base.en--focused",
+              100,
+              107,
+              "Sylveon",
+              "exact",
+              1,
+              "tcgdex:tcgdex_cards:en:A3b-033",
+              true
+            ],
+            [
+              "singlish-small--focused",
+              101,
+              108,
+              "sylveon",
+              "exact",
+              1,
+              "tcgdex:tcgdex_cards:en:A3b-033",
+              true
+            ],
+            [
+              "coats-large-v2--focused",
+              82,
+              89,
+              "Sylveon",
+              "exact",
+              1,
+              "tcgdex:tcgdex_cards:en:A3b-033",
+              true
+            ]
+          ]
+        },
+        {
+          "name": "Sylveon VMAX",
+          "type": "card_printing",
+          "id": null,
+          "engines": 3,
+          "exact": 3,
+          "e": [
+            [
+              "production-base.en--focused",
+              100,
+              112,
+              "Sylveon VMAX",
+              "exact",
+              1,
+              "tcgdex:tcgdex_cards:en:swsh7-211",
+              true
+            ],
+            [
+              "singlish-small--focused",
+              109,
+              121,
+              "sylveon vmax",
+              "exact",
+              1,
+              "tcgdex:tcgdex_cards:en:swsh7-211",
+              true
+            ],
+            [
+              "coats-large-v2--focused",
+              90,
+              102,
+              "Sylveon VMAX",
+              "exact",
+              1,
+              "tcgdex:tcgdex_cards:en:swsh7-211",
+              true
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "i": 9,
+      "wav": "c4c4e4b3939bf08469aec33fd24ffff08bcef873c9c66a2f9b95bbfadfca2227",
+      "lane": "singlish-small--control",
+      "distance": 0.66667,
+      "n": 0,
+      "truncated": 0,
+      "c": []
+    },
+    {
+      "i": 10,
+      "wav": "ba1602c919e3f6c141add1552bd8eb5f8793129cf7ec8359b4f0a0d2c8beb7ec",
+      "lane": "singlish-small--control",
+      "distance": 0.32071,
+      "n": 2,
+      "truncated": 3,
+      "c": [
+        {
+          "name": "Sylveon",
+          "type": "pokemon_species",
+          "id": "pokeapi:species:700",
+          "engines": 2,
+          "exact": 1,
+          "e": [
+            [
+              "singlish-small--compact",
+              62,
+              68,
+              "sylvan",
+              "phonetic",
+              0.7538,
+              "pokeapi:species:700:en",
+              false
+            ],
+            [
+              "coats-large-v2--control",
+              64,
+              71,
+              "Sylveon",
+              "exact",
+              1,
+              "pokeapi:species:700:en",
+              true
+            ]
+          ]
+        },
+        {
+          "name": "Sylveon VMAX",
+          "type": "card_printing",
+          "id": null,
+          "engines": 2,
+          "exact": 1,
+          "e": [
+            [
+              "singlish-small--focused",
+              61,
+              72,
+              "sylvan vmax",
+              "fuzzy",
+              0.8696,
+              "tcgdex:tcgdex_cards:en:swsh7-211",
+              true
+            ],
+            [
+              "coats-large-v2--focused",
+              65,
+              77,
+              "Sylveon VMAX",
+              "exact",
+              1,
+              "tcgdex:tcgdex_cards:en:swsh7-211",
+              true
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "i": 11,
+      "wav": "630e5e82339bc005589b5cdda15205bb5265921adceccef766872cecffe5292c",
+      "lane": "production-base.en--control",
+      "distance": 0.25,
+      "n": 2,
+      "truncated": 5,
+      "c": [
+        {
+          "name": "Rayquaza",
+          "type": "pokemon_species",
+          "id": "pokeapi:species:384",
+          "engines": 3,
+          "exact": 3,
+          "e": [
+            [
+              "production-base.en--focused",
+              45,
+              53,
+              "Rayquaza",
+              "exact",
+              1,
+              "pokeapi:species:384:en",
+              true
+            ],
+            [
+              "singlish-small--focused",
+              46,
+              54,
+              "rayquaza",
+              "exact",
+              1,
+              "pokeapi:species:384:en",
+              true
+            ],
+            [
+              "coats-large-v2--control",
+              49,
+              57,
+              "Rayquaza",
+              "exact",
+              1,
+              "pokeapi:species:384:en",
+              true
+            ]
+          ]
+        },
+        {
+          "name": "Rayquaza",
+          "type": "card_printing",
+          "id": null,
+          "engines": 3,
+          "exact": 3,
+          "e": [
+            [
+              "production-base.en--focused",
+              45,
+              53,
+              "Rayquaza",
+              "exact",
+              1,
+              "tcgdex:tcgdex_cards:en:2024sv-14",
+              true
+            ],
+            [
+              "singlish-small--focused",
+              46,
+              54,
+              "rayquaza",
+              "exact",
+              1,
+              "tcgdex:tcgdex_cards:en:2024sv-14",
+              true
+            ],
+            [
+              "coats-large-v2--control",
+              49,
+              57,
+              "Rayquaza",
+              "exact",
+              1,
+              "tcgdex:tcgdex_cards:en:2024sv-14",
+              true
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}

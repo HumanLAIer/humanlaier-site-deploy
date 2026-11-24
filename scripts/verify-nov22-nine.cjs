@@ -38,3 +38,29 @@ assert.equal(sha(fs.readFileSync(path.join(root,'streaming-demo/nine-tickers/com
 assert.equal(sha(fs.readFileSync(path.join(root,'streaming-demo/nine-tickers/commercial-180.mp4'))),'9fdbdff777391886cfc39b220a053f3e10a49dd72454fe14d7443aacc0176f92');
 assert(fs.readFileSync(path.join(root,'streaming-lab/index.html'),'utf8').includes('./nine-tickers-nov22/'));
 console.log('NOV22_NINE_EXACT_CONTRACT_PASS '+JSON.stringify({clips:rows,outputs:rows*9,frames,seconds:frames/16000,losslessParts:3,deepDecoded:deep,verifiedAssemblyRun:45358589793,originalStudyPreserved:true,comparisonSha256:sha(fs.readFileSync(path.join(dir,'comparison.json')))}));
+
+const videoManifestRaw=fs.readFileSync(path.join(dir,'video-manifest.json'));
+assert.equal(sha(videoManifestRaw),'37779680b025e15785342dc06ea03f9efd8c672b75bb451d2c9a1175b3a5237b');
+const manifest=JSON.parse(videoManifestRaw);
+assert.equal(manifest.schema,'hl-nov22-original-video-v1');assert.equal(manifest.sessionId,d.sessionId);
+assert.equal(manifest.originalManifestSha256,d.originalManifestSha256);
+assert.equal(manifest.sourceAudioSeconds,d.audioSeconds);assert.equal(manifest.parts.length,3);
+assert.equal(manifest.modelCalls,0);assert.equal(manifest.r2Writes,0);
+assert.equal(manifest.wordTimingVerified,false);assert.equal(manifest.broadcastCompletenessIndependentlyProven,false);
+for(const [i,p] of manifest.parts.entries()){
+ const a=d.parts[i];assert.equal(p.filename,'part-'+(i+1)+'.mp4');
+ assert.equal(p.sourcePartSha256,a.originalSha256);assert.equal(p.sourcePcmSha256,a.pcmSha256);
+ assert.equal(p.sourceFrames,a.frames);assert.equal(p.exactOverlapFrames,a.frames);assert.equal(p.pcmExact,true);
+ assert.equal(p.originalVideoBitstream,true);assert.equal(p.originalAudioBitstream,true);
+ const file=path.join(dir,p.filename),media=fs.readFileSync(file);
+ assert.equal(media.length,p.bytes);assert.equal(sha(media),p.sha256);assert.equal(media.toString('ascii',4,8),'ftyp');
+ if(deep){
+  const x=cp.spawnSync('ffmpeg',['-v','error','-i',file,'-map','0:a:0','-vn','-f','s16le','-acodec','pcm_s16le','-ar','16000','-ac','1','pipe:1'],{maxBuffer:24*1024*1024,timeout:60000});
+  assert.equal(x.status,0,String(x.stderr));assert.equal(x.stdout.length,a.frames*2);assert.equal(sha(x.stdout),a.pcmSha256);
+ }
+}
+const html=fs.readFileSync(path.join(dir,'index.html'),'utf8');
+assert(html.includes('href="../../streaming-demo/nine-tickers/styles.css"'));
+for(const cls of ['studio','mast','video-column','screen','right-panel','transport','tickers','ticker-bar','metrics','foot'])assert(html.includes('class="'+cls+'"'),'Missing canonical layout '+cls);
+assert(html.includes('<video id="video"'));assert(!html.includes('<audio'));
+console.log('NOV22_ORIGINAL_VIDEO_PCM_PARITY_PASS '+JSON.stringify({videoParts:3,exactSamples:frames,allOriginalBitstreams:true,sharedLayout:true,deepDecoded:deep}));

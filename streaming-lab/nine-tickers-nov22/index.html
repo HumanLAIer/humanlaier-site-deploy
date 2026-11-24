@@ -1,25 +1,103 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow,noarchive,nosnippet"><meta name="theme-color" content="#071b29"><meta name="description" content="Full November 22 source-audio and nine-model-condition transcript comparison."><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; media-src 'self'; connect-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'none'"><title>Nine-Ticker · 22 November | Human LAIer</title><link rel="stylesheet" href="styles.css"><script src="app.js" defer></script></head>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive,nosnippet">
+<meta name="theme-color" content="#071b29">
+<meta name="description" content="Original full-height portrait livestream video beside nine synchronized, source-verified ASR decodings and compact audience context.">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; media-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<title>Nine-Ticker Video Shootout · 22 November | Human LAIer</title>
+<link rel="stylesheet" href="../../streaming-demo/nine-tickers/styles.css">
+<link rel="stylesheet" href="styles.css">
+<script src="app.js" defer></script>
+</head>
 <body>
-<a class="skip" href="#player">Skip to source audio</a>
-<header class="mast"><div class="brand">HUMAN <b>LAIer</b> <small>/ STREAMING LAB</small></div><nav aria-label="Compare studies"><a href="../">Lab · 17 Nov</a><a href="../../streaming-demo/nine-tickers/">Original nine tickers · 17 Nov</a></nav></header>
-<main>
-<section class="heading"><div><div class="eyebrow">NINE-TICKER SHOOTOUT / EDITION 02</div><h1>One recording. Nine interpretations.</h1><p>@huatzaitcg · 22 November 2026 · 3 model families × 3 fixed prompts</p></div><div class="totals"><div><strong>10:27.669</strong><small>DECODED SOURCE AUDIO</small></div><div><strong>43 / 43</strong><small>SOURCE BLOCKS</small></div><div><strong>11 / 231</strong><small>ACCOUNTS / ALIASES</small></div></div></section>
-<section class="transport" aria-label="Exact source audio playback">
-  <div class="transport-top"><span class="eyebrow">SOURCE AUDIO · LOSSLESS ASR INPUT</span><span id="status" role="status">Verifying comparison…</span></div>
-  <div class="part-buttons" id="parts" role="group" aria-label="Original media parts"></div>
-  <audio id="player" controls preload="metadata" aria-label="Original decoded source audio, selected media part"></audio>
-  <div class="navigation"><button type="button" id="prev" disabled>← Previous</button><label for="blocks" class="sr-only">Source block</label><select id="blocks" disabled aria-label="Select source block"></select><button type="button" id="next" disabled>Next →</button><label class="advance"><input type="checkbox" id="advance" checked>Continue across parts</label><span id="clock" class="clock">—</span></div>
-  <div id="blockStrip" class="block-strip" role="group" aria-label="Seek to source block"></div>
-  <div class="transport-note">The audio is lossless 16 kHz PCM from the actual ASR inputs, played per original media part. No invented word timing or event-clock synchronization.</div>
-</section>
-<section class="comparison" aria-label="Nine original transcript tickers">
-  <div class="section-head"><div><h2>Original model output</h2><span id="cue">—</span></div><div class="legend"><span>Teal · Singlish</span><span>Violet · participant</span><span>Amber · repetition warning</span></div></div>
-  <div class="lane-grid" id="lanes"></div>
-  <div class="representative"><div><b>HL / RAW MEDOID</b><small id="repLabel">PROVISIONAL · NOT CORRECTION</small></div><p id="repText">—</p></div>
-</section>
-<details class="drawer" id="review"><summary>Candidate evidence and source spans <span id="candidateCount">—</span></summary><div class="drawer-body"><p>Retrieval hypotheses only. Exact lexical matches are not verified speech; overlapping printing candidates may refer to the same span.</p><label for="reviewLane">Inspect lane</label><select id="reviewLane"></select><div id="evidence"></div></div></details>
-<details class="drawer" id="results"><summary>Bake-off diagnostics <span>9 lanes · no human gold</span></summary><div class="drawer-body"><p>Counts are candidate detections, not confirmed mentions or accuracy. Repetition is a text diagnostic, not an audio-verified hallucination rate.</p><div class="table-scroll"><table><thead><tr><th>Model / context</th><th>Singlish</th><th>Clips with Singlish</th><th>Participants</th><th>Pokémon candidates</th><th>Inference s</th><th>Repeated tokens %</th></tr></thead><tbody id="metrics"></tbody></table></div><p>Native word probabilities, per-word timestamps, and segment decoding diagnostics were not retained in this legacy run; they cannot be reconstructed from text. Future runs require the new telemetry gate.</p></div></details>
-<details class="drawer"><summary>Provenance and limitations</summary><div class="drawer-body"><p>Post-upgrade development recording; not admitted to a formal held-out benchmark. All 387 lane/block texts are preserved without correction. There is no human-verified transcript, speaker or addressee attribution, or verified commercial outcome. The source video is not reproduced here; playback is the exact audio fed to all nine lanes. Public-stream research preview.</p><dl id="provenance"></dl><p><a href="https://github.com/HumanLAIer/hl-livestream-pilot/actions/runs/45353713564">Nine-lane experiment</a> · <a href="https://github.com/HumanLAIer/hl-livestream-pilot/actions/runs/45356413821">Read-only repetition audit</a></p></div></details>
-<footer>Human LAIer · Source-linked research · <a href="../../streaming-demo/nine-tickers/">Compare the unchanged original November 17 nine-ticker study</a></footer>
-</main></body></html>
+<a class="skip" href="#video">Skip to source video</a>
+<main class="studio" aria-label="Full-height livestream video and nine-way speech interpretation comparison">
+  <header class="mast">
+    <a class="mark" href="../../streaming-demo/" aria-label="Human LAIer streaming demo"><img src="../../streaming-demo/assets/human-laier-dark.svg" width="62" height="28" alt="Human LAIer"></a>
+    <strong>NINE-TICKER SHOOTOUT</strong>
+    <span class="source-name">@HUATZAITCG · 22 NOV 2026 · 10:27</span>
+    <span class="mast-purpose">3 ENGINES × 3 VOCABULARY CONDITIONS · ORIGINAL VIDEO</span>
+    <a class="back" href="../../streaming-demo/nine-tickers/">17 Nov study</a>
+  </header>
+
+  <section class="video-column" aria-label="Original full-height portrait video">
+    <div class="screen">
+      <video id="video" controls playsinline preload="metadata" aria-label="Original November 22 vertical TikTok livestream with synchronized source audio"></video>
+      <div class="video-error" id="videoError" role="status" hidden>Original source video unavailable. No substitute footage or audio is shown.</div>
+    </div>
+  </section>
+
+  <div class="right-panel">
+    <nav class="transport" aria-label="Navigate synchronized source video blocks">
+      <span class="clock" id="currentClock">00:00</span>
+      <div class="blocks" id="blockNav" role="group" aria-label="43 source video blocks across three original media parts; scroll horizontally for all blocks"></div>
+      <span class="clock" id="endClock">10:27</span>
+      <label class="speed-label" for="speed">SPEED
+        <select id="speed" aria-label="Video playback speed"><option value="0.75">.75×</option><option value="1" selected>1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option></select>
+      </label>
+      <label class="motion-label" for="tickerMotion"><input id="tickerMotion" type="checkbox" checked>Pan long text</label>
+    </nav>
+
+    <section class="tickers" aria-label="Nine synchronized ASR transcripts with differences highlighted">
+      <div class="ticker-bar">
+        <strong>ASR MODEL <span class="header-detail">/ CONTEXT</span></strong>
+        <div class="ticker-key" aria-label="Highlight legend">
+          <span><i class="key-change" aria-hidden="true"></i> Changed</span>
+          <span><i class="key-domain" aria-hidden="true"></i> Domain</span>
+          <span><i class="key-unique" aria-hidden="true"></i> Unique</span>
+        </div>
+        <span id="cueText">01 / 00:00–00:15</span>
+      </div>
+      <div class="ticker-set basic" id="rawTickers" aria-label="Unprompted: three original model transcripts"></div>
+      <div class="ticker-set glossary" id="diffTickers" aria-label="Compact TCG prompt: three original model transcripts"></div>
+      <div class="ticker-set focused" id="domainTickers" aria-label="Focused prompt: three original model transcripts"></div>
+    </section>
+
+    <aside class="metrics" aria-label="Source coverage and observed participant catalogue; not time-aligned transactions">
+      <div class="metrics-heading">
+        <strong>SOURCE &amp; AUDIENCE CONTEXT</strong>
+        <span>SOURCE-LOCAL CLOCK · CHAT NOT TIME ALIGNED</span>
+      </div>
+      <div class="kpis">
+        <div class="kpi"><strong id="metricComments">—</strong><span>BLOCKS</span></div>
+        <div class="kpi"><strong id="metricAccounts">—</strong><span>ACCOUNTS</span></div>
+        <div class="kpi"><strong id="metricEvents">—</strong><span>ALIASES</span></div>
+        <div class="kpi"><strong id="metricBuyer">—</strong><span>DECODES</span></div>
+      </div>
+      <div id="chatSignals" class="chat-signals">
+        <button type="button" class="signal" data-part="0"><span>PART 1</span><strong>Original source video</strong><small>00:00</small></button>
+        <button type="button" class="signal" data-part="1"><span>PART 2</span><strong>Original source video</strong><small>—</small></button>
+        <button type="button" class="signal" data-part="2"><span>PART 3</span><strong>Original source video</strong><small>—</small></button>
+      </div>
+      <div class="metric-foot" id="metricContext">Source-local evidence only · no confirmed product, purchase, or revenue</div>
+    </aside>
+
+    <footer class="foot">
+      <span id="audioStatus" role="status">Loading original video and verified model outputs…</span>
+      <span class="disclaimer">43 source blocks · no human-gold verdict</span>
+      <details class="notes">
+        <summary>DATA NOTES</summary>
+        <div class="notes-panel">
+          <strong>All three original portrait video parts and 627.669 seconds of exact source PCM; three ASR models × three decoding conditions.</strong>
+          <p>Each ticker preserves the exact original model output. Amber indicates words newly present versus that model's unprompted transcript; lavender indicates unprompted words not found in the other two engines; teal identifies TCG terms or retained Singlish, participant and catalogue candidate spans. Highlights mean <em>different</em>, not <em>correct</em>. A small Δ count reports newly present words versus that model's baseline. Terms not present in a conditioned transcript cannot be highlighted there.</p>
+          <p><strong>Repetition warning:</strong> when one decoder repeats the same words ten or more times across most of a source block, its ticker shows an explicit <em>suspected ASR loop</em> summary. The RAW/FOLD control restores the verbatim model output in that lane; no source transcript or score is modified. Repetition detection is not proof of incorrect speech.</p>
+          <p>Development study, not a held-out accuracy benchmark. No human reference transcript, native word timestamps, calibrated chat/video clock, speaker or addressee attribution, or verified sale exists. Original H.264 and AAC streams are remuxed without re-encoding. Each part decodes to the exact SHA-pinned ASR PCM. The cumulative source clock concatenates decoded parts; it does not prove a gapless broadcast. Ticker motion is interpolated within each source block, not word timing. <span id="provenance">Source identity verification pending.</span></p>
+          <details id="review"><summary>Candidate evidence · <span id="candidateCount">—</span></summary>
+<p>Retrieval hypotheses only; overlapping printing candidates may refer to the same span. Teal highlights are review cues, not accuracy.</p>
+<label for="reviewLane">Inspect lane</label> <select id="reviewLane"></select><div id="evidence"></div>
+<p><strong>HL raw medoid</strong> · <span id="repLabel">—</span></p><p id="repText">—</p></details>
+<details id="results"><summary>Bake-off diagnostics · 9 lanes, no human gold</summary>
+<p>Candidate counts are not accuracy. Repeated tokens are a text diagnostic; native word timing and model scores were not retained in the legacy run.</p>
+<div class="table-scroll"><table><thead><tr><th>Model / context</th><th>Singlish</th><th>Blocks with Singlish</th><th>Participants</th><th>Pokémon candidates</th><th>Inference s</th><th>Repeated tokens %</th></tr></thead><tbody id="metrics"></tbody></table></div></details>
+<details><summary>Source receipts</summary><dl id="sourceReceipts"></dl><p>Exact ASR audio: <a href="part-1.flac">Part 1 FLAC</a> · <a href="part-2.flac">Part 2 FLAC</a> · <a href="part-3.flac">Part 3 FLAC</a>.</p></details>
+<p><a href="https://github.com/HumanLAIer/hl-livestream-pilot/actions/runs/45353713564">Nine-lane experiment</a> · <a href="https://github.com/HumanLAIer/hl-livestream-pilot/actions/runs/45356413821">Repetition audit</a> · <a href="https://github.com/HumanLAIer/hl-livestream-pilot/actions/runs/45361477352">Original video verification</a></p>
+        </div>
+      </details>
+    </footer>
+  </div>
+</main>
+</body>
+</html>

@@ -1,0 +1,51 @@
+name: One-time original participation video English ASR comparison
+on:
+  push:
+    branches:
+      - research/nov17-english-source-transcription
+    paths:
+      - .github/workflows/research-nov17-english-asr.yml
+permissions:
+  contents: read
+jobs:
+  compare-english:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install pinned CPU ASR
+        run: |
+          python -m pip install --quiet --only-binary=:all: 'faster-whisper==1.2.1'
+      - name: Compare original audio using English-only recognizers
+        run: |
+          python - <<'PY'
+          import hashlib, json, pathlib, av
+          from faster_whisper import WhisperModel
+          source=pathlib.Path("streaming-demo/assets/nov17-participation.mp4")
+          sha=hashlib.sha256(source.read_bytes()).hexdigest()
+          assert sha=="a823a0c53babe333e51500dff9f8364bcdd351e3a24868786c8afa519174bfbf"
+          with av.open(str(source)) as media:
+              duration=media.duration/1000000
+          assert 118<=duration<=122
+          for name in ["small.en","base.en"]:
+              model=WhisperModel(name,device="cpu",compute_type="int8",cpu_threads=4)
+              segs, info=model.transcribe(str(source),language="en",task="transcribe",beam_size=5,best_of=5,vad_filter=False,condition_on_previous_text=False,word_timestamps=False)
+              rows=[]
+              for seg in segs:
+                  words=seg.text.strip()
+                  if words:
+                      rows.append([round(seg.start,3),round(seg.end,3),words])
+              assert rows and info.language=="en"
+              out={"schema":"hl-source-asr-public-v1","captureId":"nov17-participation","media":"assets/nov17-participation.mp4","mediaSha256":sha,"mediaDurationSeconds":round(duration,3),"clock":"SOURCE_MEDIA_LOCAL_UNCALIBRATED_TO_COLLECTOR","model":"faster-whisper/"+name,"language":"en","languageSelection":"explicit-en","task":"transcribe","humanReviewed":False,"utterances":rows}
+              print("ENGLISH_SOURCE_ASR_RESULT "+json.dumps(out,ensure_ascii=False,separators=(",",":")),flush=True)
+              pathlib.Path("nov17-"+name+".json").write_text(json.dumps(out,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
+          PY
+      - name: Retain unreviewed comparison output
+        uses: actions/upload-artifact@v4
+        with:
+          name: original-participation-english-asr
+          path: nov17-*.en.json
+          retention-days: 3

@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - .github/workflows/one-time-public-nov17-asr.yml
+      - scripts/oneoff_nov17_source_asr.py
   workflow_dispatch:
 permissions:
   contents: read

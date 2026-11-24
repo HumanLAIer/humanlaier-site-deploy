@@ -1,0 +1,79 @@
+name: One-off source-matched Sing CTX transcription for participation video
+on:
+  push:
+    branches:
+      - research/participation-sing-ctx-20261124
+    paths:
+      - .github/workflows/research-participation-sing-ctx.yml
+permissions:
+  contents: read
+jobs:
+  sing-ctx:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install exact nine-ticker Singlish model stack (CPU)
+        run: |
+          python -m pip install --quiet torch==2.6.0 --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install --quiet numpy==1.26.4 transformers==4.55.4 huggingface_hub==0.36.0 av==15.1.0
+      - name: Apply actual Sing CTX configuration to eight source-local 15s blocks
+        run: |
+          python - <<'PY'
+          import hashlib,json,pathlib,os,io,wave
+          import av,numpy as np,torch
+          from huggingface_hub import snapshot_download
+          from transformers import WhisperForConditionalGeneration,WhisperProcessor
+          source=pathlib.Path("streaming-demo/assets/nov17-participation.mp4")
+          sha=hashlib.sha256(source.read_bytes()).hexdigest()
+          assert sha=="a823a0c53babe333e51500dff9f8364bcdd351e3a24868786c8afa519174bfbf"
+          prompt="Singapore Pokémon TCG live card opening and auctions: Eevee, Sylveon VMAX, Umbreon VMAX, Leafeon VMAX, Espeon VMAX, Glaceon VMAX, Jolteon, Vaporeon, Flareon, Rayquaza VMAX, booster packs, loose packs, Elite Trainer Box, ETB, graded cards, PSA 10, card pulls, hits, card market value, Singapore dollars, price, lah, lor, leh, aiyo, shiok."
+          prompt_sha=hashlib.sha256(prompt.encode("utf-8")).hexdigest()
+          assert prompt_sha=="1f332bf0ae7df5ac7f6cd4188987ef378dcd96ce6f8f4be94dcac0c6b4e2849d",prompt_sha
+          with av.open(str(source)) as container:
+              duration=container.duration/1000000
+              assert 118<=duration<=122
+              resampler=av.AudioResampler(format="s16",layout="mono",rate=16000)
+              chunks=[]
+              for frame in container.decode(audio=0):
+                  chunks.extend(f.to_ndarray().reshape(-1) for f in resampler.resample(frame))
+              chunks.extend(f.to_ndarray().reshape(-1) for f in resampler.resample(None))
+          pcm=np.concatenate(chunks).astype("<i2")
+          assert len(pcm)>=8*240000-1600, len(pcm)
+          # Pad at most 100 ms of actual source EOF; never borrow audio.
+          if len(pcm)<8*240000: pcm=np.pad(pcm,(0,8*240000-len(pcm)))
+          repo="ivabojic/whisper-small-sing2eng-transcribe"
+          rev="0835ed29d2f8893e4fcf63d5ac531dcb086b6ee1"
+          files=snapshot_download(repo_id=repo,revision=rev,allow_patterns=["*.json","*.safetensors","*.txt","*.model","*.bin"],max_workers=2)
+          os.environ["OMP_NUM_THREADS"]="2"
+          torch.set_num_threads(2)
+          processor=WhisperProcessor.from_pretrained(files)
+          model=WhisperForConditionalGeneration.from_pretrained(files,torch_dtype=torch.float32,use_safetensors=True).eval().to("cpu")
+          rows=[];blocks=[]
+          for i in range(8):
+              block=pcm[i*240000:(i+1)*240000]
+              wav=io.BytesIO()
+              with wave.open(wav,"wb") as w:
+                  w.setnchannels(1);w.setframerate(16000);w.setsampwidth(2);w.writeframes(block.tobytes())
+              wav_sha=hashlib.sha256(wav.getvalue()).hexdigest()
+              features=processor(block.astype("float32")/32768,sampling_rate=16000,return_tensors="pt")
+              with torch.inference_mode():
+                  ids=model.generate(features.input_features,language="en",task="transcribe",num_beams=1,max_new_tokens=300,prompt_ids=torch.as_tensor(processor.get_prompt_ids(prompt),dtype=torch.long))
+              words=processor.batch_decode(ids,skip_special_tokens=True)[0].strip()
+              blocks.append({"index":i,"start":i*15,"end":(i+1)*15,"wavSha256":wav_sha,"text":words})
+              if words: rows.append([i*15,(i+1)*15,words])
+          assert len(rows)>=2
+          result={"schema":"hl-source-asr-public-v1","captureId":"nov17-participation","media":"assets/nov17-participation.mp4","mediaSha256":sha,"mediaDurationSeconds":round(duration,3),"clock":"SOURCE_MEDIA_LOCAL_UNCALIBRATED_TO_COLLECTOR","model":"singlish-small","repository":repo,"revision":rev,"phase":"focused","promptSha256":prompt_sha,"language":"en","languageSelection":"explicit-en","task":"transcribe","timingStatus":"15S_BLOCK_ONLY_NO_VERIFIED_WORD_TIMES","humanReviewed":False,"utterances":rows,"blocks":blocks}
+          print("SING_CTX_SOURCE_RESULT "+json.dumps(result,ensure_ascii=False,separators=(",",":")),flush=True)
+          pathlib.Path("participation-sing-ctx.json").write_text(json.dumps(result,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: participation-source-sing-ctx
+          path: participation-sing-ctx.json
+          retention-days: 3

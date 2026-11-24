@@ -713,6 +713,15 @@
     }
     if(!shown.length)fragment.append(elem('p','conversation-empty',
       'No observed chat, action notifications or preserved ASR speech matches this window.'));
+    // Audible source speech is NOT an empty recording. If the separate source
+    // ASR fails to load, disclose that explicitly rather than silently showing
+    // only audience comments or substituting words from another capture.
+    if(session().id==='nov17-participation' &&
+       !state.source?.transcript?.length){
+      fragment.prepend(elem('p','conversation-empty',
+        'Source video contains speech, but its matching ASR transcript did not load. '+
+        'Viewer comments and activity are still available; reload to retry the transcript.'));
+    }
     list.replaceChildren(fragment);
     state.messageNodes=nodes;
     const hasSpeech=!!state.source?.transcript?.length;

@@ -131,8 +131,10 @@ assert(boot.includes('Promise.allSettled([hydrateCore(),hydrateOptionalStudy()])
 assert(boot.includes("readiness('ready',null,accepted)")&&
   boot.includes("readiness('failed'"),
   'Source-matched host ASR must provide observable ready/failed state');
-assert(!boot.includes('if(!window.HL_SOURCE_ADAPTER?.normalize'),
-  'Missing optional nine-ticker JS must NEVER suppress core host transcription');
+assert(!boot.includes("if(!window.HL_SOURCE_ADAPTER?.normalize||typeof fetch")&&
+  boot.includes('async function hydrateOptionalStudy()')&&
+  boot.includes('if(!window.HL_SOURCE_ADAPTER?.normalize)return;'),
+  'Optional adapter guard must be confined to research, not the critical host loader');
 assert(page.includes('participation-source-asr.js?v=')&&
   page.indexOf('participation-source-asr.js?v=')<
   page.indexOf('featured-bootstrap.js?v='),

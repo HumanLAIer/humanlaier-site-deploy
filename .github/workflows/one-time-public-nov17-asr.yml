@@ -18,7 +18,8 @@ jobs:
         with:
           python-version: '3.11'
       - name: Install bounded CPU transcription, no model API
-        run: python -m pip install --quiet --only-binary=:all: 'faster-whisper==1.2.1'
+        run: |
+          python -m pip install --quiet --only-binary=:all: 'faster-whisper==1.2.1'
       - name: Transcribe the exact original published 120-second MP4 once
         run: python scripts/oneoff_nov17_source_asr.py
       - name: Preserve model words and media-local time candidate for review

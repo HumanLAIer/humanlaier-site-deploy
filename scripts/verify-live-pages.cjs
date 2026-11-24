@@ -25,7 +25,7 @@ async function verify(){
  assert.equal(m.schema,'hl-pages-release-v1');
  assert.equal(m.commit,commit,'A different commit is live; not claiming this release');
  assert.equal(m.domain,'humanlaier.com');
- for(const name of ['index.html','streaming-demo/index.html','streaming-demo/app.js',
+ for(const name of ['index.html','streaming-demo/index.html','streaming-demo/ux.css','streaming-demo/app.js',
    'streaming-demo/featured-bootstrap.js','streaming-demo/nine-tickers/comparison.json',
    'streaming-demo/participation-source-asr.js','streaming-demo/assets/nov17-participation-asr.json',
    'streaming-lab/index.html','streaming-lab/lab.js','streaming-lab/lab.css','streaming-lab/catalogue-review.json',

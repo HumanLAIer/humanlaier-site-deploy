@@ -78,7 +78,11 @@ select{max-width:100%}
 .panel-tabs button[aria-selected=true]{border-bottom-color:var(--viridian);color:var(--oxford)}
 .conversation-tools{display:grid;gap:7px;padding:10px 12px;background:#f9fbfa;border-bottom:1px solid var(--line)}
 .conversation-tools input,.conversation-tools select{width:100%;font-size:12px}
-.conversation-scroll{overflow:auto;height:var(--analysis-height,430px);max-height:none;min-height:280px;padding:6px 12px;scrollbar-color:#9fb5bc #eef2f1}
+/* The dock has an automatic grid row height. A growing flex child can
+   therefore size itself from its entire message history rather than the
+   requested analysis height. Keep exactly one bounded scroll viewport;
+   transcript controls are siblings, not part of the scrolling content. */
+.conversation-scroll{--conversation-height:var(--analysis-height,430px);flex:0 0 auto;overflow:auto;height:var(--conversation-height);max-height:var(--conversation-height);min-height:0;min-width:0;padding:6px 12px;scrollbar-color:#9fb5bc #eef2f1}
 .chat-line{display:grid;grid-template-columns:85px minmax(0,1fr);gap:9px;border-bottom:1px solid #e7eded;padding:9px 2px;align-items:start}
 .chat-line:hover{background:#f1f8f6}
 .chat-line.is-selected{border-left:3px solid var(--viridian);background:#e8f4f1;padding-left:7px}
@@ -162,7 +166,7 @@ select{max-width:100%}
   .workspace-dock{display:block}.dock-panel{display:none}.resize-grip,.dock-height-bar{display:none}
   .dock-panel.mobile-active{display:flex}.panel-head{min-height:58px}
   .dock-actions,.drag-hint{display:none}.media-viewport{height:360px}
-  .conversation-scroll{height:clamp(280px,55vh,600px);min-height:280px}
+  .conversation-scroll{--conversation-height:clamp(280px,55vh,600px)}
   .network-canvas{height:clamp(300px,55vh,600px)}
   .media-viewport{height:clamp(300px,55vh,550px)}
   .timeline-panel{display:none;margin-top:0}.timeline-panel.mobile-active{display:block}
@@ -410,7 +414,6 @@ select{max-width:100%}
 .conversation-options-content select{width:100%;min-height:32px;font-size:12px}
 .conversation-evidence{padding:0 10px;border-bottom:1px solid var(--line);background:#faf9f5}
 .conversation-evidence .conversation-note{border:0;padding:6px 4px 9px;background:none}
-.conversation-thread{flex:1;min-height:330px}
 .media-viewport img:not([hidden]){position:absolute;inset:0;object-fit:contain}
 .media-viewport .media-empty:not([hidden]){
   position:absolute;z-index:1;bottom:9px;left:9px;right:9px;width:auto;max-width:none;
@@ -430,7 +433,6 @@ select{max-width:100%}
 .showcase-chip small{font:11px/1.35 var(--sans)}
 .showcase-status{color:#526b76;font:9px/1.4 var(--mono)}
 @media(max-width:700px){
- .conversation-thread{min-height:280px}
  .conversation-search-row{flex-wrap:wrap}
  .conversation-search-row #chatSearch{flex-basis:100%}
  .public-demo-strip{margin-bottom:7px}

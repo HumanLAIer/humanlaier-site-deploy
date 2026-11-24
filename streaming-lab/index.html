@@ -81,7 +81,7 @@
         </section>
         <section class="review-section model-evidence">
           <div class="section-title"><h2>Phonetic retrieval probe</h2><span class="mono">REVIEW ONLY</span></div>
-          <p class="muted">Illustrative English-species / multilingual lookup. This browser probe covers seven species, not the complete 75,673-record private catalogue.</p>
+          <p class="muted">Illustrative English-species / multilingual lookup. This interactive browser probe covers seven example species; the full 75,673-record offline retrieval report is shown separately above.</p>
           <form id="probeForm" autocomplete="off">
             <label class="sr-only" for="probe">Enter a name or distorted ASR word</label>
             <div class="probe-input"><input id="probe" maxlength="60" placeholder="Try Mbreon, Bracky, or Zachrom" spellcheck="false"><button type="submit">Find</button></div>
@@ -100,14 +100,15 @@
         <details class="provenance">
           <summary>Evidence and release limits</summary>
           <div class="provenance-text">
-            <p>Playback and all nine ASR lanes are reused unchanged from the published nine-ticker study. Candidate lists are sourced from the study's existing unreviewed domain-candidate metadata. Probe results are illustrative local retrieval hypotheses, never proof that a word was uttered.</p>
+            <p>Playback and all nine ASR lanes are reused unchanged from the published nine-ticker study. Candidate lists are derived from the source-pinned full 75,673-record retrieval experiment, not human-reviewed truth. All matched character spans are checked against the original ASR lanes. The tenth lane is a verbatim raw-engine medoid baseline, not an automatically corrected transcript. Probe results are illustrative local retrieval hypotheses, never proof that a word was uttered.</p>
             <dl>
               <dt>Source session</dt><dd id="sourceSession">Not loaded</dd>
               <dt>Source part</dt><dd id="sourcePart">Not loaded</dd>
               <dt>Part SHA-256</dt><dd id="sourceDigest">Not loaded</dd>
               <dt>Catalogue SHA-256</dt><dd id="packDigest">Not loaded</dd>
+              <dt>Development run</dt><dd><a href="https://github.com/HumanLAIer/hl-livestream-pilot/actions/runs/45306608923" target="_blank" rel="noopener noreferrer">Pinned retrieval and baseline artifact</a></dd>
             </dl>
-            <p>No auto-rewriting; no claimed purchases, revenue, exact card printing or independently calibrated chat/video synchronization. The original public model comparison is not a human-verified evaluation. Umbreon and Zekrom probes are independent examples and must not be presented as matches to this source video.</p>
+            <p>No auto-rewriting; no claimed purchases, revenue, exact card printing or independently calibrated chat/video synchronization. The original public model comparison is not a human-verified evaluation. Interactive probe results are examples only; the full-catalogue block report contains source-linked hypotheses, not verified speech.</p>
             <p>This is a shareable research preview. The page is unlisted and noindexed, but it is accessible to anyone with the URL.</p>
           </div>
         </details>

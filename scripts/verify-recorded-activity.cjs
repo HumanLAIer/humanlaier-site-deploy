@@ -142,8 +142,8 @@ assert(boot.includes('window.HL_DEMO_READINESS')&&
   'Mandatory source/ASR loading must be isolated from OPTIONAL model research');
 assert(!boot.includes('const controller=new AbortController();\n  const timeout=setTimeout'),
   'No shared request timeout may downgrade critical ASR when an optional study stalls');
-assert(app.includes("warning.dataset.showcaseError='host-asr'")&&
-  app.includes('DEMO INCOMPLETE'),
+assert(read('app.js').includes("warning.dataset.showcaseError='host-asr'")&&
+  read('app.js').includes('DEMO INCOMPLETE'),
   'Missing host ASR MUST be visible as an incomplete demo, not silent comments');
 assert.equal(actual.comments.length,byKind.get('comment'));
 assert.equal(actual.comments.length+actual.interactions.length,source.events.length,

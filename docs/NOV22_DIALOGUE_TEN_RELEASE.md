@@ -1,7 +1,7 @@
 # Nov22 dialogue-only ten-ticker release
 
 This branch is a release staging template, NOT a public page or completed
-experiment. Wait for the corrected combined preparation and ten-lane run 45438481736 to
+experiment. Wait for the corrected combined preparation and ten-lane run 45453804518 to
 succeed; retrieve only the public export artifact and exact manifest hash.
 Run `node scripts/stage-dialogue-ten.cjs /path/to/extracted/export MANIFEST_SHA256`.
 This validates all 430 actual outputs, ten-lane input policies, native evidence

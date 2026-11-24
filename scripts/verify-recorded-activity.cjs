@@ -76,7 +76,8 @@ for(let i=0;i<asr.utterances.length;i++){
   assert(Number.isFinite(start)&&Number.isFinite(end)&&start>=0&&end>start&&
     end<=asr.mediaDurationSeconds+1);
   assert(text.trim(),'No blank source speech passages');
-  assert.deepEqual(hydratedReview.transcript[i],[start,end,text]);
+  assert.equal(JSON.stringify(hydratedReview.transcript[i]),
+    JSON.stringify([start,end,text]),'Source ASR words and local times must survive unchanged');
 }
 const amended=structuredClone(asr);
 amended.utterances=amended.utterances.slice(0,3).map((r,i)=>

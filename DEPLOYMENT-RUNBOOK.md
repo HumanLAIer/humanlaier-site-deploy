@@ -4,28 +4,17 @@
 
 The Signal Recorder V4 client demo at /streaming-demo/ and the nine-ticker ASR research bakeoff at /streaming-demo/nine-tickers/ have **different purposes, UIs, and acceptance suites**. Both belong to the published static site, but neither test suite should import the other's layout requirements. V4 uses its original three-panel video/group-chat/constellation UI. The nine-ticker page is an experimental comparison of genuine ASR variants.
 
-## Safety latch and staging status
+## Active production release enforcement
 
-The staged GitHub Actions workflow is named **CI-Gated Pages Release**. Its deployment job will **not** publish until GitHub Pages' source is switched to GitHub Actions AND the repository variable HL_PAGES_ACTIONS_ENABLED is set to true. Before cutover, Pages still publishes the main branch directly. Do not describe the current production setup as fail-closed while that source remains active.
+GitHub Pages now publishes through **GitHub Actions**, not direct branch publishing. The production hostname remains `humanlaier.com`, with HTTPS enforcement and the existing `github-pages` environment restricted to `main`. Repository variable `HL_PAGES_ACTIONS_ENABLED=true` enables the publisher. The active `main` ruleset requires pull requests and the following three GitHub checks, with **zero required human approvals and no bypass actors**:
 
-A release requires all three independent jobs:
 1. Website inventory and build integrity.
 2. Main Signal Recorder V4 acceptance.
 3. Separate nine-ticker research bakeoff acceptance.
 
-The package job runs only after all three pass. The deployment job runs only for main, checks that its tested commit is still the latest main SHA, serializes deployments, and uses the existing github-pages environment. It alone requests pages:write and id-token:write permissions. Every PR runs the same independent acceptance suites; no paid infrastructure or mandatory human reviews are required.
+All three run on every PR and every push to `main`. Failed, skipped, canceled or unrun required checks prevent the gated Pages publishing step; an old successful job cannot authorize a different SHA. A deployment job checks the current main SHA and serializes releases. Only the deploy job requests `pages:write` and `id-token:write`. The separate research experiment cannot block critical runtime initialization of the main V4 demo, but its own release tests still protect the separate public research page.
 
-## Administrative cutover for Work mode
-
-**Do this only after the staged PR has passed and has been merged.** Verify the new release-gate workflow completed three green required jobs on main with deployment skipped. Record the production URL, main SHA, Pages configuration, and custom domain.
-
-1. GitHub Settings → Pages → Build and deployment → Source: select **GitHub Actions**. Keep humanlaier.com, HTTPS, and the existing main-only github-pages environment.
-2. Settings → Secrets and variables → Actions → Variables: set repository variable HL_PAGES_ACTIONS_ENABLED to true.
-3. In Actions → CI-Gated Pages Release, manually run workflow on main. Changing settings alone does not start a new push workflow. The three checks must pass and the first gated deployment must succeed.
-4. Verify the public release manifest at https://humanlaier.com/release.json, matching its commit to the workflow SHA; confirm the custom domain and the production HTTPS/browser smoke tests pass.
-5. In repository Rulesets create an Active ruleset targeting main. Require pull request before merging, **zero approvals**, no reviewer requirement, no bypass list. Require the three status checks named above. This protects main without introducing two-person reviews.
-
-If settings access is blocked, do not disable the old publishing method or change DNS. Report the exact blocker.
+**Do not switch Pages back to branch publishing** unless performing a documented emergency recovery; that would bypass the deployment gate.
 
 ## Normal operation
 
@@ -34,6 +23,25 @@ Changes are proposed via PR. All source/site, main V4 and bakeoff tests run on e
 The main and bakeoff browser suites run against the generated, allowlisted .pages-build artifact, not against unreleased repository paths. The V4 browser suite verifies real elapsed-time video playback, seeking, pause/resume, mute and speed, source audio fallback, left/right conversation bubbles, transcript model selection, original archived captures and mobile layout. The distinct bakeoff suite validates nine genuine ASR outputs, source integrity, original video, and the dense research layout.
 
 A successful Pages deployment action is not proof of site correctness. Post-deployment checks must verify the *exact* public commit, critical asset hashes, HTTP byte-range support, and actual browser playback. A failing post-deploy smoke test must be reported as a failed release.
+
+## Mandatory default-showcase evidence contract
+
+The default `/streaming-demo/` is a complete evidence bundle, **not simply a playable video**. It must simultaneously have original media, source-matched, nonempty ASR speech, individually recorded viewer activity, and a participant-level Constellation. Source-local ASR time must never be represented as a calibrated collector-event clock.
+
+- The **single source of truth for the original main recording** is `streaming-demo/assets/nov17-participation.mp4` plus its original collector events in `streaming-demo/data.js`. `streaming-demo/participation-source-asr.js` declares its original source ID, video identity (SHA-256), ASR JSON path and minimum speech-span coverage. Do not borrow text from `nine-tickers` or other sessions.
+- Source transcript `streaming-demo/assets/nov17-participation-asr.json` contains source-media seconds, real machine output, model identity and explicit unreviewed/uncalibrated flags. Different models, words, irregular lengths, and segment counts are allowed; truncated/empty/mismatched-source text is not.
+- `streaming-demo/featured-bootstrap.js` independently initializes critical original speech and optional research data. The optional nine-ticker model comparison can fail without hiding core speech. Critical source loading has its own timeout/retry and publishes `window.HL_DEMO_READINESS.status` as `ready` or `failed`; the existing Conversation pane displays a visible **DEMO INCOMPLETE** error on a failure instead of quietly presenting comments only.
+- `scripts/verify-recorded-activity.cjs` validates exact original MP4 hash, source transcript provenance and coverage, 140 recorded events, 42 original accounts and graph completeness. Its mutation matrix rejects unrelated source SHA, borrowed transcript, truncated ASR, false clock assertions, wrong default, and absent event records. `scripts/build-pages.cjs` invokes this contract **itself**, so a standalone packaging attempt cannot bypass it.
+- `scripts/verify-pages-browser.cjs` checks the generated artifact and live default: real video playback, actual source words in native left-hand speech bubbles, 87 right-hand viewer comments, 42 Constellation nodes and 140 markers. Local browser fault injection also tests ASR HTTP failure, wrong media hash, truncated ASR, arbitrary ASR resegmentation/rewording, and an unavailable optional research comparator. These tests are run automatically in the mandatory main-demo job.
+- `release.json` records the deployed SHA, original media hash and speech model/passage count. Production smoke verifies this against the published ASR, MP4, exact HTTP asset hashes, byte-range seeking, and real-browser content. A passing Pages upload without matching public content is still a failed release.
+
+### Changing the host transcript safely
+
+1. Transcribe the **exact selected original recording**. Record model, source-media timestamps and video SHA; preserve collector records as a different clock. Never invent missing words or timestamps.
+2. Update the *single* ASR JSON input. You may change the text, model, language, timestamp boundaries and number of utterances, provided they remain supported by that source video and retain meaningful speech coverage.
+3. If replacing the actual media or changing the default session, explicitly revise the source identity contract, data export, activity/graph evidence and tests together. Do not silently fall back to an activity-only or ASR-only capture.
+4. Submit a PR. Validate all three required checks including the browser fault-injection matrix, then merge. Verify the public `release.json` and live browser smoke result before calling the change deployed.
+5. If runtime source speech fails for an individual browser, the user must see the incomplete status in the existing Conversation pane; the original activity/Constellation remain viewable. Investigate network/cache/runtime errors instead of mislabeling speech as nonexistent.
 
 ## Recovery
 

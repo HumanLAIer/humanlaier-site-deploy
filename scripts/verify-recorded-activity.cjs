@@ -79,14 +79,72 @@ for(let i=0;i<asr.utterances.length;i++){
   assert.equal(JSON.stringify(hydratedReview.transcript[i]),
     JSON.stringify([start,end,text]),'Source ASR words and local times must survive unchanged');
 }
+// Model updates may change language, text and SEGMENT COUNT, but must still
+// represent the same media and cover the audibly spoken timeline.
+const parser=context.window.HL_PARTICIPATION_ASR;
 const amended=structuredClone(asr);
-amended.utterances=amended.utterances.slice(0,3).map((r,i)=>
-  [r[0],r[1],'Updated source model passage '+i]);
-assert.equal(context.window.HL_PARTICIPATION_ASR.normalize(amended).rows.length,3,
-  'No hardcoded transcript block count or model wording');
-const tampered=structuredClone(asr);tampered.utterances[0]=[0,800,'Invented'];
-assert.throws(()=>context.window.HL_PARTICIPATION_ASR.normalize(tampered),
-  'Reject invalid source media timings');
+amended.model='faster-whisper/large-v3';
+amended.utterances=[
+  asr.utterances[0],
+  asr.utterances[Math.floor(asr.utterances.length/2)],
+  asr.utterances.at(-1)
+].map((r,i)=>[r[0],r[1],'Entirely different model wording '+i]);
+assert.equal(parser.normalize(amended).rows.length,3,
+  'No fixed 32-segment layout, model, wording or uniform time chunk');
+assert.equal(parser.normalize(amended).model,'faster-whisper/large-v3');
+function rejectChange(label,mutate){
+  const changed=structuredClone(asr);
+  mutate(changed);
+  assert.throws(()=>parser.normalize(changed),undefined,
+    'Reject '+label+' before loading the default V4');
+}
+rejectChange('missing ASR',r=>{r.utterances=[];});
+rejectChange('partial ASR with no meaningful speech span',r=>{
+  r.utterances=r.utterances.slice(0,3);
+});
+rejectChange('same-shape but unrelated source MP4 hash',r=>{
+  r.mediaSha256='f'.repeat(64);
+});
+rejectChange('different capture with borrowed source speech',r=>{
+  r.captureId='nov15-citrus';
+});
+rejectChange('wrong video path',r=>{
+  r.media='assets/nov18-trade.mp4';
+});
+rejectChange('falsely verified collector clock',r=>{
+  r.clock='VERIFIED';
+});
+rejectChange('fabricated human-reviewed status',r=>{
+  r.humanReviewed=true;
+});
+rejectChange('invalid source media timings',r=>{
+  r.utterances[0]=[0,800,'Invented'];
+});
+const activeData=context.window.HL_SIGNAL_DATA;
+const activeSource=context.window.HL_SHOWCASE_DATA;
+const originalDefault=activeData.defaultSession;
+activeData.defaultSession='nov15-citrus';
+assert.throws(()=>parser.attach(asr),undefined,
+  'Source-backed default cannot silently switch to unrelated capture');
+activeData.defaultSession=originalDefault;
+const originalEvents=activeSource.sessions.find(s=>s.id==='nov17-participation').events;
+activeSource.sessions.find(s=>s.id==='nov17-participation').events=[];
+assert.throws(()=>parser.attach(asr),undefined,
+  'Transcript alone cannot replace original attributed event inventory');
+activeSource.sessions.find(s=>s.id==='nov17-participation').events=originalEvents;
+assert.equal(parser.attach(asr).segments,asr.utterances.length,
+  'Restoring original source must produce complete, source-matched readiness');
+const boot=read('featured-bootstrap.js');
+assert(boot.includes('window.HL_DEMO_READINESS')&&
+  boot.includes('async function hydrateCore()')&&
+  boot.includes('async function hydrateOptionalStudy()')&&
+  boot.includes('Promise.allSettled([hydrateCore(),hydrateOptionalStudy()])'),
+  'Mandatory source/ASR loading must be isolated from OPTIONAL model research');
+assert(!boot.includes('const controller=new AbortController();\n  const timeout=setTimeout'),
+  'No shared request timeout may downgrade critical ASR when an optional study stalls');
+assert(read('app.js').includes("warning.dataset.showcaseError='host-asr'")&&
+  read('app.js').includes('DEMO INCOMPLETE'),
+  'Missing host ASR MUST be visible as an incomplete demo, not silent comments');
 assert.equal(actual.comments.length,byKind.get('comment'));
 assert.equal(actual.comments.length+actual.interactions.length,source.events.length,
   'All original individual event markers must pass through V4 adapter intact');
@@ -155,5 +213,8 @@ console.log('SOURCE_ACTIVITY_CONSTELLATION_CONTRACT_PASS '+JSON.stringify({
     likeNotifications:6,likingAccounts:4,oneAccount:{notifications:3,units:20}},
   mainSourceASR:{segments:asr.utterances.length,mediaSha256:originalSha,
     model:asr.model,language:asr.language,humanReviewed:false},
+  negativeContracts:['empty','truncated','wrong-media-hash','wrong-capture',
+    'wrong-video-path','false-clock','false-review','bad-timing',
+    'default-mismatch','missing-events'],
   roomSignalsUnpublished:true,mediaEventAlignmentVerified:false
 }));

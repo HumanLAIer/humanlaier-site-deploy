@@ -7,6 +7,14 @@ on:
       - 'streaming-demo/ux.css'
       - 'streaming-demo/featured-evidence.js'
       - 'streaming-demo/featured-bootstrap.js'
+      - 'streaming-demo/participation-source-asr.js'
+      - 'streaming-demo/assets/nov17-participation-asr.json'
+      - 'streaming-demo/assets/nov17-participation.mp4'
+      - 'streaming-demo/data.js'
+      - 'streaming-demo/bridge.js'
+      - 'scripts/verify-recorded-activity.cjs'
+      - 'scripts/verify-pages-browser.cjs'
+      - 'scripts/build-pages.cjs'
       - 'streaming-demo/nine-tickers/video-manifest.json'
       - 'streaming-demo/nine-tickers/commercial-180.mp4'
       - 'streaming-demo/verify-featured-chat.cjs'
@@ -21,6 +29,14 @@ on:
       - 'streaming-demo/ux.css'
       - 'streaming-demo/featured-evidence.js'
       - 'streaming-demo/featured-bootstrap.js'
+      - 'streaming-demo/participation-source-asr.js'
+      - 'streaming-demo/assets/nov17-participation-asr.json'
+      - 'streaming-demo/assets/nov17-participation.mp4'
+      - 'streaming-demo/data.js'
+      - 'streaming-demo/bridge.js'
+      - 'scripts/verify-recorded-activity.cjs'
+      - 'scripts/verify-pages-browser.cjs'
+      - 'scripts/build-pages.cjs'
       - 'streaming-demo/nine-tickers/video-manifest.json'
       - 'streaming-demo/nine-tickers/commercial-180.mp4'
       - 'streaming-demo/verify-featured-chat.cjs'
@@ -44,5 +60,7 @@ jobs:
           node --check streaming-demo/verify-range-server.cjs
       - name: Verify exact source evidence and native group-chat layout
         run: node streaming-demo/verify-featured-chat.cjs
+      - name: Verify source-matched default video, host ASR, activity and graph
+        run: node scripts/verify-recorded-activity.cjs
       - name: Browser verify actual source VIDEO playback plus original V4 chat layout
         run: node streaming-demo/verify-source-chat-browser.cjs

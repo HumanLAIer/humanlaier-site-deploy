@@ -28,12 +28,29 @@ async function verify(){
  for(const name of ['index.html','streaming-demo/index.html','streaming-demo/app.js',
    'streaming-demo/featured-bootstrap.js','streaming-demo/nine-tickers/comparison.json',
    'streaming-demo/participation-source-asr.js','streaming-demo/assets/nov17-participation-asr.json',
-   'streaming-lab/index.html','streaming-lab/lab.js','streaming-lab/lab.css']){
+   'streaming-lab/index.html','streaming-lab/lab.js','streaming-lab/lab.css',
+   'streaming-demo/assets/nov17-participation.mp4']){
    const x=await get('/'+name);
    assert.equal(x.status,200,'Missing production file: '+name);
    assert.equal(x.bytes.length,m.assets[name].bytes,'Wrong production asset size: '+name);
    assert.equal(sha(x.bytes),m.assets[name].sha256,'Stale production asset: '+name);
  }
+ // Public release must contain a complete default demo, not merely an
+ // HTTP 200 for some transcript file. The runtime and CI share source IDs.
+ const showcase=m.primaryShowcase;
+ assert.equal(showcase?.captureId,'nov17-participation');
+ assert.equal(showcase?.media,'assets/nov17-participation.mp4');
+ assert(showcase.transcriptPassages>=2,'Public release has missing default host transcript');
+ assert.equal(showcase.humanReviewed,false);
+ assert.equal(showcase.collectorClockCalibrated,false);
+ assert.equal(showcase.mediaSha256,
+   m.assets['streaming-demo/assets/nov17-participation.mp4'].sha256);
+ const sourceAsr=await get('/streaming-demo/assets/nov17-participation-asr.json');
+ assert.equal(sourceAsr.status,200);
+ const asr=JSON.parse(sourceAsr.bytes.toString('utf8'));
+ assert.equal(asr.mediaSha256,showcase.mediaSha256);
+ assert.equal(asr.captureId,showcase.captureId);
+ assert.equal(asr.utterances.length,showcase.transcriptPassages);
  const home=await get('/');
  assert.equal(home.status,200);
  assert(home.bytes.toString('utf8').includes('humanlaier'),
@@ -44,6 +61,12 @@ async function verify(){
  assert.equal(video.bytes.length,32,'Unexpected MP4 range length');
  assert.equal(video.bytes.toString('ascii',4,8),'ftyp','Wrong MP4 source bytes');
  assert.match(video.headers.get('content-range')||'',/^bytes 0-31\/\d+$/);
+ const originalVideo=await get('/streaming-demo/assets/nov17-participation.mp4',
+   {Range:'bytes=0-31'});
+ assert.equal(originalVideo.status,206,'Original V4 source MP4 must support HTTP byte-range seeking');
+ assert.equal(originalVideo.bytes.length,32);
+ assert.equal(originalVideo.bytes.toString('ascii',4,8),'ftyp');
+ assert.match(originalVideo.headers.get('content-range')||'',/^bytes 0-31\/\d+$/);
  const script=await get('/streaming-demo/featured-evidence.js');
  assert.equal(script.status,200);
  const js=await get('/streaming-demo/featured-bootstrap.js');
@@ -52,7 +75,9 @@ async function verify(){
    'Production video fallback bootstrap absent');
  console.log('PUBLIC_HTTPS_EXACT_COMMIT_PASS '+JSON.stringify({
    root,commit,checks:Object.keys(m.assets).length,
-   rangeVideo:'206 bytes 0-31',videoBytes:m.assets['streaming-demo/nine-tickers/commercial-180.mp4'].bytes
+   rangeVideo:'206 bytes 0-31',videoBytes:m.assets['streaming-demo/nine-tickers/commercial-180.mp4'].bytes,
+   originalVideoBytes:m.assets['streaming-demo/assets/nov17-participation.mp4'].bytes,
+   primarySpeechPassages:showcase.transcriptPassages
  }));
 }
 (async()=>{

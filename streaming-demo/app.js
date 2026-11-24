@@ -713,19 +713,33 @@
     }
     if(!shown.length)fragment.append(elem('p','conversation-empty',
       'No observed chat, action notifications or preserved ASR speech matches this window.'));
-    // Audible source speech is NOT an empty recording. If the separate source
-    // ASR fails to load, disclose that explicitly rather than silently showing
-    // only audience comments or substituting words from another capture.
-    if(session().id==='nov17-participation' &&
-       !state.source?.transcript?.length){
-      fragment.prepend(elem('p','conversation-empty',
-        'Source video contains speech, but its matching ASR transcript did not load. '+
-        'Viewer comments and activity are still available; reload to retry the transcript.'));
+    // An audio-bearing source with missing ASR is an INCOMPLETE demo, not
+    // a comments-only success. Make failures visible and machine-testable.
+    const isCore=session().id===(window.HL_PARTICIPATION_ASR?.contract?.captureId||
+      'nov17-participation');
+    const readiness=window.HL_DEMO_READINESS?.status||'failed';
+    const sourceSpeech=!!state.source?.transcript?.length;
+    const coreIncomplete=isCore&&(readiness!=='ready'||!sourceSpeech);
+    list.dataset.showcaseState=isCore?(coreIncomplete?'failed':'ready'):'other-source';
+    if(coreIncomplete){
+      const warning=elem('p','conversation-empty',
+        'INCOMPLETE SOURCE EVIDENCE: this video contains speech, but its matching '+
+        'transcript could not be loaded and verified. Viewer comments and the '+
+        'Constellation remain available. Reload to retry; do not treat this '+
+        'as a complete recorded conversation.');
+      warning.setAttribute('role','alert');
+      warning.dataset.showcaseError='host-asr';
+      fragment.prepend(warning);
     }
     list.replaceChildren(fragment);
     state.messageNodes=nodes;
-    const hasSpeech=!!state.source?.transcript?.length;
-    $('conversationNote').textContent=hasSpeech?
+    const hasSpeech=sourceSpeech;
+    $('conversationNote').dataset.showcaseState=
+      coreIncomplete?'failed':isCore?'ready':'other-source';
+    $('conversationNote').textContent=coreIncomplete?
+      'DEMO INCOMPLETE · Host speech transcription failed to load. '+
+      'Recorded audience activity is still available; reload to retry.':
+      hasSpeech?
       (currentAlignment().status==='verified'?
         'Reviewed media alignment. Speech is machine-generated and speaker attribution remains unverified. Reactions/chat are collector observations.':
         'Original ASR speech (left) and collector chat/actions (right/center) use DIFFERENT clocks. Side-by-side ordering does not establish responses.'):

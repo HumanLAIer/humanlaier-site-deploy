@@ -115,8 +115,8 @@ assert(!app.includes("if(isFeatured())track='audio'"),
   'Featured recording must not forcibly downgrade to audio');
 assert(app.includes("Original source video unavailable in this browser"),
   'Video playback errors must fall back to original audio, not silent failure');
-assert(boot.includes("readJson('nine-tickers/video-manifest.json')"),
-  'Source video manifest must be loaded and validated');
+assert(boot.includes("readJson('nine-tickers/video-manifest.json',5000)"),
+  'Optional research video manifest must remain separate and validated');
 assert(app.includes('for(const id of FEATURED.models)'),
   'Model selector should be driven by actual available models');
 assert(app.includes('[No recorded output from this engine for this passage]'),
@@ -125,8 +125,23 @@ assert(!app.includes('r.start===i*15'),'UI must not assume 15s blocks');
 assert(css.includes('.message-row.chat{justify-content:flex-end}'));
 assert(css.includes('.message-row.speech{justify-content:flex-start}'));
 assert(!css.includes('.featured-audio-slate{'),'Do not rewrite V4 styling');
-assert(boot.includes('finally(()=>{clearTimeout(timeout);launch();})'),
-  'Load baseline app even if transcript JSON fails');
+assert(boot.includes('Promise.allSettled([hydrateCore(),hydrateOptionalStudy()])')&&
+  boot.includes('.finally(launch)'),
+  'V4 must bootstrap after independent mandatory ASR and optional research tasks');
+assert(boot.includes("readiness('ready',null,accepted)")&&
+  boot.includes("readiness('failed'"),
+  'Source-matched host ASR must provide observable ready/failed state');
+assert(!boot.includes("if(!window.HL_SOURCE_ADAPTER?.normalize||typeof fetch")&&
+  boot.includes('async function hydrateOptionalStudy()')&&
+  boot.includes('if(!window.HL_SOURCE_ADAPTER?.normalize)return;'),
+  'Optional adapter guard must be confined to research, not the critical host loader');
+assert(page.includes('participation-source-asr.js?v=')&&
+  page.indexOf('participation-source-asr.js?v=')<
+  page.indexOf('featured-bootstrap.js?v='),
+  'Source contract adapter must load before the V4 bootstrap');
+assert(app.includes("warning.dataset.showcaseError='host-asr'")&&
+  app.includes("list.dataset.showcaseState"),
+  'Incomplete default speech must produce visible failure, not a silent comments-only demo');
 new vm.Script(app,{filename:'app.js'});
 new vm.Script(boot,{filename:'featured-bootstrap.js'});
 new vm.Script(read('bridge.js'),{filename:'bridge.js'});

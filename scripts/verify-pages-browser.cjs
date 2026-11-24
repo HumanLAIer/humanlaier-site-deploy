@@ -65,6 +65,10 @@ async function sourceChat(browser){
        speechSide:actualSpeech[0]?getComputedStyle(actualSpeech[0]).justifyContent:null,
        viewerSide:actualChat[0]?getComputedStyle(actualChat[0]).justifyContent:null,
        transcriptEvidence:selectedSource?.transcriptEvidence,
+       readiness:window.HL_DEMO_READINESS?.status||null,
+       sourceStatus:document.getElementById('conversationList').dataset.showcaseState,
+       incompleteNote:document.getElementById('conversationNote').textContent,
+       criticalVideoSha:window.HL_PARTICIPATION_ASR?.contract?.mediaSha256,
        actionScope:document.getElementById('actionScope').value,
        eventLayerOptions:[...document.getElementById('graphEventKind').options]
          .map(o=>({kind:o.value,label:o.textContent})),
@@ -103,6 +107,14 @@ async function sourceChat(browser){
      'Viewer comments must remain on original right-side chat bubbles');
    assert.equal(evidence.transcriptEvidence,'SAME_SOURCE_MACHINE_ASR_UNREVIEWED',
      'Original default ASR must explicitly be unreviewed, not human-verified');
+   assert.equal(evidence.readiness,'ready',
+     'Critical source video, ASR and recorded activity must pass the default integrity contract');
+   assert.equal(evidence.sourceStatus,'ready',
+     'Never claim an incomplete default recording is a complete showcase');
+   assert.equal(evidence.criticalVideoSha,
+     'a823a0c53babe333e51500dff9f8364bcdd351e3a24868786c8afa519174bfbf');
+   assert(!evidence.incompleteNote.includes('DEMO INCOMPLETE'));
+   assert.equal(await page.locator('#conversationList [data-showcase-error]').count(),0);
    assert.equal(evidence.actionScope,'all');
    assert(evidence.statline.includes('observed accounts')&&evidence.video.includes('nov17-participation.mp4')&&
      !evidence.videoHidden&&evidence.layout==='grid');
@@ -304,6 +316,111 @@ async function videoFallback(browser){
    console.log('V4_SOURCE_AUDIO_FALLBACK_PASS '+JSON.stringify(state));
  }finally{await page.close();}
 }
+// Real-browser failure injection: broken source ASR must NEVER look like a
+// complete comments-only demo, but original Constellation must survive.
+async function sourceEvidenceFailureMatrix(browser){
+ const original=JSON.parse(fs.readFileSync(
+   path.join(__dirname,'../streaming-demo/assets/nov17-participation-asr.json'),'utf8'));
+ const invalidSha={...original,mediaSha256:'f'.repeat(64)};
+ const truncated={...original,utterances:original.utterances.slice(0,3)};
+ const cases=[
+   {name:'missing-asset',intercept:route=>route.abort('failed')},
+   {name:'wrong-video-hash',intercept:route=>route.fulfill({
+     status:200,contentType:'application/json',body:JSON.stringify(invalidSha)})},
+   {name:'truncated-speech',intercept:route=>route.fulfill({
+     status:200,contentType:'application/json',body:JSON.stringify(truncated)})}
+ ];
+ for(const item of cases){
+   const page=await browser.newPage({viewport:{width:1300,height:800}});
+   try{
+     await page.route('**/assets/nov17-participation-asr.json*',item.intercept);
+     await page.goto(origin+'/streaming-demo/',{waitUntil:'domcontentloaded',timeout:35000});
+     await page.waitForFunction(()=>{
+       return window.HL_DEMO_READINESS?.status==='failed' &&
+         document.getElementById('conversationList')?.dataset.showcaseState==='failed' &&
+         document.querySelectorAll('#networkNodes g[data-actor]').length>=42;
+     },null,{timeout:30000});
+     const evidence=await page.evaluate(()=>({
+       readiness:window.HL_DEMO_READINESS?.status,
+       htmlStatus:document.documentElement.dataset.showcaseState,
+       note:document.getElementById('conversationNote').textContent,
+       message:document.querySelector('[data-showcase-error="host-asr"]')?.textContent,
+       alert:document.querySelector('[data-showcase-error="host-asr"]')?.getAttribute('role'),
+       speech:document.querySelectorAll('.message-row.speech').length,
+       comments:document.querySelectorAll('.message-row.chat').length,
+       actors:document.querySelectorAll('#networkNodes g[data-actor]').length,
+       markers:Number(document.getElementById('signals').dataset.recordedMarkerCount)
+     }));
+     assert.equal(evidence.readiness,'failed');
+     assert.equal(evidence.htmlStatus,'failed');
+     assert(evidence.note.includes('DEMO INCOMPLETE'),'Speech failure must be announced in the header');
+     assert(evidence.message?.includes('INCOMPLETE SOURCE EVIDENCE'));
+     assert.equal(evidence.alert,'alert');
+     assert.equal(evidence.speech,0,'Invalid ASR must NEVER be replaced with invented host words');
+     assert.equal(evidence.comments,87,'Preserve authentic original viewer comments');
+     assert.equal(evidence.actors,42,'Preserve authentic original Constellation');
+     assert.equal(evidence.markers,140,'Preserve all 140 recorded activity markers');
+     console.log('CORE_ASR_FAIL_VISIBLE_PASS '+JSON.stringify({case:item.name,...evidence}));
+   }finally{await page.close();}
+ }
+}
+async function independentOptionalResearchAndMutableSpeech(browser){
+ const asr=JSON.parse(fs.readFileSync(
+   path.join(__dirname,'../streaming-demo/assets/nov17-participation-asr.json'),'utf8'));
+ // Missing research is allowed: it must not stop source speech and graph.
+ const optional=await browser.newPage({viewport:{width:1250,height:780}});
+ try{
+   await optional.route('**/nine-tickers/comparison.json*',route=>route.abort('failed'));
+   await optional.goto(origin+'/streaming-demo/',{waitUntil:'domcontentloaded',timeout:35000});
+   await optional.waitForFunction(()=>
+     window.HL_DEMO_READINESS?.status==='ready' &&
+     document.querySelectorAll('#conversationList .message-row.speech').length>=2 &&
+     document.querySelectorAll('#networkNodes g[data-actor]').length===42,
+     null,{timeout:25000});
+   assert.equal(await optional.locator('#conversationList').getAttribute('data-showcase-state'),'ready');
+   assert.equal(await optional.locator('.message-row.speech').count(),asr.utterances.length);
+   assert.equal(await optional.locator('.message-row.chat').count(),87);
+   console.log('OPTIONAL_RESEARCH_OUTAGE_CANNOT_HIDE_CORE_SPEECH_PASS');
+ }finally{await optional.close();}
+ // New engines can split/join utterances and replace every word without
+ // changing the current recording, event identity, group-chat layout, or
+ // the number of public viewer accounts.
+ const revised={...asr,model:'faster-whisper/large-v3',utterances:[
+   asr.utterances[0],
+   asr.utterances[Math.floor(asr.utterances.length/2)],
+   asr.utterances.at(-1)
+ ].map((r,i)=>[r[0],r[1],'Completely revised same-source speech '+i])};
+ const page=await browser.newPage({viewport:{width:1250,height:780}});
+ try{
+   await page.route('**/assets/nov17-participation-asr.json*',route=>route.fulfill({
+     status:200,contentType:'application/json',body:JSON.stringify(revised)}));
+   await page.goto(origin+'/streaming-demo/',{waitUntil:'domcontentloaded',timeout:35000});
+   await page.waitForFunction(()=>
+     window.HL_DEMO_READINESS?.status==='ready'&&
+     document.querySelectorAll('.message-row.speech').length===3&&
+     document.querySelectorAll('#networkNodes g[data-actor]').length===42,
+     null,{timeout:25000});
+   const result=await page.evaluate(()=>({
+     count:document.querySelectorAll('.message-row.speech').length,
+     first:document.querySelector('.message-row.speech .message-text')?.textContent,
+     comments:document.querySelectorAll('.message-row.chat').length,
+     accounts:document.querySelectorAll('#networkNodes g[data-actor]').length,
+     markers:Number(document.getElementById('signals').dataset.recordedMarkerCount),
+     sourceVideo:document.getElementById('videoPlayer').currentSrc,
+     model:window.HL_DEMO_READINESS.details?.model,
+     state:document.getElementById('conversationList').dataset.showcaseState
+   }));
+   assert.equal(result.count,3);
+   assert.equal(result.first,'Completely revised same-source speech 0');
+   assert.equal(result.model,'faster-whisper/large-v3');
+   assert.equal(result.comments,87);
+   assert.equal(result.accounts,42);
+   assert.equal(result.markers,140);
+   assert(result.sourceVideo.endsWith('/assets/nov17-participation.mp4'));
+   assert.equal(result.state,'ready');
+   console.log('ARBITRARY_SOURCE_ASR_RESEGMENTATION_BROWSER_PASS '+JSON.stringify(result));
+ }finally{await page.close();}
+}
 async function mobile(browser){
  const page=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
  try{
@@ -389,7 +506,11 @@ async function rootPages(browser){
    try{
      if(target==='main'){
        await sourceChat(browser);
-       if(!remote)await videoFallback(browser); // Don't intentionally disrupt live media.
+       if(!remote){
+         await videoFallback(browser); // Don't intentionally disrupt live media.
+         await sourceEvidenceFailureMatrix(browser);
+         await independentOptionalResearchAndMutableSpeech(browser);
+       }
        await mobile(browser);
        await rootPages(browser);
      }else if(target==='bakeoff'){

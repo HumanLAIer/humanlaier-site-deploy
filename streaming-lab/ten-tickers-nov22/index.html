@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive,nosnippet">
+<meta name="theme-color" content="#071b29">
+<meta name="description" content="Original full-height portrait livestream video beside ten synchronized, source-verified ASR decodings and compact audience context.">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; media-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<title>Ten-Ticker Dialogue Shootout · 22 November | Human LAIer</title>
+<link rel="stylesheet" href="../../streaming-demo/nine-tickers/styles.css">
+<link rel="stylesheet" href="styles.css">
+<script src="app.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#video">Skip to source video</a>
+<main class="studio" aria-label="Full-height livestream video and ten-way speech interpretation comparison">
+  <header class="mast">
+    <a class="mark" href="../../streaming-demo/" aria-label="Human LAIer streaming demo"><img src="../../streaming-demo/assets/human-laier-dark.svg" width="62" height="28" alt="Human LAIer"></a>
+    <strong>TEN-TICKER SHOOTOUT</strong>
+    <span class="source-name">@HUATZAITCG · 22 NOV 2026 · 10:27</span>
+    <span class="mast-purpose">9 DIALOGUE DECODES + 1 RAW CONTROL · ORIGINAL VIDEO</span>
+    <a class="back" href="../nine-tickers-nov22/">Original Nov22 study</a>
+  </header>
+
+  <section class="video-column" aria-label="Original full-height portrait video">
+    <div class="screen">
+      <video id="video" controls playsinline preload="metadata" aria-label="Original November 22 vertical TikTok livestream with synchronized source audio"></video>
+      <div class="video-error" id="videoError" role="status" hidden>Original source video unavailable. No substitute footage or audio is shown.</div>
+    </div>
+  </section>
+
+  <div class="right-panel">
+    <nav class="transport" aria-label="Navigate synchronized source video blocks">
+      <span class="clock" id="currentClock">00:00</span>
+      <div class="blocks" id="blockNav" role="group" aria-label="43 source video blocks across three original media parts; scroll horizontally for all blocks"></div>
+      <span class="clock" id="endClock">10:27</span>
+      <label class="speed-label" for="speed">SPEED
+        <select id="speed" aria-label="Video playback speed"><option value="0.75">.75×</option><option value="1" selected>1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option></select>
+      </label>
+      <label class="motion-label" for="tickerMotion"><input id="tickerMotion" type="checkbox" checked>Pan long text</label>
+    </nav>
+
+    <section class="tickers" aria-label="Ten synchronized ASR transcripts with differences highlighted">
+      <div class="ticker-bar">
+        <strong>ASR MODEL <span class="header-detail">/ CONTEXT</span></strong>
+        <div class="ticker-key" aria-label="Highlight legend">
+          <span><i class="key-change" aria-hidden="true"></i> Changed</span>
+          <span><i class="key-domain" aria-hidden="true"></i> Domain</span>
+          <span><i class="key-unique" aria-hidden="true"></i> Unique</span>
+        </div>
+        <span id="cueText">01 / 00:00–00:15</span>
+      </div>
+      <div class="ticker-set basic" id="rawTickers" aria-label="Dialogue audio, unprompted: three model transcripts"></div>
+      <div class="ticker-set glossary" id="diffTickers" aria-label="Dialogue audio, compact TCG prompt: three model transcripts"></div>
+      <div class="ticker-set focused" id="domainTickers" aria-label="Dialogue audio, focused prompt: three model transcripts"></div>
+      <div class="ticker-set stock" id="stockTickers" aria-label="Stock Whisper on untouched original audio"></div>
+    </section>
+
+    <aside class="metrics" aria-label="Source coverage and observed participant catalogue; not time-aligned transactions">
+      <div class="metrics-heading">
+        <strong>SOURCE &amp; AUDIENCE CONTEXT</strong>
+        <span>SOURCE-LOCAL CLOCK · CHAT NOT TIME ALIGNED</span>
+      </div>
+      <div class="kpis">
+        <div class="kpi"><strong id="metricComments">—</strong><span>BLOCKS</span></div>
+        <div class="kpi"><strong id="metricAccounts">—</strong><span>ACCOUNTS</span></div>
+        <div class="kpi"><strong id="metricEvents">—</strong><span>ALIASES</span></div>
+        <div class="kpi"><strong id="metricBuyer">—</strong><span>DECODES</span></div>
+      </div>
+      <div id="chatSignals" class="chat-signals">
+        <button type="button" class="signal" data-part="0"><span>PART 1</span><strong>Original source video</strong><small>00:00</small></button>
+        <button type="button" class="signal" data-part="1"><span>PART 2</span><strong>Original source video</strong><small>—</small></button>
+        <button type="button" class="signal" data-part="2"><span>PART 3</span><strong>Original source video</strong><small>—</small></button>
+      </div>
+      <div class="metric-foot" id="metricContext">Source-local evidence only · no confirmed product, purchase, or revenue</div>
+    </aside>
+
+    <footer class="foot">
+      <span id="audioStatus" role="status">Loading original video and verified model outputs…</span>
+      <span class="disclaimer">43 source blocks · no human-gold verdict</span>
+      <details class="notes">
+        <summary>DATA NOTES</summary>
+        <div class="notes-panel">
+          <strong>All three original portrait video parts and 627.669 seconds of source PCM. Nine decodes of the estimated DBS-TIGER dialogue stem, one stock Whisper decode of the untreated audio.</strong>
+          <p>Each ticker preserves the exact original model output. Amber indicates words newly present versus that model's unprompted transcript; lavender indicates unprompted words not found in the other two engines; teal identifies TCG terms or retained Singlish, participant and catalogue candidate spans. Highlights mean <em>different</em>, not <em>correct</em>. A small Δ count reports newly present words versus that model's baseline. Terms not present in a conditioned transcript cannot be highlighted there.</p>
+          <p><strong>Repetition warning:</strong> when one decoder repeats the same words ten or more times across most of a source block, its ticker shows a <em>repetitive output — attribution unresolved</em> summary. The RAW/FOLD control restores the verbatim model output in that lane; no source transcript or score is modified. Repetition may originate from actual speech, music, nonlexical sounds or decoder behavior; repetition detection is not proof of incorrect speech.</p>
+          <p>Development study, not a held-out accuracy benchmark. No human reference transcript, independently validated word timing, calibrated chat/video clock, speaker or addressee attribution, or verified sale exists. Available native ASR timing and score evidence is retained privately. Dialogue stems are estimates, not independently verified pure host speech. Original H.264 and AAC streams are remuxed without re-encoding. Each original video part decodes to the exact SHA-pinned original PCM; the nine dialogue lanes use a separately pinned sample-aligned derivative. The cumulative source clock concatenates decoded parts; it does not prove a gapless broadcast. Ticker motion is interpolated within each source block, not word timing. <span id="provenance">Source identity verification pending.</span></p>
+          <details id="review"><summary>Candidate evidence · <span id="candidateCount">—</span></summary>
+<p>Retrieval hypotheses only; overlapping printing candidates may refer to the same span. Teal highlights are review cues, not accuracy.</p>
+<label for="reviewLane">Inspect lane</label> <select id="reviewLane"></select><div id="evidence"></div>
+<p><strong>HL dialogue medoid</strong> · <span id="repLabel">—</span></p><p id="repText">—</p></details>
+<details id="results"><summary>Bake-off diagnostics · 10 lanes, no human gold</summary>
+<p>Candidate counts are not accuracy. Flagged repetition coverage is a text diagnostic, not an error rate. Native ASR telemetry coverage is retained; timing and confidence are not independently validated. Lane 10 receives no contextual candidate enrichment.</p>
+<div class="table-scroll"><table><thead><tr><th>Model / context</th><th>Singlish</th><th>Blocks with Singlish</th><th>Participants</th><th>Pokémon candidates</th><th>Inference s</th><th>Flagged repeat tokens %</th></tr></thead><tbody id="metrics"></tbody></table></div></details>
+<details><summary>Source receipts</summary><dl id="sourceReceipts"></dl><p>Untreated source: <a href="../nine-tickers-nov22/part-1.flac">Part 1</a> · <a href="../nine-tickers-nov22/part-2.flac">Part 2</a> · <a href="../nine-tickers-nov22/part-3.flac">Part 3</a>.</p><p>Listen separately to the exact estimated dialogue input: <a href="dialogue-1.wav">Part 1</a> · <a href="dialogue-2.wav">Part 2</a> · <a href="dialogue-3.wav">Part 3</a>. The video player retains the original mix.</p></details>
+<p><a href="https://github.com/HumanLAIer/hl-livestream-pilot/actions/runs/45453804518">Dialogue preparation and ten-lane experiment</a> · <a href="https://github.com/HumanLAIer/hl-livestream-pilot/actions/runs/45361477352">Original video verification</a></p>
+        </div>
+      </details>
+    </footer>
+  </div>
+</main>
+</body>
+</html>

@@ -8,18 +8,17 @@ temporary GitHub workflow before merging any public demo update.
 import hashlib
 import json
 import pathlib
-import subprocess
 
 from faster_whisper import WhisperModel
 
 source = pathlib.Path("streaming-demo/assets/nov17-participation.mp4")
 assert source.is_file() and source.stat().st_size == 10403588, "Missing or changed original source"
 audio_sha = hashlib.sha256(source.read_bytes()).hexdigest()
-probe = subprocess.check_output([
-    "ffprobe", "-v", "error", "-show_entries", "format=duration",
-    "-of", "default=noprint_wrappers=1:nokey=1", str(source)
-], text=True).strip()
-duration = float(probe)
+# PyAV is already installed by faster-whisper. No host ffprobe binary
+# or system package manager is needed for this bounded source probe.
+import av
+with av.open(str(source)) as original:
+    duration = float(original.duration / 1000000)
 assert 118 <= duration <= 122, f"Unexpected original media duration: {duration}"
 model_name = "small"
 model = WhisperModel(model_name, device="cpu", compute_type="int8", cpu_threads=4)

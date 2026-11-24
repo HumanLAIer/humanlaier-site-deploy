@@ -59,6 +59,8 @@ for(const entry of allow){
     }
   });
 }
+// Editorial previews have their own optional, strict runtime allowlist.
+require('./stage-editorial-previews.cjs').stageEditorial(root,dest);
 for(const item of required)
   if(!fs.existsSync(path.join(dest,item)))throw Error('Missing deployed asset: '+item);
 assert.equal(fs.readFileSync(path.join(dest,'CNAME'),'utf8').trim(),'humanlaier.com');

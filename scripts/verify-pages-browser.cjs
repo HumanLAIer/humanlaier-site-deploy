@@ -491,16 +491,18 @@ async function rootPages(browser){
 }
 (async()=>{
  try{
+   const target=String(process.env.HL_TEST_TARGET||'main');
+   assert(['main','bakeoff','site'].includes(target),'Choose an independent page acceptance target');
    if(!remote){
      server=cp.spawn(process.execPath,[path.resolve('streaming-demo/verify-range-server.cjs')],
        {stdio:'ignore'});
+     const readyPath=target==='bakeoff'?'/streaming-demo/nine-tickers/index.html':
+       target==='site'?'/index.html':'/streaming-demo/index.html';
      await retry(async()=>{
-       const r=await fetch(origin+'/streaming-demo/index.html');
-       if(!r.ok)throw Error('Local range server not ready');
+       const r=await fetch(origin+readyPath);
+       if(!r.ok)throw Error('Local range server not ready: '+readyPath);
      });
    }
-   const target=String(process.env.HL_TEST_TARGET||'main');
-   assert(['main','bakeoff','site'].includes(target),'Choose an independent page acceptance target');
    const browser=await chromium.launch({headless:true,channel:'chrome',
      args:['--no-sandbox','--disable-dev-shm-usage','--autoplay-policy=no-user-gesture-required']});
    try{

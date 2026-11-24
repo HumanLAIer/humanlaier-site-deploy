@@ -68,6 +68,7 @@ audio.addEventListener("error",()=>{$("status").textContent="Source audio unavai
 $("prev").addEventListener("click",()=>select(index-1,!audio.paused));$("next").addEventListener("click",()=>select(index+1,!audio.paused));$("blocks").addEventListener("change",()=>select(Number($("blocks").value),!audio.paused));$("reviewLane").addEventListener("change",showEvidence);
 async function load(){
  const r=await fetch("comparison.json",{cache:"no-store"});if(!r.ok)throw Error("Comparison unavailable");const bytes=await r.arrayBuffer();const digest=hex(await crypto.subtle.digest("SHA-256",bytes));
+ if(digest!=="8669a3403f609db40ee427842d4446852c292c0e21b7284850d43edcd8e486e6")throw Error("Comparison checksum mismatch");
  const d=JSON.parse(new TextDecoder().decode(bytes));validate(d);data=d;
  for(const [i,p] of d.parts.entries()){const b=el("button","PART "+(i+1)+" · "+clock(p.duration));b.type="button";b.addEventListener("click",()=>select(d.clips.findIndex(c=>c.sourcePart===p.part),!audio.paused));$("parts").append(b);}
  d.clips.forEach((c,i)=>{const p=d.parts.findIndex(p=>p.part===c.sourcePart);const label="Block "+(i+1)+" · part "+(p+1)+" · "+clock(c.startSec);const o=el("option",label);o.value=String(i);$("blocks").append(o);

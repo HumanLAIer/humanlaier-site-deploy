@@ -28,10 +28,11 @@ jobs:
           e3d8eda5eb16fb5c8089ddf5e7b17827f087b755053c7f75c08e753e7ae92cc6  part-3.flac
           8669a3403f609db40ee427842d4446852c292c0e21b7284850d43edcd8e486e6  comparison.json
           EOF
+          echo "Media blob hashes: $(git hash-object part-1.flac) $(git hash-object part-2.flac)"
           test "$(git hash-object part-1.flac)" = 38f5c8dbbc46651ecfee43b6898f1f9ab99daf4a
           test "$(git hash-object part-2.flac)" = e50f2c5e154a8037dc5aae429e90f25efe4db2bc
           cd ../..
-          command -v ffmpeg >/dev/null
+          if ! command -v ffmpeg >/dev/null; then sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends ffmpeg; fi
           node scripts/verify-nov22-nine.cjs
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

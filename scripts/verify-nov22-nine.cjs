@@ -4,7 +4,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto'),cp=require('node:child_process');
 const root=path.resolve(__dirname,'..'),dir=path.join(root,'streaming-lab/nine-tickers-nov22');
 const sha=x=>crypto.createHash('sha256').update(x).digest('hex');
-const d=JSON.parse(fs.readFileSync(path.join(dir,'comparison.json')));
+const raw=fs.readFileSync(path.join(dir,'comparison.json'));assert.equal(sha(raw),'8669a3403f609db40ee427842d4446852c292c0e21b7284850d43edcd8e486e6');const d=JSON.parse(raw);
 const ids=['production-base.en','singlish-small','coats-large-v2'].flatMap(m=>['control','compact','focused'].map(p=>m+'--'+p)).sort();
 const eqKeys=o=>assert.deepEqual(Object.keys(o).sort(),ids);
 assert.equal(d.schema,'hl-nov22-nine-public-v1');assert.equal(d.sessionId,'20261122T205428_176734Z_huatzaitcg');

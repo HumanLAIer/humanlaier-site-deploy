@@ -1,0 +1,3 @@
+# November 22 Coats decoder guard release
+
+Separate research page, no mutation of the published nine- or ten-ticker studies or production ASR defaults. Exact prior comparison and original source video shared; six original/guarded Coats rows, three Singlish2English references and untreated stock Whisper. Guarded rows show actual redecodes only on 26 flagged pairs and explicitly retain original text elsewhere. Nine single-setting ablations exposed in the paired evidence panel. No new catalogue extraction; no stale term spans. Public paired report is checksum-pinned projection of successful run 45476538340; private storage object keys removed, source and receipt digests retained. Native telemetry private. No human accuracy or timing claim.

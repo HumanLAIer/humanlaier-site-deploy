@@ -18,19 +18,52 @@
     <span class="source-label">17 NOV 2026 · SOURCE-VERIFIED VIDEO · RESEARCH</span>
     <span class="grow"></span>
     <span class="phase-pill">UNREVIEWED / RESEARCH PREVIEW</span>
-    <button type="button" id="openReview" aria-controls="reviewPanel" aria-expanded="false">Entity evidence <span aria-hidden="true">▤</span></button>
+    <button type="button" id="openReview" aria-controls="reviewPanel" aria-expanded="false">Transcription review <span aria-hidden="true">▤</span></button>
   </header>
   <main class="workspace">
     <iframe id="sourceFrame" title="Existing nine synchronized ASR tickers and original 180-second video"
       src="../streaming-demo/nine-tickers/" loading="eager" referrerpolicy="same-origin"></iframe>
-    <aside id="reviewPanel" class="review-panel" aria-label="Review-only retrieval evidence" hidden>
+    <section id="hlTrack" class="hl-track" aria-label="Provisional Human LAIer transcript track">
+      <div class="hl-track-id"><strong>HL · BASELINE</strong><small id="hlLane">UNPROMPTED MEDOID</small></div>
+      <div class="hl-track-body"><p id="hlText">Loading exact source model outputs…</p><small id="hlMeta">Provisional verbatim selection · not a corrected transcript</small></div>
+      <span id="hlBlock" class="mono">00:00–00:15</span>
+    </section>
+    <aside id="reviewPanel" class="review-panel" aria-label="Original audio transcription and candidate review" hidden>
       <div class="review-head">
-        <div><small>ANALYSIS / SOURCE LAB</small><h1>Entity evidence</h1></div>
+        <div><small>TRANSCRIPTION QUALITY / SOURCE LAB</small><h1>Transcription review</h1></div>
         <button type="button" id="closeReview" aria-label="Close entity evidence panel">✕</button>
       </div>
       <div class="review-body">
         <div class="status-line" id="labStatus" role="status">Loading published research source…</div>
-        <section class="review-section">
+        <section class="review-section annotation" aria-label="Original-audio reference annotation">
+          <div class="section-title"><h2>Human reference draft</h2><span id="annotationCount" class="mono">0/12</span></div>
+          <p class="muted">Development sample only. Select a block and listen to the original audio before entering words. Unintelligible speech can be left unscored.</p>
+          <div class="annotation-controls">
+            <button type="button" id="prevBlock" aria-label="Previous review block">←</button>
+            <label for="annotationBlock" class="sr-only">Review block</label>
+            <select id="annotationBlock" aria-label="Review block"></select>
+            <button type="button" id="nextBlock" aria-label="Next review block">→</button>
+            <button type="button" id="listenBlock">Listen to block</button>
+          </div>
+          <label class="annotation-check"><input type="checkbox" id="blindReview"> Hide ASR evidence during reference listening</label>
+          <div id="listenStatus" class="tiny-note" role="status">Original video audio · exact 15-second block, not word timing.</div>
+          <label class="annotation-label" for="referenceText">VERBATIM WORDS (preserve Singlish / code-switching)</label>
+          <textarea id="referenceText" rows="3" maxlength="4000" placeholder="Transcribe what you actually hear; do not copy an ASR lane."></textarea>
+          <label class="annotation-label" for="referenceStatus">REVIEW STATUS</label>
+          <select id="referenceStatus">
+            <option value="draft">Draft / not yet reviewed</option>
+            <option value="listened">Listened and transcribed</option>
+            <option value="unintelligible">Unintelligible / exclude</option>
+          </select>
+          <label class="annotation-label" for="reviewerName">REVIEWER (optional for draft)</label>
+          <input id="reviewerName" maxlength="100" placeholder="Reviewer name">
+          <div class="annotation-actions">
+            <button type="button" id="saveReference">Save draft locally</button>
+            <button type="button" id="exportReference">Export reference JSON</button>
+          </div>
+          <div id="annotationStatus" class="tiny-note" role="status">Drafts stay in this browser. Export to retain them. No held-out or human-gold claim.</div>
+        </section>
+        <section class="review-section model-evidence">
           <div class="section-title"><h2>Current source block</h2><span id="clipClock" class="mono">00:00–00:15</span></div>
           <p class="muted" id="clipLabel">Nine-ticker video, part-local time only.</p>
           <div id="candidateList" class="candidate-list" aria-live="polite"></div>
@@ -46,9 +79,9 @@
           <div id="sourceTranscripts" class="source-transcripts"></div>
           <p class="tiny-note">These are original model words, not a human transcript. Source video is the sole playback clock; audience-event times are not calibrated to it.</p>
         </section>
-        <section class="review-section">
+        <section class="review-section model-evidence">
           <div class="section-title"><h2>Phonetic retrieval probe</h2><span class="mono">REVIEW ONLY</span></div>
-          <p class="muted">Illustrative English-species / multilingual lookup. This browser probe covers seven species, not the complete 75,673-record private catalogue.</p>
+          <p class="muted">Illustrative English-species / multilingual lookup. This interactive browser probe covers seven example species; the full 75,673-record offline retrieval report is shown separately above.</p>
           <form id="probeForm" autocomplete="off">
             <label class="sr-only" for="probe">Enter a name or distorted ASR word</label>
             <div class="probe-input"><input id="probe" maxlength="60" placeholder="Try Mbreon, Bracky, or Zachrom" spellcheck="false"><button type="submit">Find</button></div>
@@ -67,14 +100,15 @@
         <details class="provenance">
           <summary>Evidence and release limits</summary>
           <div class="provenance-text">
-            <p>Playback and all nine ASR lanes are reused unchanged from the published nine-ticker study. Candidate lists are sourced from the study's existing unreviewed domain-candidate metadata. Probe results are illustrative local retrieval hypotheses, never proof that a word was uttered.</p>
+            <p>Playback and all nine ASR lanes are reused unchanged from the published nine-ticker study. Candidate lists are derived from the source-pinned full 75,673-record retrieval experiment, not human-reviewed truth. All matched character spans are checked against the original ASR lanes. The tenth lane is a verbatim raw-engine medoid baseline, not an automatically corrected transcript. Probe results are illustrative local retrieval hypotheses, never proof that a word was uttered.</p>
             <dl>
               <dt>Source session</dt><dd id="sourceSession">Not loaded</dd>
               <dt>Source part</dt><dd id="sourcePart">Not loaded</dd>
               <dt>Part SHA-256</dt><dd id="sourceDigest">Not loaded</dd>
               <dt>Catalogue SHA-256</dt><dd id="packDigest">Not loaded</dd>
+              <dt>Development run</dt><dd><a href="https://github.com/HumanLAIer/hl-livestream-pilot/actions/runs/45306608923" target="_blank" rel="noopener noreferrer">Pinned retrieval and baseline artifact</a></dd>
             </dl>
-            <p>No auto-rewriting; no claimed purchases, revenue, exact card printing or independently calibrated chat/video synchronization. The original public model comparison is not a human-verified evaluation. Umbreon and Zekrom probes are independent examples and must not be presented as matches to this source video.</p>
+            <p>No auto-rewriting; no claimed purchases, revenue, exact card printing or independently calibrated chat/video synchronization. The original public model comparison is not a human-verified evaluation. Interactive probe results are examples only; the full-catalogue block report contains source-linked hypotheses, not verified speech.</p>
             <p>This is a shareable research preview. The page is unlisted and noindexed, but it is accessible to anyone with the URL.</p>
           </div>
         </details>

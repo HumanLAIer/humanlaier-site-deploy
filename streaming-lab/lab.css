@@ -86,3 +86,33 @@ button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible,su
   .review-panel{width:100%;border-left:0}
 }
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+
+
+/* Tenth track: independent development output; the original nine remain in
+   their unchanged source frame. Reference review is optional and local. */
+.workspace{display:grid;grid-template-rows:minmax(0,1fr) auto}
+.hl-track{display:grid;grid-template-columns:126px minmax(0,1fr) 105px;align-items:center;gap:12px;padding:7px 12px;border-top:1px solid #547780;background:#0d2b38;min-height:54px}
+.hl-track-id{display:grid;gap:3px;min-width:0}
+.hl-track-id strong{color:var(--mint);font:700 11px var(--mono)}
+.hl-track-id small,.hl-track-body small{color:var(--quiet);font:9px var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hl-track-body{min-width:0;display:grid;gap:4px}
+.hl-track-body p{font-size:12px;line-height:1.4;margin:0;max-height:35px;overflow:auto;overflow-wrap:anywhere}
+#hlBlock{font-size:10px;color:var(--muted);text-align:right}
+.annotation-controls,.annotation-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.annotation button{background:#153845;color:var(--text);border:1px solid #52727d;border-radius:4px;padding:7px 10px;font-size:11px}
+.annotation button:hover{border-color:var(--mint)}
+.annotation select,.annotation textarea,.annotation input:not([type="checkbox"]){background:#071b29;color:var(--text);border:1px solid #53717b;border-radius:4px;padding:7px;font:12px var(--sans);min-width:0}
+.annotation-controls select{flex:1}
+.annotation textarea,.annotation>select,.annotation>input:not([type="checkbox"]){display:block;width:100%;margin:0 0 9px}
+.annotation textarea{resize:vertical;min-height:64px;line-height:1.4}
+.annotation-label{display:block;font:10px var(--mono);color:var(--muted);margin:10px 0 4px}
+.annotation-check{display:flex;gap:6px;align-items:center;margin:9px 0;font-size:11px;color:var(--muted)}
+.annotation-actions button:last-child{color:var(--mint)}
+.workspace.blind-review #sourceFrame,.workspace.blind-review #hlTrack{visibility:hidden}
+.workspace.blind-review .model-evidence{display:none}
+@media(max-width:650px){
+  .hl-track{grid-template-columns:90px minmax(0,1fr);gap:6px;padding:7px 9px}
+  #hlBlock{display:none}
+  .hl-track-id strong{font-size:10px}
+  .hl-track-body p{font-size:11px}
+}

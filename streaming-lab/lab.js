@@ -140,38 +140,71 @@
     }
     output.append(node("div","No acoustic verification, calibrated probability or exact card-printing claim.","secondary"));
   }
+  // Full-catalogue result is a source-bound, immutable development projection
+  // of the actual workflow artifact; never fabricate confirmed matches.
+  let catalogueReport=null;
+  const EXPECTED_COMPARISON="141f0c9ee47f7c49d5bc1f546814fff12c740de69f59dde27c23bdd85f8178be";
+  function checkCatalogue(report,d,sourceHash){
+    if(!report||report.schema!=="hl-nine-ticker-full-catalogue-review-v1"||
+       sourceHash!==EXPECTED_COMPARISON||report.sourceComparisonSha256!==sourceHash||
+       report.sourcePartSha256!==EXPECTED_PART||report.domainPackSha256!==EXPECTED_PACK||
+       report.catalogueRecords!==75673||report.workflowRunId!==45306608923||
+       report.ledgerSha256!=="4b530fd6aff9b8d366894c6fffcd8bb5d81ffab7d7073a350713aa73f31cce3c"||
+       report.heldOut!==false||report.humanGoldAvailable!==false||
+       !Array.isArray(report.rows)||report.rows.length!==12)
+      throw Error("catalogue_report_contract_mismatch");
+    for(let i=0;i<12;i++){
+      const row=report.rows[i],clip=d.clips[i];
+      if(row.i!==i||row.wav!==clip.wavSha256||!row.lane.endsWith("--control")||
+         typeof clip.texts[row.lane]!=="string"||!Number.isFinite(row.distance)||
+         !Array.isArray(row.c)||row.n!==row.c.length||!Number.isInteger(row.truncated)||row.truncated<0)
+        throw Error("catalogue_block_contract_mismatch");
+      for(const c of row.c){
+        if(typeof c.name!=="string"||!["pokemon_species","card_printing"].includes(c.type)||
+           !Array.isArray(c.e)||c.e.length!==c.engines||c.engines<2||c.engines>3||
+           new Set(c.e.map(e=>e[0].split("--")[0])).size!==c.engines||
+           c.exact!==c.e.filter(e=>e[4]==="exact").length)
+          throw Error("catalogue_candidate_contract_mismatch");
+        for(const e of c.e){
+          const text=clip.texts[e[0]];
+          if(typeof text!=="string"||!Number.isInteger(e[1])||!Number.isInteger(e[2])||
+             e[1]<0||e[2]<=e[1]||text.slice(e[1],e[2])!==e[3]||
+             !["phonetic","fuzzy","exact"].includes(e[4])||!Number.isFinite(e[5]))
+            throw Error("catalogue_source_span_mismatch");
+        }
+      }
+    }
+  }
   function renderCandidates(clip){
     const list=$("candidateList");
     list.replaceChildren();
-    const items=Array.isArray(clip.domainCandidateReview)?clip.domainCandidateReview:[];
-    // Source-verified textual disagreement from block 04. Not a verdict:
-    // three Whisper-family renderings are not independent human evidence.
-    if(clip.index===3 &&
-      /mombreon\s+please/i.test(clip.texts["production-base.en--focused"]) &&
-      /momebrion\s+please/i.test(clip.texts["singlish-small--compact"]) &&
-      /um bombion\s+please/i.test(clip.texts["coats-large-v2--control"])){
-      const card=node("article",undefined,"candidate candidate-feature");
-      card.append(node("strong","Umbreon? · pokeapi:species:197"));
-      card.append(node("span","LISTEN TO VERIFY","review-badge"));
-      card.append(node("span","Cross-model ASR disagreement · English species hypothesis","kind"));
-      card.append(node("span","","kind"));
-      card.append(node("span","Base focused: “mombreon” · Singlish compact: “momebrion” · Coats raw: “um bombion” · Coats focused: omitted. Different spellings are retrieval clues, NOT an independently heard Umbreon or a card sale.","why"));
-      list.append(card);
-    }
-    if(!items.length && list.childElementCount===0){
-      list.append(node("div","No published candidate-review entry in this block. That does not establish silence or an absent product.","empty"));
+    if(!catalogueReport){
+      list.append(node("div","Full-catalogue report unavailable or source contract mismatch. No candidate assertions.","empty"));
       return;
     }
-    for(const item of items.slice(0,8)){
+    const row=catalogueReport.rows[clip.index];
+    list.append(node("div","FULL CATALOGUE · "+catalogueReport.catalogueRecords.toLocaleString("en-US")+
+      " entries · "+row.n+" review group"+(row.n===1?"":"s")+" · "+row.truncated+" truncated retrieval windows","tiny-note"));
+    if(!row.c.length){
+      list.append(node("div","No cross-engine candidate survived retrieval in this block. This does not prove absence of an entity.","empty"));
+      return;
+    }
+    for(const c of row.c){
       const card=node("article",undefined,"candidate");
-      card.append(node("strong",item.name));
-      card.append(node("span","REVIEW ONLY","review-badge"));
-      card.append(node("span",item.entityType.replace(/_/g," · "),"kind"));
+      card.append(node("strong",c.name+"?"+(c.id?" · "+c.id:"")));
+      card.append(node("span","LISTEN TO VERIFY","review-badge"));
+      card.append(node("span",c.type.replace(/_/g," · ")+" · "+c.engines+"/3 engines · "+c.exact+" exact","kind"));
       card.append(node("span","","kind"));
-      const n=Array.isArray(item.sourceConfigurations)?item.sourceConfigurations.length:0;
-      card.append(node("span","Present in "+n+"/9 ASR lanes · text similarity "+
-        Number(item.maxSimilarity).toFixed(2)+" (NOT probability) · "+
-        (item.ambiguous?"ambiguous printing / ID":"unverified identity"),"why"));
+      for(const e of c.e){
+        card.append(node("span",e[0]+" · “"+e[3]+"” · "+e[4]+" "+e[5].toFixed(3),"why"));
+      }
+      if(c.name==="Umbreon"&&clip.index===3&&/um bombion\s+please/i.test(clip.texts["coats-large-v2--control"])){
+        card.append(node("span","Additional original Coats raw clue: “um bombion” (not retrieved as Umbreon). Coats focused omitted the phrase.","why"));
+      }
+      if(c.name==="Beautifly"&&c.e.every(e=>e[3].toLowerCase()==="beautiful")){
+        card.append(node("span","Possible ordinary-word false positive: all matched spans say “beautiful”. Do not substitute the species name without listening.","why"));
+      }
+      card.append(node("span","REVIEW ONLY · similarity is not probability; "+(c.type==="card_printing"?"printing identity unresolved.":"spoken identity unverified."),"why"));
       list.append(card);
     }
   }
@@ -186,6 +219,143 @@
       parent.append(row);
     }
   }
+  // Each unprompted engine gets one vote. The selected text is verbatim,
+  // never an invented consensus splice or a verified correction.
+  function rawTokens(value){
+    return value.normalize("NFKC").toLowerCase().match(/[\p{L}\p{N}]+(?:['’][\p{L}\p{N}]+)*/gu)||[];
+  }
+  function editDistance(a,b){
+    let previous=Array.from({length:b.length+1},(_,i)=>i);
+    for(let i=1;i<=a.length;i++){
+      const row=[i];
+      for(let j=1;j<=b.length;j++)row[j]=Math.min(previous[j]+1,row[j-1]+1,previous[j-1]+(a[i-1]===b[j-1]?0:1));
+      previous=row;
+    }
+    return previous[b.length]/Math.max(a.length,b.length,1);
+  }
+  function renderHL(clip){
+    const choices=MODELS.map(([name,label])=>({name,label,text:clip.texts[name+"--control"]}));
+    const lists=choices.map(x=>rawTokens(x.text));
+    const costs=lists.map((a,i)=>lists.reduce((sum,b,j)=>sum+(i===j?0:editDistance(a,b)),0)/2);
+    const best=costs.indexOf(Math.min(...costs));
+    const result=catalogueReport?.rows[clip.index];
+    const selected=result?choices.find(x=>x.name+"--control"===result.lane):choices[best];
+    $("hlText").textContent=selected.text||"(Empty model output)";
+    $("hlLane").textContent=selected.label+" · RAW";
+    $("hlBlock").textContent=clock(clip.start)+"–"+clock(clip.end);
+    $("hlMeta").textContent="Verbatim raw-engine medoid · mean token distance "+(result?result.distance:costs[best]).toFixed(2)+" · not accuracy or correction";
+  }
+  const draftKey="hl-reference-development-v1:"+EXPECTED_PART;
+  let drafts={};
+  let reviewEnd=null;
+  function player(){
+    try{return $("sourceFrame").contentDocument?.getElementById("video")||null}catch(_){return null}
+  }
+  function draftStatus(message){$("annotationStatus").textContent=message}
+  function countDrafts(){
+    $("annotationCount").textContent=Object.keys(drafts).length+"/12";
+  }
+  function showDraft(){
+    const index=Number($("annotationBlock").value);
+    const row=drafts[index];
+    $("referenceText").value=row?.text||"";
+    $("referenceStatus").value=row?.reviewStatus||"draft";
+    if(row?.reviewer)$("reviewerName").value=row.reviewer;
+    $("prevBlock").disabled=index===0;
+    $("nextBlock").disabled=index===11;
+    $("listenStatus").textContent="Selected "+clock(index*15)+"–"+clock((index+1)*15)+" · original source audio.";
+  }
+  function initializeDrafts(){
+    drafts={};
+    try{
+      const loaded=JSON.parse(localStorage.getItem(draftKey)||"{}");
+      if(loaded&&typeof loaded==="object"&&!Array.isArray(loaded)){
+        for(const [key,row] of Object.entries(loaded)){
+          if(/^(?:[0-9]|1[01])$/.test(key)&&row&&typeof row.text==="string"&&
+             row.text.length<=4000&&["draft","listened","unintelligible"].includes(row.reviewStatus))
+            drafts[key]={text:row.text,reviewStatus:row.reviewStatus,reviewer:String(row.reviewer||"").slice(0,100)};
+        }
+      }
+    }catch(_){draftStatus("Local storage unavailable. Drafts remain in memory until exported.")}
+    $("annotationBlock").replaceChildren();
+    for(let i=0;i<12;i++){
+      const option=node("option",String(i+1).padStart(2,"0")+" · "+clock(i*15)+"–"+clock((i+1)*15));
+      option.value=String(i);$("annotationBlock").append(option);
+    }
+    showDraft();countDrafts();
+  }
+  function saveDraft(){
+    if(!state.data)return false;
+    const index=Number($("annotationBlock").value);
+    const text=$("referenceText").value.trim(), reviewStatus=$("referenceStatus").value;
+    const reviewer=$("reviewerName").value.trim();
+    if(reviewStatus==="listened"&&(!text||!reviewer)){
+      draftStatus("Listened/transcribed status requires actual words and a reviewer name. Use draft or unintelligible otherwise.");
+      return false;
+    }
+    if(reviewStatus==="unintelligible"&&!reviewer){
+      draftStatus("Unintelligible review requires a reviewer name.");return false;
+    }
+    drafts[index]={text,reviewStatus,reviewer};
+    try{
+      localStorage.setItem(draftKey,JSON.stringify(drafts));
+      draftStatus("Saved locally. This is a development reference draft, never held-out gold.");
+    }catch(_){draftStatus("Saved in memory only. Export before closing this page.")}
+    countDrafts();return true;
+  }
+  function exportDrafts(){
+    if(!state.data||!saveDraft())return;
+    const source=state.data.source;
+    const rows=Object.entries(drafts).sort((a,b)=>Number(a[0])-Number(b[0])).map(([index,row])=>{
+      const clip=state.data.clips[Number(index)];
+      const offset=Number(source.sourcePartOffsetSeconds)||0;
+      return {index:Number(index),sessionId:source.sessionId,part:source.sourcePart,
+        partSha256:source.sourcePartSha256,wavSha256:clip.wavSha256,
+        startMs:Math.round((offset+clip.start)*1000),endMs:Math.round((offset+clip.end)*1000),
+        videoStartMs:clip.start*1000,videoEndMs:clip.end*1000,
+        text:row.text,reviewStatus:row.reviewStatus,reviewer:row.reviewer};
+    });
+    const doc={schema:"hl-development-reference-draft-v1",split:"development_only",
+      sourcePartSha256:EXPECTED_PART,domainPackSha256:EXPECTED_PACK,
+      heldOut:false,humanGoldAvailable:false,referenceRequiresIndependentVerification:true,rows};
+    const url=URL.createObjectURL(new Blob([JSON.stringify(doc,null,2)+"\n"],{type:"application/json"}));
+    const a=node("a");a.href=url;a.download="hl-nine-ticker-reference-draft.json";a.click();
+    setTimeout(()=>URL.revokeObjectURL(url),2000);
+    draftStatus("Reference draft exported. Not eligible for the held-out benchmark.");
+  }
+  function setBlind(){
+    document.querySelector(".workspace").classList.toggle("blind-review",$("blindReview").checked);
+  }
+  function stopListening(message){
+    const p=player();
+    if(reviewEnd!==null&&p)p.pause();
+    reviewEnd=null;
+    $("listenBlock").textContent="Listen to block";
+    if(message)$("listenStatus").textContent=message;
+  }
+  function listenBlock(){
+    if(reviewEnd!==null){stopListening("Source listening stopped.");return}
+    const p=player(), i=Number($("annotationBlock").value);
+    if(!state.data||!p||!Number.isFinite(p.duration)||p.readyState<1){
+      $("listenStatus").textContent="Original source video is not ready. Try again after it loads.";return;
+    }
+    p.pause();p.currentTime=i*15;reviewEnd=(i+1)*15;
+    $("listenBlock").textContent="Stop listening";
+    $("listenStatus").textContent="Listening to "+clock(i*15)+"–"+clock(reviewEnd)+" · source video audio.";
+    p.play().catch(()=>stopListening("Playback blocked or unavailable. Try listening again."));
+  }
+  $("annotationBlock").addEventListener("change",()=>{stopListening();showDraft()});
+  for(const [id,delta] of [["prevBlock",-1],["nextBlock",1]]){
+    $(id).addEventListener("click",()=>{
+      if(!state.data)return;
+      stopListening();$("annotationBlock").value=String(Math.max(0,Math.min(11,Number($("annotationBlock").value)+delta)));
+      showDraft();
+    });
+  }
+  $("saveReference").addEventListener("click",saveDraft);
+  $("exportReference").addEventListener("click",exportDrafts);
+  $("listenBlock").addEventListener("click",listenBlock);
+  $("blindReview").addEventListener("change",setBlind);
   function renderClip(index){
     if(!state.data||index<0||index>=state.data.clips.length)return;
     const clip=state.data.clips[index], source=state.data.source;
@@ -195,14 +365,19 @@
       "/12 · "+source.sourcePart+" · original ASR preserved";
     renderCandidates(clip);
     renderTranscripts(clip);
+    renderHL(clip);
   }
   function updateSourceClock(){
-    if(!state.data||$("reviewPanel").hidden)return;
+    if(!state.data)return;
     let seconds=0;
     try{
       const frame=$("sourceFrame");
       const player=frame.contentDocument&&frame.contentDocument.getElementById("video");
-      if(player&&Number.isFinite(player.currentTime)) seconds=player.currentTime;
+      if(player&&Number.isFinite(player.currentTime)){
+        seconds=player.currentTime;
+        if(reviewEnd!==null&&!player.seeking&&seconds>=reviewEnd)
+          stopListening("Selected source block finished. Enter only what you heard.");
+      }
     }catch(_){
       $("labStatus").textContent="Playback context unavailable; choose original nine-ticker study.";
       return;
@@ -218,7 +393,7 @@
     if(open){
       updateSourceClock();
       $("closeReview").focus();
-    }else $("openReview").focus();
+    }else {stopListening();$("blindReview").checked=false;setBlind();$("openReview").focus()}
   }
   function checkData(d){
     if(!d||d.schema!=="hl-commercial-nine-public-v1"||
@@ -238,26 +413,40 @@
         throw Error("source_block_contract_mismatch");
     }
   }
-  function load(){
-    fetch(ROOT+"comparison.json",{cache:"no-store"})
-      .then(r=>{if(!r.ok)throw Error("missing_source");return r.json();})
-      .then(d=>{
-        checkData(d);
-        state.data=d;
-        $("sourceSession").textContent=d.source.sessionId;
-        $("sourcePart").textContent=d.source.sourcePart;
-        $("sourceDigest").textContent=d.source.sourcePartSha256;
-        $("packDigest").textContent=d.domainPackSha256;
-        $("sourceStatus").textContent="SOURCE-PINNED · NINE ASR LANES UNCHANGED";
-        $("labStatus").textContent="12 × 15-second blocks · public unreviewed evidence";
-        renderClip(0);
-        updateSourceClock();
-      }).catch(()=>{
-        $("labStatus").textContent="SOURCE CONTRACT UNAVAILABLE — suggestions disabled.";
-        $("candidateList").replaceChildren(node("div",
-          "Published source data unavailable; no candidate assertions.","empty"));
-        $("sourceStatus").textContent="SOURCE CONTRACT ERROR";
-      });
+  async function load(){
+    try{
+      const response=await fetch(ROOT+"comparison.json",{cache:"no-store"});
+      if(!response.ok)throw Error("missing_source");
+      const bytes=await response.arrayBuffer();
+      const digest=Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256",bytes)),b=>b.toString(16).padStart(2,"0")).join("");
+      if(digest!==EXPECTED_COMPARISON)throw Error("source_bytes_mismatch");
+      const d=JSON.parse(new TextDecoder().decode(bytes));
+      checkData(d);
+      state.data=d;
+      try{
+        const response=await fetch("catalogue-review.json",{cache:"no-store"});
+        if(!response.ok)throw Error("missing_catalogue_report");
+        const report=await response.json();
+        checkCatalogue(report,d,digest);
+        catalogueReport=report;
+      }catch(_){catalogueReport=null}
+      $("sourceSession").textContent=d.source.sessionId;
+      $("sourcePart").textContent=d.source.sourcePart;
+      $("sourceDigest").textContent=d.source.sourcePartSha256;
+      $("packDigest").textContent=d.domainPackSha256;
+      $("sourceStatus").textContent="SOURCE-PINNED · NINE ASR LANES UNCHANGED";
+      $("labStatus").textContent="12 × 15-second blocks · "+(catalogueReport?"75,673-record retrieval report · development only":"full catalogue report unavailable");
+      initializeDrafts();
+      renderClip(0);
+      updateSourceClock();
+    }catch(_){
+      state.data=null;catalogueReport=null;
+      $("labStatus").textContent="SOURCE CONTRACT UNAVAILABLE — suggestions disabled.";
+      $("candidateList").replaceChildren(node("div",
+        "Published source data unavailable; no candidate assertions.","empty"));
+      $("sourceStatus").textContent="SOURCE CONTRACT ERROR";
+      $("hlText").textContent="Source contract unavailable; no provisional transcript.";
+    }
   }
   $("openReview").addEventListener("click",()=>openReview($("reviewPanel").hidden));
   $("closeReview").addEventListener("click",()=>openReview(false));

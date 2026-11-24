@@ -9,7 +9,28 @@ const read=p=>fs.readFileSync(path.join(root,p),"utf8");
 const html=read("streaming-lab/index.html");
 const script=read("streaming-lab/lab.js");
 const css=read("streaming-lab/lab.css");
-const source=JSON.parse(read("streaming-demo/nine-tickers/comparison.json"));
+const sourceText=read("streaming-demo/nine-tickers/comparison.json");
+const source=JSON.parse(sourceText);
+const report=JSON.parse(read("streaming-lab/catalogue-review.json"));
+const sourceHash=require("node:crypto").createHash("sha256").update(sourceText).digest("hex");
+assert.equal(report.sourceComparisonSha256,sourceHash);
+assert.equal(report.catalogueRecords,75673);
+assert.equal(report.heldOut,false);assert.equal(report.humanGoldAvailable,false);
+assert.equal(report.rows.length,12);
+assert.equal(report.rows.reduce((n,r)=>n+r.c.length,0),15);
+assert.equal(report.rows.filter(r=>r.c.length).length,7);
+assert.equal(report.rows.reduce((n,r)=>n+r.truncated,0),32);
+for(const [i,r] of report.rows.entries()){
+  assert.equal(r.i,i);const clip=source.clips[i];assert.equal(r.wav,clip.wavSha256);
+  assert(r.lane.endsWith("--control"));assert(typeof clip.texts[r.lane]==="string");
+  assert.equal(r.n,r.c.length);
+  for(const c of r.c){assert.equal(c.engines,new Set(c.e.map(e=>e[0].split("--")[0])).size);assert.equal(c.exact,c.e.filter(e=>e[4]==="exact").length);
+    for(const e of c.e)assert.equal(clip.texts[e[0]].slice(e[1],e[2]),e[3],"Exact source span");}
+}
+assert(report.rows[3].c.some(c=>c.name==="Umbreon"&&c.engines===2&&c.exact===0));
+assert(report.rows[2].c.some(c=>c.name==="Beautifly"&&c.e.every(e=>e[3]==="beautiful")));
+assert(html.includes('id="hlTrack"')&&html.includes('id="blindReview"')&&html.includes('id="exportReference"'));
+assert(script.includes("development_only")&&script.includes("referenceRequiresIndependentVerification"));
 const originalHtml=read("streaming-demo/nine-tickers/index.html");
 assert(html.includes('src="../streaming-demo/nine-tickers/"'),"Must reuse nine-ticker study unchanged");
 assert(html.includes("frame-src 'self'")&&html.includes('id="sourceFrame"'));
@@ -46,7 +67,7 @@ assert(script.includes("ABSTAIN")&&script.includes("No acoustic verification"));
 assert(script.includes('getElementById("video")'));
 assert(originalHtml.includes('id="rawTickers"')&&originalHtml.includes('id="diffTickers"')&&
        originalHtml.includes('id="domainTickers"'));
-for(const p of ["streaming-lab/index.html","streaming-lab/lab.css","streaming-lab/lab.js"])
+for(const p of ["streaming-lab/index.html","streaming-lab/lab.css","streaming-lab/lab.js","streaming-lab/catalogue-review.json"])
   assert(fs.statSync(path.join(root,p)).size>500);
 console.log("STREAMING_LAB_CONTRACT_PASS "+JSON.stringify({
   originalTracks:9,sourceClips:12,sourceExampleBlock:4,originalMediaPreserved:true,

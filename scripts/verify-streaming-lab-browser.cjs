@@ -24,7 +24,7 @@ const root=(process.env.HL_SITE_PUBLIC_BASE||"http://127.0.0.1:18764").replace(/
           return frame?.contentDocument?.querySelectorAll(".ticker-row").length===9 &&
             frame.contentDocument.getElementById("video")?.getAttribute("src")==="commercial-180.mp4";
         },null,{timeout:22000});
-        await page.waitForFunction(()=>document.getElementById("labStatus")?.textContent?.includes("12 × 15-second"),null,{timeout:18000});
+        await page.waitForFunction(()=>document.getElementById("labStatus")?.textContent?.includes("75,673-record retrieval report"),null,{timeout:18000});
         assert.equal(await page.locator("#reviewPanel").isVisible(),false);
         assert.equal(await page.locator("#openReview").getAttribute("aria-expanded"),"false");
         const source=await page.evaluate(()=>{
@@ -62,11 +62,56 @@ const root=(process.env.HL_SITE_PUBLIC_BASE||"http://127.0.0.1:18764").replace(/
         assert.match(text,/Umbreon\?/);
         for(const cue of ["mombreon","momebrion","um bombion"]) assert(text.includes(cue));
         assert.match(text,/LISTEN TO VERIFY/);
+        assert.match(text,/2\/3 engines · 0 exact/);
+        assert.match(text,/FULL CATALOGUE/);
         await page.locator("#phaseSelect").selectOption("compact");
         assert((await page.locator(".transcript").count())===3);
         assert((await page.locator("#sourceTranscripts").textContent()).includes("momebrion"));
+        // Tenth lane is a verbatim unprompted medoid, not a fabricated correction.
+        const data=await (await page.request.get(root+"/streaming-demo/nine-tickers/comparison.json")).json();
+        const block=data.clips[3];
+        const raw=Object.entries(block.texts).filter(([id])=>id.endsWith("--control")).map(([,t])=>t);
+        assert(raw.includes(await page.locator("#hlText").textContent()),"HL baseline must equal one original raw lane");
+        const report=await (await page.request.get(root+"/streaming-lab/catalogue-review.json")).json();
+        assert.equal(await page.locator("#hlText").textContent(),block.texts[report.rows[3].lane]);
+        assert.match(await page.locator("#hlMeta").textContent(),/not accuracy or correction/);
+        await page.locator("#annotationBlock").selectOption("3");
+        await page.locator("#blindReview").check();
+        assert.equal(await page.locator("#sourceFrame").isVisible(),false);
+        assert.equal(await page.locator("#hlTrack").isVisible(),false);
+        assert.equal(await page.locator("#candidateList").isVisible(),false);
+        await page.locator("#listenBlock").click();
+        await page.waitForFunction(()=>{
+          const v=document.getElementById("sourceFrame").contentDocument.getElementById("video");
+          return !v.paused && v.currentTime>=45 && v.currentTime<60;
+        },null,{timeout:15000});
+        await page.locator("#listenBlock").click();
+        assert.match(await page.locator("#listenStatus").textContent(),/stopped/);
+        await page.locator("#referenceText").fill("SYNTHETIC browser QA draft only");
+        await page.locator("#referenceStatus").selectOption("draft");
+        await page.locator("#reviewerName").fill("Browser QA");
+        await page.locator("#saveReference").click();
+        assert.match(await page.locator("#annotationCount").textContent(),/1\/12/);
+        const promise=page.waitForEvent("download");
+        await page.locator("#exportReference").click();
+        const download=await promise;
+        const fs=require("node:fs");
+        const saved=JSON.parse(fs.readFileSync(await download.path(),"utf8"));
+        assert.equal(saved.split,"development_only");
+        assert.equal(saved.heldOut,false);
+        assert.equal(saved.humanGoldAvailable,false);
+        assert.equal(saved.rows[0].text,"SYNTHETIC browser QA draft only");
+        assert.equal(saved.rows[0].partSha256,data.source.sourcePartSha256);
+        assert.equal(saved.rows[0].startMs,(data.source.sourcePartOffsetSeconds+45)*1000);
+        assert.equal(saved.rows[0].endMs,(data.source.sourcePartOffsetSeconds+60)*1000);
+        await page.locator("#annotationBlock").selectOption("4");
+        assert.equal(await page.locator("#referenceText").inputValue(),"");
+        await page.locator("#annotationBlock").selectOption("3");
+        assert.equal(await page.locator("#referenceText").inputValue(),"SYNTHETIC browser QA draft only");
         await page.keyboard.press("Escape");
         assert.equal(await page.locator("#reviewPanel").isVisible(),false);
+        assert.equal(await page.locator("#sourceFrame").isVisible(),true);
+        assert.equal(await page.locator("#hlTrack").isVisible(),true);
         assert.equal(errors.length,0,"Source and lab JS errors");
         assert.equal(bad.length,0,"Preview assets returned HTTP errors");
         console.log("STREAMING_LAB_BROWSER_PASS "+JSON.stringify({viewport:size,source,block4ReviewOnly:true,originalTextPreserved:true,probeAbstains:true}));

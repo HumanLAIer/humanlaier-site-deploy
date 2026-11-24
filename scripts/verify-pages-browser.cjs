@@ -65,6 +65,10 @@ async function sourceChat(browser){
        speechSide:actualSpeech[0]?getComputedStyle(actualSpeech[0]).justifyContent:null,
        viewerSide:actualChat[0]?getComputedStyle(actualChat[0]).justifyContent:null,
        transcriptEvidence:selectedSource?.transcriptEvidence,
+       readiness:window.HL_DEMO_READINESS?.status||null,
+       sourceStatus:document.getElementById('conversationList').dataset.showcaseState,
+       incompleteNote:document.getElementById('conversationNote').textContent,
+       criticalVideoSha:window.HL_PARTICIPATION_ASR?.contract?.mediaSha256,
        actionScope:document.getElementById('actionScope').value,
        eventLayerOptions:[...document.getElementById('graphEventKind').options]
          .map(o=>({kind:o.value,label:o.textContent})),
@@ -103,6 +107,14 @@ async function sourceChat(browser){
      'Viewer comments must remain on original right-side chat bubbles');
    assert.equal(evidence.transcriptEvidence,'SAME_SOURCE_MACHINE_ASR_UNREVIEWED',
      'Original default ASR must explicitly be unreviewed, not human-verified');
+   assert.equal(evidence.readiness,'ready',
+     'Critical source video, ASR and recorded activity must pass the default integrity contract');
+   assert.equal(evidence.sourceStatus,'ready',
+     'Never claim an incomplete default recording is a complete showcase');
+   assert.equal(evidence.criticalVideoSha,
+     'a823a0c53babe333e51500dff9f8364bcdd351e3a24868786c8afa519174bfbf');
+   assert(!evidence.incompleteNote.includes('DEMO INCOMPLETE'));
+   assert.equal(await page.locator('#conversationList [data-showcase-error]').count(),0);
    assert.equal(evidence.actionScope,'all');
    assert(evidence.statline.includes('observed accounts')&&evidence.video.includes('nov17-participation.mp4')&&
      !evidence.videoHidden&&evidence.layout==='grid');

@@ -16,6 +16,8 @@ const required=[
   'streaming-demo/assets/nov17-participation-asr.json',
   'streaming-demo/nine-tickers/comparison.json',
   'streaming-lab/index.html','streaming-lab/lab.js','streaming-lab/lab.css','streaming-lab/catalogue-review.json',
+  'streaming-lab/nine-tickers-nov22/index.html','streaming-lab/nine-tickers-nov22/app.js','streaming-lab/nine-tickers-nov22/styles.css','streaming-lab/nine-tickers-nov22/comparison.json',
+  'streaming-lab/nine-tickers-nov22/part-1.flac','streaming-lab/nine-tickers-nov22/part-2.flac','streaming-lab/nine-tickers-nov22/part-3.flac',
   'streaming-demo/nine-tickers/video-manifest.json',
   'streaming-demo/nine-tickers/commercial-180.mp4',
   'streaming-demo/nine-tickers/commercial-180.mp3',
@@ -57,7 +59,7 @@ assert.equal(fs.readFileSync(path.join(dest,'CNAME'),'utf8').trim(),'humanlaier.
 // A new release always gets a new JavaScript/CSS URL, even when the source
 // HTML or its fixed historical query strings are unchanged.
 for(const page of ['index.html','thanks.html','streaming-demo/index.html',
-                   'streaming-demo/nine-tickers/index.html','streaming-lab/index.html',
+                   'streaming-demo/nine-tickers/index.html','streaming-lab/index.html','streaming-lab/nine-tickers-nov22/index.html',
                    'singlish-compare/index.html']){
   const filepath=path.join(dest,page);
   const html=fs.readFileSync(filepath,'utf8').replace(
@@ -80,6 +82,8 @@ for(const asset of ['index.html','streaming-demo/index.html',
   'streaming-demo/assets/nov17-participation-asr.json',
   'streaming-demo/nine-tickers/comparison.json',
   'streaming-lab/index.html','streaming-lab/lab.js','streaming-lab/lab.css','streaming-lab/catalogue-review.json',
+  'streaming-lab/nine-tickers-nov22/index.html','streaming-lab/nine-tickers-nov22/app.js','streaming-lab/nine-tickers-nov22/styles.css','streaming-lab/nine-tickers-nov22/comparison.json',
+  'streaming-lab/nine-tickers-nov22/part-1.flac','streaming-lab/nine-tickers-nov22/part-2.flac','streaming-lab/nine-tickers-nov22/part-3.flac',
   'streaming-demo/nine-tickers/video-manifest.json',
   'streaming-demo/nine-tickers/commercial-180.mp4',
   'streaming-demo/nine-tickers/commercial-180.mp3',

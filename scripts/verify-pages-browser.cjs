@@ -25,6 +25,90 @@ function observe(page){
  });
  return {errors,bad};
 }
+// Measure rendered geometry, not merely overflow:auto on a CSS rule.
+// A scrollable region must be bounded independently of transcript length.
+async function conversationGeometry(page){
+ return page.evaluate(()=>{
+   const list=document.getElementById('conversationList');
+   const pane=list.closest('.panel-conversation');
+   const chooser=document.getElementById('transcriptChooser');
+   const footer=document.getElementById('conversationFooter');
+   const dock=document.getElementById('primaryDock');
+   const r=list.getBoundingClientRect(),p=pane.getBoundingClientRect();
+   const c=chooser.getBoundingClientRect(),f=footer.getBoundingClientRect();
+   const mobile=matchMedia('(max-width:700px)').matches;
+   const expected=mobile?Math.max(280,Math.min(600,innerHeight*.55)):
+     parseFloat(getComputedStyle(dock).getPropertyValue('--analysis-height'));
+   const s=getComputedStyle(list);
+   return {width:innerWidth,viewportHeight:innerHeight,mobile,expected,
+     height:r.height,client:list.clientHeight,content:list.scrollHeight,
+     overflowY:s.overflowY,scrollTop:list.scrollTop,
+     top:r.top+scrollY,bottom:r.bottom+scrollY,
+     paneHeight:p.height,paneBottom:p.bottom+scrollY,
+     dockHeight:dock.getBoundingClientRect().height,
+     chooserVisible:!chooser.hidden&&c.height>0,
+     chooserOutside:!list.contains(chooser)&&chooser.parentElement===list.parentElement,
+     chooserTop:c.top+scrollY,chooserBottom:c.bottom+scrollY,
+     footerTop:f.top+scrollY,footerBottom:f.bottom+scrollY,
+     horizontal:list.scrollWidth-list.clientWidth};
+ });
+}
+function requireConversationGeometry(g,label,requireOverflow=true){
+ assert(Number.isFinite(g.expected)&&Math.abs(g.height-g.expected)<=2,
+   label+': conversation height budget violated '+JSON.stringify(g));
+ assert(g.client>0&&['auto','scroll'].includes(g.overflowY),
+   label+': conversation is not an internal scroll viewport '+JSON.stringify(g));
+ if(requireOverflow)assert(g.content>g.client+20,
+   label+': long conversation must overflow internally '+JSON.stringify(g));
+ assert(g.horizontal<=3,label+': unexpected horizontal conversation overflow');
+ assert(g.footerTop>=g.bottom-2&&g.footerBottom<=g.paneBottom+2,
+   label+': footer overlaps chat or escapes its panel '+JSON.stringify(g));
+ if(g.chooserVisible){
+   assert(g.chooserOutside&&Math.abs(g.chooserTop-g.bottom)<=3&&
+     g.chooserBottom<=g.footerTop+2,
+     label+': transcript selector must remain immediately below, outside the scroller '+JSON.stringify(g));
+ }
+ return g;
+}
+async function assertConversationScrolling(page,label,{wheel=true}={}){
+ const before=requireConversationGeometry(await conversationGeometry(page),label);
+ const list=page.locator('#conversationList');
+ // The user can reach both ends of the actual rendered history. Keep the
+ // page stationary when scrolling inside the conversation, not just when
+ // checking its computed overflow property.
+ if(wheel){
+   await list.hover();
+   await list.evaluate(el=>{el.scrollTop=0;});
+   const pageBefore=await page.evaluate(()=>scrollY);
+   await page.mouse.wheel(0,240);
+   await page.waitForFunction(()=>document.getElementById('conversationList').scrollTop>20,
+     null,{timeout:4000});
+   const pageAfter=await page.evaluate(()=>scrollY);
+   assert(Math.abs(pageAfter-pageBefore)<=2,label+': wheel scroll escaped into the outer page');
+ }else{
+   await list.evaluate(el=>{el.scrollTop=0;el.scrollTop=240;});
+   assert((await list.evaluate(el=>el.scrollTop))>20,
+     label+': mobile conversation must support internal scrolling');
+ }
+ const bottom=await list.evaluate(el=>{
+   el.scrollTop=el.scrollHeight;
+   const last=el.querySelector('.message-row:last-of-type');
+   const a=el.getBoundingClientRect(),b=last?.getBoundingClientRect();
+   return {top:el.scrollTop,max:el.scrollHeight-el.clientHeight,
+     lastVisible:!!b&&b.top<a.bottom&&b.bottom>a.top};
+ });
+ assert(Math.abs(bottom.max-bottom.top)<=2&&bottom.lastVisible,
+   label+': final message must be reachable inside scroll viewport '+JSON.stringify(bottom));
+ const after=requireConversationGeometry(await conversationGeometry(page),label);
+ assert(Math.abs(after.height-before.height)<=2&&
+   Math.abs(after.chooserTop-before.chooserTop)<=3,
+   label+': scrolling must not resize the pane or move the transcript chooser');
+ await list.evaluate(el=>{el.scrollTop=0;});
+ console.log('V4_CONVERSATION_SCROLL_PASS '+JSON.stringify({label,height:before.height,
+   content:before.content,maxScroll:bottom.max,mobile:before.mobile,
+   chooser:before.chooserVisible,actualWheel:wheel}));
+ return before;
+}
 async function sourceChat(browser){
  const page=await browser.newPage({viewport:{width:1440,height:900},deviceScaleFactor:1});
  const observeResult=observe(page);
@@ -130,6 +214,22 @@ async function sourceChat(browser){
    assert.equal(evidence.actionScope,'all');
    assert(evidence.statline.includes('observed accounts')&&evidence.video.includes('nov17-participation.mp4')&&
      !evidence.videoHidden&&evidence.layout==='grid');
+   // Exercise the actual scroll container before any model switch, including
+   // laptop and two-column widths. Restore the original viewport for the rest
+   // of the source/graph acceptance tests.
+   await assertConversationScrolling(page,'default desktop 1440x900');
+   await page.setViewportSize({width:1280,height:720});
+   await assertConversationScrolling(page,'laptop 1280x720');
+   await page.setViewportSize({width:900,height:768});
+   await assertConversationScrolling(page,'tablet 900x768');
+   await page.setViewportSize({width:1440,height:900});
+   const heightBefore=requireConversationGeometry(await conversationGeometry(page),'before dock resize');
+   await page.locator('#dockHeightUp').click();
+   const heightAfter=requireConversationGeometry(await conversationGeometry(page),'after dock resize');
+   assert(Math.abs(heightAfter.height-heightBefore.height-40)<=2,
+     'Conversation must honor the existing dock height adjustment');
+   await page.locator('#dockHeightDown').click();
+   requireConversationGeometry(await conversationGeometry(page),'restored dock height');
    // Change only the actual source-bound transcript: video transport,
    // viewer comments, markers and network identities must not change.
    const switchProof=await page.evaluate(()=>{
@@ -166,6 +266,15 @@ async function sourceChat(browser){
    }
    console.log('SAME_SOURCE_TRANSCRIPT_SWITCH_PASS '+JSON.stringify(
      switchProof.snapshots.map(t=>({id:t.id,segments:t.rows.length,comments:t.comments,accounts:t.actors,markers:t.marks}))));
+   // DOM order alone is insufficient. Each genuine alternative must retain
+   // bounded scrolling and a physically separate, accessible selector.
+   for(const t of switchProof.snapshots){
+     await page.locator('#featuredModel').selectOption(t.id);
+     await assertConversationScrolling(page,'desktop transcript '+t.id);
+   }
+   await page.locator('#featuredModel').selectOption('sing-ctx');
+   if(await page.locator('#conversationFollow').getAttribute('aria-pressed')==='false')
+     await page.locator('#conversationFollow').click();
    // All source event kinds remain selectable for inspection and true
    // incident playback, rather than being represented by aggregate labels.
    await page.locator('#graphEventKind').selectOption('gift');
@@ -292,6 +401,7 @@ async function sourceChat(browser){
    assert.equal(state.layout,'grid');
    assert.equal(state.disconnectedTranscript,false);
    assert(state.widthOverflow<=2,'Original V4 workspace has no horizontal overflow');
+   requireConversationGeometry(await conversationGeometry(page),'independent 180s ASR excerpt',false);
    await page.waitForFunction(()=>{
      const v=document.getElementById('videoPlayer');
      return v.readyState>=2&&v.videoWidth>100&&v.videoHeight>100&&v.duration>179;
@@ -325,6 +435,7 @@ async function sourceChat(browser){
      const actual=await page.evaluate(id=>window.HL_FEATURED_SOURCE.transcriptBlocks[0].texts[id]||
        '[No recorded output from this engine for this passage]',optionValues[1]);
      assert.equal(updated.trim(),actual.trim(),'ASR choice must change native chat bubble');
+     requireConversationGeometry(await conversationGeometry(page),'independent 180s ASR switch',false);
    }
    const oldCaptures=await page.locator('#sessionSelect option').evaluateAll(els=>
      els.map(e=>e.value).filter(v=>v&&v!=='source-nov17-original-audio-180'));
@@ -457,7 +568,7 @@ async function independentOptionalResearchAndMutableSpeech(browser){
    alternative.utterances[0],
    alternative.utterances[Math.floor(alternative.utterances.length/2)],
    alternative.utterances.at(-1)
- ].map((r,i)=>[r[0],r[1],'Completely revised same-source speech '+i]);
+ ].map((r,i)=>[r[0],r[1],('Test-only long same-source speech '+i+' with repeated words and different segment boundaries. ').repeat(85).trim()]);
  const page=await browser.newPage({viewport:{width:1250,height:780}});
  try{
    await page.route('**/assets/nov17-participation-asr.json*',route=>route.fulfill({
@@ -468,6 +579,7 @@ async function independentOptionalResearchAndMutableSpeech(browser){
      document.getElementById('featuredModel')?.value==='sing-ctx'&&
      document.querySelectorAll('#networkNodes g[data-actor]').length===42,
      null,{timeout:25000});
+   const baseline=requireConversationGeometry(await conversationGeometry(page),'before long transcript');
    await page.locator('#featuredModel').selectOption('base-en');
    await page.waitForFunction(()=>document.querySelectorAll('.message-row.speech').length===3,
      null,{timeout:10000});
@@ -482,14 +594,33 @@ async function independentOptionalResearchAndMutableSpeech(browser){
      state:document.getElementById('conversationList').dataset.showcaseState
    }));
    assert.equal(result.count,3);
-   assert.equal(result.first,'Completely revised same-source speech 0');
+   assert.equal(result.first,alternative.utterances[0][2]);
    assert.equal(result.model,'faster-whisper/large-v3');
    assert.equal(result.comments,87);
    assert.equal(result.accounts,42);
    assert.equal(result.markers,140);
    assert(result.sourceVideo.endsWith('/assets/nov17-participation.mp4'));
    assert.equal(result.state,'ready');
-   console.log('ARBITRARY_SOURCE_ASR_RESEGMENTATION_BROWSER_PASS '+JSON.stringify(result));
+   const long=await assertConversationScrolling(page,'long resegmented transcript');
+   assert(long.content>baseline.content+300,'Long fixture must actually stress scrolling');
+   assert(Math.abs(long.height-baseline.height)<=2&&long.dockHeight<=baseline.dockHeight+80,
+     'Longer transcript must not expand the conversation or the dock');
+   // Controlled browser-only mutation of the original flex growth rule:
+   // prove the same geometry assertion catches the reported unbounded chat.
+   const broken=await page.addStyleTag({content:
+     '#conversationList{flex:1!important;max-height:none!important;min-height:330px!important}'});
+   try{
+     const bad=await conversationGeometry(page);
+     assert.throws(()=>requireConversationGeometry(bad,'regressed flex sizing'),
+       /conversation height budget violated|long conversation must overflow internally/,
+       'The old flex:1/unbounded rule must be detected by the real browser gate');
+     console.log('V4_UNBOUNDED_CHAT_MUTATION_REJECTED '+JSON.stringify({
+       height:bad.height,content:bad.content,expected:bad.expected}));
+   }finally{await broken.evaluate(el=>el.remove());}
+   await assertConversationScrolling(page,'restored after flex mutation');
+   console.log('ARBITRARY_SOURCE_ASR_RESEGMENTATION_BROWSER_PASS '+JSON.stringify({
+     count:result.count,comments:result.comments,accounts:result.accounts,markers:result.markers,
+     model:result.model,state:result.state,longCharacters:result.first.length}));
  }finally{await page.close();}
 }
 async function mobile(browser){
@@ -514,6 +645,11 @@ async function mobile(browser){
    assert(metrics.graphNodes>0,'Original activity constellation must have real nodes on mobile');
    assert(metrics.htmlWidth<=metrics.viewport+3,'No mobile page horizontal overflow');
    assert(metrics.left>=-2&&metrics.right<=metrics.viewport+3,'Conversation stays within viewport');
+   await assertConversationScrolling(page,'mobile 390x844',{wheel:false});
+   for(const id of ['base-en','small-en','sing-ctx']){
+     await page.locator('#featuredModel').selectOption(id);
+     await assertConversationScrolling(page,'mobile transcript '+id,{wheel:false});
+   }
    await page.locator('[data-mobile-tab="constellation"]').click();
    const graphVisible=await page.locator('#networkSvg').evaluate(el=>{
      const r=el.getBoundingClientRect();

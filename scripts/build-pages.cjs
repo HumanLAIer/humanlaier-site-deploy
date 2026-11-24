@@ -75,7 +75,7 @@ fs.writeFileSync(bootstrap,fs.readFileSync(bootstrap,'utf8')
   .replace(/app\.js\?v=[a-z0-9_.-]+/g,'app.js?release='+releaseSha.slice(0,12)));
 const checks={};
 for(const asset of ['index.html','streaming-demo/index.html',
-  'streaming-demo/app.js','streaming-demo/featured-bootstrap.js',
+  'streaming-demo/ux.css','streaming-demo/app.js','streaming-demo/featured-bootstrap.js',
   'streaming-demo/participation-source-asr.js',
   'streaming-demo/assets/nov17-participation-asr.json',
   'streaming-demo/nine-tickers/comparison.json',

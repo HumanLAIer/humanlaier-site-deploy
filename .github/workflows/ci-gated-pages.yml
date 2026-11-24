@@ -18,11 +18,13 @@ jobs:
       - name: Syntax-check shipped JavaScript
         run: |
           set -euo pipefail
-          for src in js/*.js singlish-compare/app.js streaming-demo/*.js streaming-demo/nine-tickers/app.js scripts/*.cjs; do
+          for src in js/*.js singlish-compare/app.js streaming-demo/*.js streaming-demo/nine-tickers/app.js streaming-lab/*.js scripts/*.cjs; do
             node --check "$src"
           done
       - name: Verify independent Singlish archive
         run: node scripts/verify-singlish-contracts.cjs
+      - name: Verify independent research preview and source-only constraints
+        run: node scripts/verify-streaming-lab.cjs
       - name: Build exact static site allowlist
         run: node scripts/build-pages.cjs
       - name: Inspect site inventory and custom domain
@@ -89,6 +91,13 @@ jobs:
           HL_TEST_TARGET: bakeoff
           HL_TEST_WEB_ROOT: .pages-build
         run: node scripts/verify-pages-browser.cjs
+      - name: Test lab wrapper with nine real source lanes and retrieval evidence
+        env:
+          HL_TEST_WEB_ROOT: .pages-build
+        run: |
+          node streaming-demo/verify-range-server.cjs > /tmp/streaming-lab-range.log 2>&1 &
+          sleep 2
+          node scripts/verify-streaming-lab-browser.cjs
       - name: Check independent nine-ticker research screen layout
         run: |
           mkdir -p .private/nine-layout-qa
@@ -194,3 +203,7 @@ jobs:
           HL_TEST_TARGET: bakeoff
           HL_SITE_PUBLIC_BASE: https://humanlaier.com
         run: node scripts/verify-pages-browser.cjs
+      - name: Smoke-test shareable research preview without changing main demo
+        env:
+          HL_SITE_PUBLIC_BASE: https://humanlaier.com
+        run: node scripts/verify-streaming-lab-browser.cjs

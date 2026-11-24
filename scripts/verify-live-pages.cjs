@@ -26,7 +26,8 @@ async function verify(){
  assert.equal(m.commit,commit,'A different commit is live; not claiming this release');
  assert.equal(m.domain,'humanlaier.com');
  for(const name of ['index.html','streaming-demo/index.html','streaming-demo/app.js',
-   'streaming-demo/featured-bootstrap.js','streaming-demo/nine-tickers/comparison.json']){
+   'streaming-demo/featured-bootstrap.js','streaming-demo/nine-tickers/comparison.json',
+   'streaming-lab/index.html','streaming-lab/lab.js','streaming-lab/lab.css']){
    const x=await get('/'+name);
    assert.equal(x.status,200,'Missing production file: '+name);
    assert.equal(x.bytes.length,m.assets[name].bytes,'Wrong production asset size: '+name);

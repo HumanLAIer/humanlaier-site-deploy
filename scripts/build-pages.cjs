@@ -12,6 +12,8 @@ const required=[
   'index.html','CNAME','.nojekyll','streaming-demo/index.html',
   'streaming-demo/app.js','streaming-demo/ux.css',
   'streaming-demo/featured-bootstrap.js','streaming-demo/featured-evidence.js',
+  'streaming-demo/participation-source-asr.js',
+  'streaming-demo/assets/nov17-participation-asr.json',
   'streaming-demo/nine-tickers/comparison.json',
   'streaming-lab/index.html','streaming-lab/lab.js','streaming-lab/lab.css',
   'streaming-demo/nine-tickers/video-manifest.json',
@@ -65,6 +67,8 @@ fs.writeFileSync(bootstrap,fs.readFileSync(bootstrap,'utf8')
 const checks={};
 for(const asset of ['index.html','streaming-demo/index.html',
   'streaming-demo/app.js','streaming-demo/featured-bootstrap.js',
+  'streaming-demo/participation-source-asr.js',
+  'streaming-demo/assets/nov17-participation-asr.json',
   'streaming-demo/nine-tickers/comparison.json',
   'streaming-lab/index.html','streaming-lab/lab.js','streaming-lab/lab.css',
   'streaming-demo/nine-tickers/video-manifest.json',

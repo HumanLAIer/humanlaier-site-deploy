@@ -11,3 +11,5 @@ The ranked-alternative panel offers immediate, structured not-spoken decisions: 
 
 ## Unintelligible speech
 Use `decision: unintelligible` when speech is audible but a reliable transcription is not possible. It is a completed review decision, not an absent-token removal, and has empty replacement, null absenceReason and no selected alternative. The original span and notes remain available for subsequent acoustic investigation. Exports count unintelligible and uncertain decisions separately; neither is counted as absence or an asserted correction.
+
+Whole-passage review in the fixed contiguous diagnostic view selects its designated crop even when the media clock is slightly before the crop or after its end. The original video is sought back as needed. Browser regression explicitly exercises a seek before the boundary; no word timing or source evidence is altered.

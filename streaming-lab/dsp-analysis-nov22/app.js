@@ -3,7 +3,7 @@
 const T=DspTiming,R=T.R,$=id=>document.getElementById(id),v=$('video'),expected='0eef6036a42eb9e8515ae301c2a04ecafeb663d11a4ab930ee750f01cc9fc1cc',base='../nine-tickers-nov22/',arch='../architecture-decision-nov22/',KEY='hl-dsp-review:'+expected;
 const names={control:'No DSP',eq25:'EQ 25%',eq100:'EQ 100%',voice25:'Voice 25%',voice50:'Voice 50%',voice100:'Voice 100%',combined100:'Combined 100%','rms-control':'Volume only',static:'Static vocab','voice25-static':'Voice 25% + vocab'};
 const variants=Object.keys(names),rows={},reviewCues={repetition:[33,49],'focus-fighters':[57.37,64],'start-bid':[160.21,177],'been-a-while':[331,340],togekiss:[369,396],'normal-milk':[424,437.18],'shout-out':[567,580]};
-const S={data:null,index:0,part:0,pending:null,end:null,review:null,notes:{},blind:false,raf:0,audioContext:null,audioNode:null,audioGen:0,trackCache:new Map(),cachePart:null};
+const S={data:null,index:0,part:0,pending:null,end:null,review:null,notes:{},blind:false,raf:0,audioContext:null,audioNode:null,audioGen:0,inputs:null};
 const el=(tag,cls,text)=>{const x=document.createElement(tag);if(cls)x.className=cls;if(text!=null)x.textContent=text;return x};
 const status=t=>$('status').textContent=t, audioStatus=t=>$('audioStatus').textContent=t;
 const fmt=s=>{s=Math.max(0,s);return String(Math.floor(s/60)).padStart(2,'0')+':'+String(Math.floor(s%60)).padStart(2,'0')};
@@ -63,18 +63,21 @@ function noteKey(){return S.review?.window===S.index?S.review.slug:'window-'+(S.
 function persist(){try{localStorage.setItem(KEY,JSON.stringify(S.notes));return true}catch{return false}}
 function reviewText(){return S.data.reviews.filter(r=>S.notes[r.slug]).map(r=>r.label+' ('+fmt(S.data.windows[r.window].startFrame/R)+'): '+S.notes[r.slug].text).concat(Object.entries(S.notes).filter(([k])=>k.startsWith('window-')).map(([k,v])=>k+': '+v.text)).join('\n\n')}
 function setBlind(b){S.blind=b;document.body.classList.toggle('blind',b);$('blind').setAttribute('aria-pressed',String(b));$('blind').textContent=b?'Reveal transcripts':'Blind review';$('revealReview').hidden=!b;if(b){$('transcripts').close();$('reviewNotes').open=true;$('reviewText').focus()}}
-async function getTrack(p,label,ctx){
- if(S.cachePart!==p.part){S.trackCache.clear();S.cachePart=p.part}
- if(S.trackCache.has(label))return S.trackCache.get(label);
- const track=label==='raw'?p.rawAudio:p.tracks[label],url=(label==='raw'?base:arch)+track.filename;
- const task=(async()=>{const data=await bytes(url,track.sha256),buf=await ctx.decodeAudioData(data);if(buf.sampleRate!==R||buf.length!==track.frames||buf.numberOfChannels!==1)throw Error('Decoded PCM extent mismatch');return new Float32Array(buf.getChannelData(0))})();
- S.trackCache.set(label,task);try{return await task}catch(e){S.trackCache.delete(label);throw e}
-}
 async function audition(){
- stopAudio();v.pause();const gen=S.audioGen,w=current(),c=cell(w,$('audioTrack').value),p=part();if(c.status==='not_decoded'){audioStatus('No valid gain control for this window');return}
- try{if(!S.audioContext)S.audioContext=new AudioContext({sampleRate:R});const ctx=S.audioContext;await ctx.resume();if(ctx.sampleRate!==R)throw Error('16 kHz Web Audio unavailable');audioStatus('Loading and verifying exact PCM…');$('stopAudio').disabled=false;const spec=T.profiles[c.variant],raw=await getTrack(p,'raw',ctx),filtered=spec?await getTrack(p,spec[0],ctx):null;if(gen!==S.audioGen)return;
- const x=T.reconstruct(w,c,raw,filtered);if(await digest(x.buffer)!==c.inputPcmSha256)throw Error('Packed PCM SHA mismatch; audition disabled');if(gen!==S.audioGen)return;
- const buffer=ctx.createBuffer(1,x.length,R);buffer.copyToChannel(x,0);const node=ctx.createBufferSource();node.buffer=buffer;node.connect(ctx.destination);node.playbackRate.value=Number($('speed').value);S.audioNode=node;node.onended=()=>{if(S.audioNode===node){S.audioNode=null;$('stopAudio').disabled=true;audioStatus('Verified input finished')}};node.start();audioStatus('SHA-VERIFIED · '+names[c.variant]+' · '+(x.length/R).toFixed(2)+'s packed audio (video paused)');
+ stopAudio();v.pause();const gen=S.audioGen,w=current(),c=cell(w,$('audioTrack').value);if(c.status==='not_decoded'){audioStatus('No valid gain control for this window');return}
+ try{
+  if(!S.audioContext)S.audioContext=new AudioContext();const ctx=S.audioContext;await ctx.resume();
+  if(gen!==S.audioGen)return;
+  audioStatus('Loading and verifying exact PCM…');$('stopAudio').disabled=false;
+  if(!S.inputs){const response=await fetch('audio-inputs.json',{cache:'no-cache'});if(!response.ok)throw Error('Input inventory unavailable');const m=await response.json();if(m.schema!=='hl-packed-dsp-inputs-v1'||m.comparisonSha256!==expected||m.sampleRate!==R)throw Error('Input inventory mismatch');S.inputs=m}
+  const a=S.inputs.assets[c.inputPcmSha256];if(!a||a.frames!==w.inputFrames||a.file!=='inputs/'+c.inputPcmSha256+'.pcmz')throw Error('Exact input unavailable');
+  const compressed=await bytes(a.file,a.sha256);if(compressed.byteLength!==a.bytes)throw Error('Input bytes mismatch');
+  const decompressed=await new Response(new Blob([compressed]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
+  if(decompressed.byteLength!==w.inputFrames*2)throw Error('Input PCM extent mismatch');
+  const raw=new DataView(decompressed),x=new Float32Array(w.inputFrames),f32=new DataView(new ArrayBuffer(w.inputFrames*4));
+  for(let i=0;i<x.length;i++){x[i]=raw.getInt16(i*2,true)/32768;f32.setFloat32(i*4,x[i],true)}
+  if(await digest(f32.buffer)!==c.inputPcmSha256)throw Error('Packed PCM SHA mismatch; audition disabled');if(gen!==S.audioGen)return;
+  const buffer=ctx.createBuffer(1,x.length,R);buffer.copyToChannel(x,0);const node=ctx.createBufferSource();node.buffer=buffer;node.connect(ctx.destination);node.playbackRate.value=Number($('speed').value);S.audioNode=node;node.onended=()=>{if(S.audioNode===node){S.audioNode=null;$('stopAudio').disabled=true;audioStatus('Verified input finished')}};node.start();audioStatus('SHA-VERIFIED · '+names[c.variant]+' · '+(x.length/R).toFixed(2)+'s packed audio (video paused)');
  }catch(e){if(gen===S.audioGen){$('stopAudio').disabled=true;audioStatus(e.message)}}
 }
 $('audition').onclick=audition;$('stopAudio').onclick=stopAudio;$('audioTrack').onchange=stopAudio;$('speed').onchange=()=>{v.playbackRate=Number($('speed').value);if(S.audioNode)S.audioNode.playbackRate.value=v.playbackRate};$('wordTiming').onchange=kick;

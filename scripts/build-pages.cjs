@@ -85,6 +85,7 @@ for(const page of ['index.html','thanks.html','streaming-demo/index.html',
 const bootstrap=path.join(dest,'streaming-demo/featured-bootstrap.js');
 fs.writeFileSync(bootstrap,fs.readFileSync(bootstrap,'utf8')
   .replace(/app\.js\?v=[a-z0-9_.-]+/g,'app.js?release='+releaseSha.slice(0,12)));
+const dspInputs=require('./stage-packed-dsp-audio.cjs').stageDspAudio(root,dest);
 const checks={};
 for(const asset of ['index.html','streaming-demo/index.html',
   'streaming-demo/ux.css','streaming-demo/app.js','streaming-demo/featured-bootstrap.js',
@@ -108,6 +109,10 @@ for(const asset of ['index.html','streaming-demo/index.html',
   'streaming-demo/assets/nov17-participation.mp4']){
   const filepath=path.join(dest,asset);
   checks[asset]={sha256:sha(filepath),bytes:fs.statSync(filepath).size};
+}
+for(const name of ['audio-inputs.json',...Object.values(dspInputs.assets).map(a=>a.file)]){
+ const rel='streaming-lab/dsp-analysis-nov22/'+name,filename=path.join(dest,rel);
+ checks[rel]={sha256:sha(filename),bytes:fs.statSync(filename).size};
 }
 const originalMedia=checks['streaming-demo/assets/nov17-participation.mp4'];
 const originalAsr=JSON.parse(fs.readFileSync(

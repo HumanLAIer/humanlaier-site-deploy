@@ -57,6 +57,7 @@ assert(!fs.existsSync(path.join(destination,'streaming-demo/app.js')),
   'Independent research QA must not depend on the client V4 demo');
 assert(!fs.existsSync(path.join(destination,'streaming-demo/assets/nov17-participation-asr.json')),
   'Research QA must not depend on the client host transcript');
+require('./stage-packed-dsp-audio.cjs').stageDspAudio(root,destination);
 console.log('INDEPENDENT_RESEARCH_ARTIFACT_READY '+JSON.stringify({
   output:'.research-build',products:directories,
   originalVideoBytes:fs.statSync(path.join(destination,

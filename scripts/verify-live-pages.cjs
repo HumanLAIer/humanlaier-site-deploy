@@ -46,6 +46,11 @@ async function verify(){
    assert.equal(x.bytes.length,m.assets[name].bytes,'Wrong production asset size: '+name);
    assert.equal(sha(x.bytes),m.assets[name].sha256,'Stale production asset: '+name);
  }
+ const dsp=await get('/streaming-lab/dsp-analysis-nov22/audio-inputs.json');
+ assert.equal(dsp.status,200);assert.equal(sha(dsp.bytes),m.assets['streaming-lab/dsp-analysis-nov22/audio-inputs.json'].sha256);
+ const di=JSON.parse(dsp.bytes);assert.equal(di.schema,'hl-packed-dsp-inputs-v1');assert.equal(di.verifiedCells,210);
+ for(const a of Object.values(di.assets)){const k='streaming-lab/dsp-analysis-nov22/'+a.file;assert.equal(m.assets[k].sha256,a.sha256);assert.equal(m.assets[k].bytes,a.bytes)}
+ // Browser smoke verifies actual selected input bytes and decoded float32 hashes.
  // Public release must contain a complete default demo, not merely an
  // HTTP 200 for some transcript file. The runtime and CI share source IDs.
  const showcase=m.primaryShowcase;

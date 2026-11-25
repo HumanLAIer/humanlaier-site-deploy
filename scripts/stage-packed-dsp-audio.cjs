@@ -13,7 +13,7 @@ function stageDspAudio(root,dest){
    if(tracks.has(label))return tracks.get(label);
    const t=label==='raw'?p.rawAudio:p.tracks[label],src=path.join(root,'streaming-lab',label==='raw'?'nine-tickers-nov22':'architecture-decision-nov22',t.filename);
    assert.equal(sha(fs.readFileSync(src)),t.sha256);
-   const result=cp.spawnSync('ffmpeg',['-nostdin','-v','error','-i',src,'-map','0:a:0','-c:a','pcm_s16le','-f','s16le','pipe:1'],{maxBuffer:32*1024*1024,timeout:30000});
+   const result=cp.spawnSync('flac',['--silent','--decode','--force-raw-format','--endian=little','--sign=signed','--stdout',src],{maxBuffer:32*1024*1024,timeout:30000});
    if(result.error||result.status!==0)throw Error('FLAC decode failed: '+String(result.stderr||result.error));
    const b=result.stdout;assert.equal(b.length,t.frames*2);assert.equal(sha(b),label==='raw'?p.sourcePcmSha256:t.pcmS16Sha256);
    const x=new Float32Array(t.frames);for(let i=0;i<x.length;i++)x[i]=b.readInt16LE(2*i)/32768;

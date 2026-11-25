@@ -8,3 +8,6 @@ Default is two frozen A/R tickers and five actual configuration summaries; acous
 
 ## Explicit absent-token adjudication
 The ranked-alternative panel offers immediate, structured not-spoken decisions: music, noise/other sound, silence, hallucinated/repeated text, and not spoken with unclear cause. These record `decision: remove`, an empty replacement and `absenceReason`, with original evidence untouched. A reviewer who cannot establish whether the text was spoken should use uncertain instead. Notes preserve the absence reason; selecting a new interpretation clears it. Exports include absence counts by reason. These are human adjudications, not automatic acoustic classification or proof of hallucination mechanism. Older removal annotations without a reason are interpreted as unspecified.
+
+## Unintelligible speech
+Use `decision: unintelligible` when speech is audible but a reliable transcription is not possible. It is a completed review decision, not an absent-token removal, and has empty replacement, null absenceReason and no selected alternative. The original span and notes remain available for subsequent acoustic investigation. Exports count unintelligible and uncertain decisions separately; neither is counted as absence or an asserted correction.

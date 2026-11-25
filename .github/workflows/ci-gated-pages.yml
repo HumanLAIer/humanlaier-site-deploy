@@ -44,6 +44,9 @@ jobs:
         run: |
           node --check streaming-lab/architecture-decision-nov22/app.js
           node scripts/verify-architecture-decision.cjs
+          node --check streaming-lab/dsp-analysis-nov22/app.js
+          node --check streaming-lab/dsp-analysis-nov22/timing.js
+          node scripts/verify-packed-dsp.cjs
       - name: Validate main demo evidence before preparing a website artifact
         run: node scripts/verify-recorded-activity.cjs
       - name: Build exact static site allowlist
@@ -125,6 +128,7 @@ jobs:
           node scripts/verify-speaker-roles-browser.cjs
           node scripts/verify-persistent-speaker-roles-browser.cjs
           node scripts/verify-architecture-decision-browser.cjs
+          node scripts/verify-packed-dsp-browser.cjs
       - name: Check independent nine-ticker research screen layout
         run: |
           mkdir -p .private/nine-layout-qa
@@ -241,3 +245,4 @@ jobs:
           node scripts/verify-speaker-roles-browser.cjs
           node scripts/verify-persistent-speaker-roles-browser.cjs
           node scripts/verify-architecture-decision-browser.cjs
+          node scripts/verify-packed-dsp-browser.cjs

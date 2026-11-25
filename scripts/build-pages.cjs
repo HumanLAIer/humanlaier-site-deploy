@@ -23,6 +23,7 @@ const required=[
   'streaming-lab/coats-guarded-nov22/index.html','streaming-lab/coats-guarded-nov22/app.js','streaming-lab/coats-guarded-nov22/styles.css','streaming-lab/coats-guarded-nov22/paired-results.json',
   'streaming-lab/speaker-roles-nov22/index.html','streaming-lab/speaker-roles-nov22/app.js','streaming-lab/speaker-roles-nov22/styles.css','streaming-lab/speaker-roles-nov22/role-data.json',
   'streaming-lab/speaker-roles-persistent-nov22/index.html','streaming-lab/speaker-roles-persistent-nov22/app.js','streaming-lab/speaker-roles-persistent-nov22/replay.js','streaming-lab/speaker-roles-persistent-nov22/styles.css',
+  'streaming-lab/dsp-analysis-nov22/index.html','streaming-lab/dsp-analysis-nov22/app.js','streaming-lab/dsp-analysis-nov22/timing.js','streaming-lab/dsp-analysis-nov22/styles.css','streaming-lab/dsp-analysis-nov22/comparison.json','streaming-lab/dsp-analysis-nov22/evidence.json',
   'streaming-lab/architecture-decision-nov22/index.html','streaming-lab/architecture-decision-nov22/app.js','streaming-lab/architecture-decision-nov22/styles.css','streaming-lab/architecture-decision-nov22/comparison.json','streaming-lab/architecture-decision-nov22/export-manifest.json','streaming-lab/architecture-decision-nov22/listen-B-1.flac','streaming-lab/architecture-decision-nov22/listen-B-2.flac','streaming-lab/architecture-decision-nov22/listen-B-3.flac','streaming-lab/architecture-decision-nov22/listen-C-1.flac','streaming-lab/architecture-decision-nov22/listen-C-2.flac','streaming-lab/architecture-decision-nov22/listen-C-3.flac','streaming-lab/architecture-decision-nov22/listen-D-1.flac','streaming-lab/architecture-decision-nov22/listen-D-2.flac','streaming-lab/architecture-decision-nov22/listen-D-3.flac','streaming-lab/architecture-decision-nov22/listen-E-1.flac','streaming-lab/architecture-decision-nov22/listen-E-2.flac','streaming-lab/architecture-decision-nov22/listen-E-3.flac','streaming-lab/architecture-decision-nov22/listen-F-1.flac','streaming-lab/architecture-decision-nov22/listen-F-2.flac','streaming-lab/architecture-decision-nov22/listen-F-3.flac','streaming-lab/architecture-decision-nov22/listen-G-1.flac','streaming-lab/architecture-decision-nov22/listen-G-2.flac','streaming-lab/architecture-decision-nov22/listen-G-3.flac','streaming-lab/architecture-decision-nov22/listen-H-1.flac','streaming-lab/architecture-decision-nov22/listen-H-2.flac','streaming-lab/architecture-decision-nov22/listen-H-3.flac','streaming-lab/architecture-decision-nov22/listen-gate-1.flac','streaming-lab/architecture-decision-nov22/listen-gate-2.flac','streaming-lab/architecture-decision-nov22/listen-gate-3.flac',
   'streaming-demo/nine-tickers/styles.css',
   'streaming-demo/nine-tickers/video-manifest.json',
@@ -68,7 +69,7 @@ assert.equal(fs.readFileSync(path.join(dest,'CNAME'),'utf8').trim(),'humanlaier.
 // A new release always gets a new JavaScript/CSS URL, even when the source
 // HTML or its fixed historical query strings are unchanged.
 for(const page of ['index.html','thanks.html','streaming-demo/index.html',
-                   'streaming-demo/nine-tickers/index.html','streaming-lab/index.html','streaming-lab/nine-tickers-nov22/index.html','streaming-lab/ten-tickers-nov22/index.html','streaming-lab/coats-guarded-nov22/index.html','streaming-lab/speaker-roles-nov22/index.html','streaming-lab/speaker-roles-persistent-nov22/index.html','streaming-lab/architecture-decision-nov22/index.html',
+                   'streaming-demo/nine-tickers/index.html','streaming-lab/index.html','streaming-lab/nine-tickers-nov22/index.html','streaming-lab/ten-tickers-nov22/index.html','streaming-lab/coats-guarded-nov22/index.html','streaming-lab/speaker-roles-nov22/index.html','streaming-lab/speaker-roles-persistent-nov22/index.html','streaming-lab/architecture-decision-nov22/index.html','streaming-lab/dsp-analysis-nov22/index.html',
                    'singlish-compare/index.html']){
   const filepath=path.join(dest,page);
   const html=fs.readFileSync(filepath,'utf8').replace(
@@ -84,6 +85,7 @@ for(const page of ['index.html','thanks.html','streaming-demo/index.html',
 const bootstrap=path.join(dest,'streaming-demo/featured-bootstrap.js');
 fs.writeFileSync(bootstrap,fs.readFileSync(bootstrap,'utf8')
   .replace(/app\.js\?v=[a-z0-9_.-]+/g,'app.js?release='+releaseSha.slice(0,12)));
+const dspInputs=require('./stage-packed-dsp-audio.cjs').stageDspAudio(root,dest);
 const checks={};
 for(const asset of ['index.html','streaming-demo/index.html',
   'streaming-demo/ux.css','streaming-demo/app.js','streaming-demo/featured-bootstrap.js',
@@ -98,6 +100,7 @@ for(const asset of ['index.html','streaming-demo/index.html',
   'streaming-lab/coats-guarded-nov22/index.html','streaming-lab/coats-guarded-nov22/app.js','streaming-lab/coats-guarded-nov22/styles.css','streaming-lab/coats-guarded-nov22/paired-results.json',
   'streaming-lab/speaker-roles-nov22/index.html','streaming-lab/speaker-roles-nov22/app.js','streaming-lab/speaker-roles-nov22/styles.css','streaming-lab/speaker-roles-nov22/role-data.json',
   'streaming-lab/speaker-roles-persistent-nov22/index.html','streaming-lab/speaker-roles-persistent-nov22/app.js','streaming-lab/speaker-roles-persistent-nov22/replay.js','streaming-lab/speaker-roles-persistent-nov22/styles.css',
+  'streaming-lab/dsp-analysis-nov22/index.html','streaming-lab/dsp-analysis-nov22/app.js','streaming-lab/dsp-analysis-nov22/timing.js','streaming-lab/dsp-analysis-nov22/styles.css','streaming-lab/dsp-analysis-nov22/comparison.json','streaming-lab/dsp-analysis-nov22/evidence.json',
   'streaming-lab/architecture-decision-nov22/index.html','streaming-lab/architecture-decision-nov22/app.js','streaming-lab/architecture-decision-nov22/styles.css','streaming-lab/architecture-decision-nov22/comparison.json','streaming-lab/architecture-decision-nov22/export-manifest.json','streaming-lab/architecture-decision-nov22/listen-B-1.flac','streaming-lab/architecture-decision-nov22/listen-B-2.flac','streaming-lab/architecture-decision-nov22/listen-B-3.flac','streaming-lab/architecture-decision-nov22/listen-C-1.flac','streaming-lab/architecture-decision-nov22/listen-C-2.flac','streaming-lab/architecture-decision-nov22/listen-C-3.flac','streaming-lab/architecture-decision-nov22/listen-D-1.flac','streaming-lab/architecture-decision-nov22/listen-D-2.flac','streaming-lab/architecture-decision-nov22/listen-D-3.flac','streaming-lab/architecture-decision-nov22/listen-E-1.flac','streaming-lab/architecture-decision-nov22/listen-E-2.flac','streaming-lab/architecture-decision-nov22/listen-E-3.flac','streaming-lab/architecture-decision-nov22/listen-F-1.flac','streaming-lab/architecture-decision-nov22/listen-F-2.flac','streaming-lab/architecture-decision-nov22/listen-F-3.flac','streaming-lab/architecture-decision-nov22/listen-G-1.flac','streaming-lab/architecture-decision-nov22/listen-G-2.flac','streaming-lab/architecture-decision-nov22/listen-G-3.flac','streaming-lab/architecture-decision-nov22/listen-H-1.flac','streaming-lab/architecture-decision-nov22/listen-H-2.flac','streaming-lab/architecture-decision-nov22/listen-H-3.flac','streaming-lab/architecture-decision-nov22/listen-gate-1.flac','streaming-lab/architecture-decision-nov22/listen-gate-2.flac','streaming-lab/architecture-decision-nov22/listen-gate-3.flac',
   'streaming-demo/nine-tickers/styles.css',
   'streaming-demo/nine-tickers/video-manifest.json',
@@ -106,6 +109,10 @@ for(const asset of ['index.html','streaming-demo/index.html',
   'streaming-demo/assets/nov17-participation.mp4']){
   const filepath=path.join(dest,asset);
   checks[asset]={sha256:sha(filepath),bytes:fs.statSync(filepath).size};
+}
+for(const name of ['audio-inputs.json',...Object.values(dspInputs.assets).map(a=>a.file)]){
+ const rel='streaming-lab/dsp-analysis-nov22/'+name,filename=path.join(dest,rel);
+ checks[rel]={sha256:sha(filename),bytes:fs.statSync(filename).size};
 }
 const originalMedia=checks['streaming-demo/assets/nov17-participation.mp4'];
 const originalAsr=JSON.parse(fs.readFileSync(

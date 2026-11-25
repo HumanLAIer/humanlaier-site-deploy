@@ -44,8 +44,18 @@ jobs:
         run: |
           node --check streaming-lab/architecture-decision-nov22/app.js
           node scripts/verify-architecture-decision.cjs
+          node --check streaming-lab/dsp-analysis-nov22/app.js
+          node --check streaming-lab/dsp-analysis-nov22/timing.js
+          node scripts/verify-packed-dsp.cjs
       - name: Validate main demo evidence before preparing a website artifact
         run: node scripts/verify-recorded-activity.cjs
+      - name: Ensure reference FLAC decoder is installed
+        run: |
+          if ! command -v flac >/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y --no-install-recommends flac
+          fi
+          flac --version
       - name: Build exact static site allowlist
         run: node scripts/build-pages.cjs
       - name: Inspect site inventory and custom domain
@@ -80,6 +90,13 @@ jobs:
           if ! command -v google-chrome >/dev/null 2>&1; then
             npx playwright install --with-deps chrome
           fi
+      - name: Ensure reference FLAC decoder is installed
+        run: |
+          if ! command -v flac >/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y --no-install-recommends flac
+          fi
+          flac --version
       - name: Build exact Pages artifact for browser-level release acceptance
         run: node scripts/build-pages.cjs
       - name: Test V4 real playback, group chat, original Constellation and source failure injection
@@ -105,6 +122,13 @@ jobs:
           if ! command -v google-chrome >/dev/null 2>&1; then
             npx playwright install --with-deps chrome
           fi
+      - name: Ensure reference FLAC decoder is installed
+        run: |
+          if ! command -v flac >/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y --no-install-recommends flac
+          fi
+          flac --version
       - name: Stage independent research-only artifact (no V4 transcript dependency)
         run: node scripts/build-research-pages.cjs
       - name: Test independent bakeoff real media in Chrome
@@ -125,6 +149,7 @@ jobs:
           node scripts/verify-speaker-roles-browser.cjs
           node scripts/verify-persistent-speaker-roles-browser.cjs
           node scripts/verify-architecture-decision-browser.cjs
+          node scripts/verify-packed-dsp-browser.cjs
       - name: Check independent nine-ticker research screen layout
         run: |
           mkdir -p .private/nine-layout-qa
@@ -148,6 +173,13 @@ jobs:
     timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
+      - name: Ensure reference FLAC decoder is installed
+        run: |
+          if ! command -v flac >/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y --no-install-recommends flac
+          fi
+          flac --version
       - name: Rebuild approved site at this exact commit
         run: node scripts/build-pages.cjs
       - name: Upload for Pages only after authorized cutover
@@ -241,3 +273,4 @@ jobs:
           node scripts/verify-speaker-roles-browser.cjs
           node scripts/verify-persistent-speaker-roles-browser.cjs
           node scripts/verify-architecture-decision-browser.cjs
+          node scripts/verify-packed-dsp-browser.cjs

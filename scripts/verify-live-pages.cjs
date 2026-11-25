@@ -38,6 +38,7 @@ async function verify(){
   'streaming-lab/coats-guarded-nov22/index.html','streaming-lab/coats-guarded-nov22/app.js','streaming-lab/coats-guarded-nov22/styles.css','streaming-lab/coats-guarded-nov22/paired-results.json',
   'streaming-lab/speaker-roles-nov22/index.html','streaming-lab/speaker-roles-nov22/app.js','streaming-lab/speaker-roles-nov22/styles.css','streaming-lab/speaker-roles-nov22/role-data.json',
   'streaming-lab/speaker-roles-persistent-nov22/index.html','streaming-lab/speaker-roles-persistent-nov22/app.js','streaming-lab/speaker-roles-persistent-nov22/replay.js','streaming-lab/speaker-roles-persistent-nov22/styles.css',
+  'streaming-lab/dsp-analysis-nov22/index.html','streaming-lab/dsp-analysis-nov22/app.js','streaming-lab/dsp-analysis-nov22/timing.js','streaming-lab/dsp-analysis-nov22/styles.css','streaming-lab/dsp-analysis-nov22/comparison.json','streaming-lab/dsp-analysis-nov22/evidence.json',
   'streaming-lab/architecture-decision-nov22/index.html','streaming-lab/architecture-decision-nov22/app.js','streaming-lab/architecture-decision-nov22/styles.css','streaming-lab/architecture-decision-nov22/comparison.json','streaming-lab/architecture-decision-nov22/export-manifest.json','streaming-lab/architecture-decision-nov22/listen-B-1.flac','streaming-lab/architecture-decision-nov22/listen-B-2.flac','streaming-lab/architecture-decision-nov22/listen-B-3.flac','streaming-lab/architecture-decision-nov22/listen-C-1.flac','streaming-lab/architecture-decision-nov22/listen-C-2.flac','streaming-lab/architecture-decision-nov22/listen-C-3.flac','streaming-lab/architecture-decision-nov22/listen-D-1.flac','streaming-lab/architecture-decision-nov22/listen-D-2.flac','streaming-lab/architecture-decision-nov22/listen-D-3.flac','streaming-lab/architecture-decision-nov22/listen-E-1.flac','streaming-lab/architecture-decision-nov22/listen-E-2.flac','streaming-lab/architecture-decision-nov22/listen-E-3.flac','streaming-lab/architecture-decision-nov22/listen-F-1.flac','streaming-lab/architecture-decision-nov22/listen-F-2.flac','streaming-lab/architecture-decision-nov22/listen-F-3.flac','streaming-lab/architecture-decision-nov22/listen-G-1.flac','streaming-lab/architecture-decision-nov22/listen-G-2.flac','streaming-lab/architecture-decision-nov22/listen-G-3.flac','streaming-lab/architecture-decision-nov22/listen-H-1.flac','streaming-lab/architecture-decision-nov22/listen-H-2.flac','streaming-lab/architecture-decision-nov22/listen-H-3.flac','streaming-lab/architecture-decision-nov22/listen-gate-1.flac','streaming-lab/architecture-decision-nov22/listen-gate-2.flac','streaming-lab/architecture-decision-nov22/listen-gate-3.flac',
   'streaming-demo/nine-tickers/styles.css','streaming-demo/assets/nov17-participation.mp4']){
    const x=await get('/'+name);
@@ -45,6 +46,11 @@ async function verify(){
    assert.equal(x.bytes.length,m.assets[name].bytes,'Wrong production asset size: '+name);
    assert.equal(sha(x.bytes),m.assets[name].sha256,'Stale production asset: '+name);
  }
+ const dsp=await get('/streaming-lab/dsp-analysis-nov22/audio-inputs.json');
+ assert.equal(dsp.status,200);assert.equal(sha(dsp.bytes),m.assets['streaming-lab/dsp-analysis-nov22/audio-inputs.json'].sha256);
+ const di=JSON.parse(dsp.bytes);assert.equal(di.schema,'hl-packed-dsp-inputs-v1');assert.equal(di.verifiedCells,210);
+ for(const a of Object.values(di.assets)){const k='streaming-lab/dsp-analysis-nov22/'+a.file;assert.equal(m.assets[k].sha256,a.sha256);assert.equal(m.assets[k].bytes,a.bytes)}
+ // Browser smoke verifies actual selected input bytes and decoded float32 hashes.
  // Public release must contain a complete default demo, not merely an
  // HTTP 200 for some transcript file. The runtime and CI share source IDs.
  const showcase=m.primaryShowcase;

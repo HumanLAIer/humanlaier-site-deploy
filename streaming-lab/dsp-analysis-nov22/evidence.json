@@ -1,0 +1,15 @@
+{
+  "schema": "hl-packed-dsp-export-v1",
+  "comparisonSha256": "0eef6036a42eb9e8515ae301c2a04ecafeb663d11a4ab930ee750f01cc9fc1cc",
+  "comparisonBytes": 584931,
+  "runId": 45548543642,
+  "controlComparisonSha256": "22c1747f2760846641490431bfd6c67872e3fe891fd7a0e621341cdbcbb79125",
+  "shards": {
+    "dsp-0": "41bfcdb360c787c55c253c64975dffc03df96fbf9e897d365ae106c98353eba2",
+    "dsp-1": "54e1603d5569039d19804b794eb34f4cf02f60ffd8f22ed9251d3a0f4317e141",
+    "dsp-2": "208a7e46143892b0d6f0f1afed549f89232d9889a749cc748b2a5491f13ebd87",
+    "context-0": "9cc8082dfe46cf2706e7050e01e25eeca803dee3eb2a33728b97801ee28913ca",
+    "context-1": "8a8d5ac6878362a6911e377d89b14092d4fa2352b1c6f0886c2737b62724f12a",
+    "context-2": "0648f72296a97cd0eb4b60c226e447e16d76b1361465f960ad50ff1ed4335f2b"
+  }
+}

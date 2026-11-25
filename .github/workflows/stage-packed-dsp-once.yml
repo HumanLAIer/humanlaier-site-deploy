@@ -1,0 +1,55 @@
+name: Stage verified packed DSP evidence once
+on:
+  push:
+    branches: [research/nov25-packed-dsp-lab]
+    paths: [.github/workflows/stage-packed-dsp-once.yml]
+permissions:
+  contents: write
+concurrency:
+  group: nov25-packed-dsp-stage
+  cancel-in-progress: false
+jobs:
+  stage:
+    if: github.repository == 'HumanLAIer/humanlaier-site-deploy'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify authorized artifacts and project evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          set +x
+          mkdir -p /tmp/dsp-evidence
+          URL='https://sdmntprcentralus.oaiusercontent.com/files/00000000-1178-81f5-8e4a-612d7da58967/raw?se=2026-11-25T05%3A12%3A18Z&sp=r&sv=2026-06-06&sr=b&scid=5b102b22-64f9-5c53-8763-36378715e544&skoid=add8ee7d-5fc7-451e-b06e-a82b2276cf62&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-11-24T12%3A59%3A42Z&ske=2026-11-25T12%3A59%3A42Z&sks=b&skv=2026-06-06&sig=/4wQ5SeBwuMwd7NE9y00R/rSOTYLENzC7m6NegArrgc%3D'
+          echo "::add-mask::$URL"
+          curl -fsSL --retry 2 --max-time 60 "$URL" -o /tmp/dsp-evidence/dsp-0.zip
+          echo 'f69ef8c53bffdb200b411cc90216a0ab5ba762fe48722dbd81d1c5a032cad35b  /tmp/dsp-evidence/dsp-0.zip' | sha256sum -c -
+          URL='https://sdmntprcentralus.oaiusercontent.com/files/00000000-b134-81f5-b6db-19b503b84d50/raw?se=2026-11-25T05%3A12%3A18Z&sp=r&sv=2026-06-06&sr=b&scid=690ca9f9-c03e-59ad-9306-442d7fe780b6&skoid=add8ee7d-5fc7-451e-b06e-a82b2276cf62&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-11-25T00%3A08%3A33Z&ske=2026-11-26T00%3A08%3A33Z&sks=b&skv=2026-06-06&sig=MaCHc6xcb0Lm8rcLhnxV/32H7zcee3p1P4Ur5RONnIE%3D'
+          echo "::add-mask::$URL"
+          curl -fsSL --retry 2 --max-time 60 "$URL" -o /tmp/dsp-evidence/dsp-1.zip
+          echo '3bd0000672dc3dcb91bd2b7c769557ad3501306dacdc46af3cacdbe3ada0065e  /tmp/dsp-evidence/dsp-1.zip' | sha256sum -c -
+          URL='https://sdmntprcentralus.oaiusercontent.com/files/00000000-9b28-81f5-967c-79aff1e82cee/raw?se=2026-11-25T05%3A12%3A18Z&sp=r&sv=2026-06-06&sr=b&scid=3e40fecf-74d7-5a91-a7e9-876a0815f345&skoid=add8ee7d-5fc7-451e-b06e-a82b2276cf62&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-11-25T00%3A14%3A45Z&ske=2026-11-26T00%3A14%3A45Z&sks=b&skv=2026-06-06&sig=gepSWbcTGVzM478qSoFPgrDetaIoXdATKxq90RLcuZU%3D'
+          echo "::add-mask::$URL"
+          curl -fsSL --retry 2 --max-time 60 "$URL" -o /tmp/dsp-evidence/dsp-2.zip
+          echo '225c6331310afa9feb3d88e5b88de7f2d6f4407b2d6f75f98e312d594331526a  /tmp/dsp-evidence/dsp-2.zip' | sha256sum -c -
+          URL='https://sdmntprcentralus.oaiusercontent.com/files/00000000-6ac0-81f5-8fb1-c58e993cfbb1/raw?se=2026-11-25T05%3A12%3A18Z&sp=r&sv=2026-06-06&sr=b&scid=5a0e8a88-a07e-53e5-9cfe-ff57a36ecd84&skoid=add8ee7d-5fc7-451e-b06e-a82b2276cf62&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-11-25T00%3A32%3A43Z&ske=2026-11-26T00%3A32%3A43Z&sks=b&skv=2026-06-06&sig=uY9GBsCOZ26AH1zgouYBH6I3dUzQw/Hz%2Bn5X5H1YkRE%3D'
+          echo "::add-mask::$URL"
+          curl -fsSL --retry 2 --max-time 60 "$URL" -o /tmp/dsp-evidence/context-0.zip
+          echo '1a69c969142e12c2ba0d698b8ea3a2806fd5c58d4f288da4d396ac71ccf99a0e  /tmp/dsp-evidence/context-0.zip' | sha256sum -c -
+          URL='https://sdmntprcentralus.oaiusercontent.com/files/00000000-df98-81f5-b9a5-0b2d5a62d8a2/raw?se=2026-11-25T05%3A12%3A18Z&sp=r&sv=2026-06-06&sr=b&scid=dc94ca36-3cac-56a6-9b78-d5072acbd58d&skoid=add8ee7d-5fc7-451e-b06e-a82b2276cf62&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-11-25T00%3A32%3A43Z&ske=2026-11-26T00%3A32%3A43Z&sks=b&skv=2026-06-06&sig=i7UPIWbd0MHZOi8kcIOr45I5huOKeGNSEREt0/JkN40%3D'
+          echo "::add-mask::$URL"
+          curl -fsSL --retry 2 --max-time 60 "$URL" -o /tmp/dsp-evidence/context-1.zip
+          echo 'd5e59e5f8a92fa5893482c48c3b18726c4540c5d83ff761155e6a30993c2e3a0  /tmp/dsp-evidence/context-1.zip' | sha256sum -c -
+          URL='https://sdmntprcentralus.oaiusercontent.com/files/00000000-e758-81f5-8118-db310fa7b907/raw?se=2026-11-25T05%3A12%3A19Z&sp=r&sv=2026-06-06&sr=b&scid=61e433db-e193-51c7-900f-3538b97b99cc&skoid=add8ee7d-5fc7-451e-b06e-a82b2276cf62&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-11-25T00%3A04%3A40Z&ske=2026-11-26T00%3A04%3A40Z&sks=b&skv=2026-06-06&sig=WIfczLnN8WkfJTYmd9Jvo%2BTksav45mrqc%2BVORqQjC%2B8%3D'
+          echo "::add-mask::$URL"
+          curl -fsSL --retry 2 --max-time 60 "$URL" -o /tmp/dsp-evidence/context-2.zip
+          echo '2a67778db9730b549911ff57bd253eb57905de8e6a533502f12c210622710844  /tmp/dsp-evidence/context-2.zip' | sha256sum -c -
+          python scripts/stage-packed-dsp.py /tmp/dsp-evidence
+      - name: Commit only public result projection
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add streaming-lab/dsp-analysis-nov22/comparison.json streaming-lab/dsp-analysis-nov22/evidence.json
+          git commit -m 'Stage verified packed DSP public result projection'
+          git push origin HEAD:research/nov25-packed-dsp-lab

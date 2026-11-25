@@ -58,3 +58,22 @@ button:disabled{opacity:.45;cursor:not-allowed}
 @media(max-width:1000px){.review-actions{gap:4px}.review-actions button,.review-actions select,.import-label{font-size:10px;padding:4px 6px}.ordinary-legend{display:none!important}.inspect-inner{gap:7px}}
 @media(max-width:860px){html,body{height:auto;overflow:auto}.studio{height:auto;min-height:100dvh;display:flex;flex-direction:column;overflow:visible}.mast{height:32px;flex:0 0 auto;position:sticky;top:0;z-index:5}.mast-purpose{display:none}.video-column{height:340px;flex:0 0 auto;position:sticky;top:32px;z-index:4;border-right:0}.right-panel{display:flex;overflow:visible}.review-tickers{min-height:335px;flex:0 0 auto}.review-tickers .ticker-row{min-height:26px}.inspector{max-height:none}.inspect-inner{grid-template-columns:1fr}.review-tickers .ticker-bar{grid-template-columns:92px 1fr 92px}.review-tickers .ticker-row{grid-template-columns:92px 1fr 50px}.review-tickers .ticker-key{gap:6px}.review-tickers .ticker-key span{font-size:9px}.review-actions{flex-wrap:wrap}.review-toolbar .transport{grid-template-columns:35px minmax(0,1fr) 36px 65px 80px;gap:3px;padding:3px 5px}.progress{margin-left:0}.source-name{display:none}}
 @media(max-width:540px){.video-column{height:300px}.mast{gap:7px}.mast>strong{font-size:9px}.review-actions select{max-width:190px}.review-tickers .ticker-meta{font-size:8px}.review-tickers .ticker-model small{display:none}.review-tickers .ticker-bar strong{font-size:9px}.foot{flex-wrap:wrap}}
+
+/* Main evaluation compares recognition settings, not model lanes. */
+.recognition-view .review-tickers .ticker-set{flex:0 0 auto;min-height:86px}
+.recognition-view .review-tickers .ticker-row{min-height:43px;flex:0 0 43px}
+.config-overview{padding:8px 10px;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;align-content:start}
+.config-overview[hidden],.config-compare[hidden]{display:none!important}
+.config-overview-title,.config-caption{font:10px var(--mono);color:var(--muted);letter-spacing:.02em;grid-column:1/-1}
+.config-summary,.config-row{border:1px solid #52707f;background:#122f3d;color:var(--text);border-radius:3px;padding:6px;text-align:left;min-width:0}
+.config-summary strong,.config-summary small{display:block;overflow-wrap:anywhere}
+.config-summary strong{font-size:11px}.config-summary small{font:9px var(--mono);color:var(--muted);margin-top:4px}
+.config-summary[aria-pressed=true],.config-row[aria-pressed=true]{border-color:var(--mint);background:#19453f}
+.config-overview-hint{grid-column:1/-1;font-size:11px;color:var(--muted);margin:2px 0}
+.config-compare{display:grid;gap:3px;margin:5px 0}
+.config-compare .config-row{display:grid;grid-template-columns:85px minmax(0,1fr) minmax(0,1.1fr);align-items:center;gap:5px;text-align:left}
+.config-row span,.config-row small{overflow-wrap:anywhere}.config-row small{font-size:9px;color:var(--muted)}
+.alignment-details{border:1px solid var(--line);padding:4px 6px;font-size:11px}.alignment-details summary{cursor:pointer;color:var(--mint)}
+.alignment-row{padding:4px 0;border-top:1px solid var(--line);overflow-wrap:anywhere}.alignment-row small{display:block;color:var(--muted);margin:2px 0}
+.alignment-caution{font-size:10px;color:var(--muted)}
+@media(max-width:860px){.config-overview{grid-template-columns:repeat(2,minmax(0,1fr))}.recognition-view .review-tickers{min-height:260px}.config-compare .config-row{grid-template-columns:75px minmax(0,1fr)}.config-row small{grid-column:2}}

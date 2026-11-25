@@ -15,7 +15,7 @@ const required=[
   'streaming-demo/participation-source-asr.js',
   'streaming-demo/assets/nov17-participation-asr.json',
   'streaming-demo/nine-tickers/comparison.json',
-  'streaming-demo/manual-review/index.html','streaming-demo/manual-review/review.js','streaming-demo/manual-review/review.css','streaming-demo/manual-review/review-data.json',
+  'streaming-demo/manual-review/index.html','streaming-demo/manual-review/review.js','streaming-demo/manual-review/review.css','streaming-demo/manual-review/review-data.json','streaming-demo/manual-review/configurations.json',
   'streaming-lab/index.html','streaming-lab/lab.js','streaming-lab/lab.css','streaming-lab/catalogue-review.json',
   'streaming-lab/nine-tickers-nov22/index.html','streaming-lab/nine-tickers-nov22/app.js','streaming-lab/nine-tickers-nov22/styles.css','streaming-lab/nine-tickers-nov22/comparison.json',
   'streaming-lab/nine-tickers-nov22/part-1.flac','streaming-lab/nine-tickers-nov22/part-2.flac','streaming-lab/nine-tickers-nov22/part-3.flac',
@@ -89,6 +89,7 @@ fs.writeFileSync(bootstrap,fs.readFileSync(bootstrap,'utf8')
 const dspInputs=require('./stage-packed-dsp-audio.cjs').stageDspAudio(root,dest);
 const checks={};
 for(const asset of ['index.html','streaming-demo/index.html',
+  'streaming-demo/manual-review/index.html','streaming-demo/manual-review/review.js','streaming-demo/manual-review/review.css','streaming-demo/manual-review/review-data.json','streaming-demo/manual-review/configurations.json',
   'streaming-demo/ux.css','streaming-demo/app.js','streaming-demo/featured-bootstrap.js',
   'streaming-demo/participation-source-asr.js',
   'streaming-demo/assets/nov17-participation-asr.json',

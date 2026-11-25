@@ -39,7 +39,7 @@ for(const rel of [
   'streaming-demo/nine-tickers/app.js',
   'streaming-demo/nine-tickers/styles.css',
   'streaming-demo/nine-tickers/comparison.json',
-  'streaming-demo/manual-review/index.html','streaming-demo/manual-review/review.js','streaming-demo/manual-review/review.css','streaming-demo/manual-review/review-data.json',
+  'streaming-demo/manual-review/index.html','streaming-demo/manual-review/review.js','streaming-demo/manual-review/review.css','streaming-demo/manual-review/review-data.json','streaming-demo/manual-review/configurations.json',
   'streaming-demo/nine-tickers/video-manifest.json',
   'streaming-demo/nine-tickers/commercial-180.mp4',
   'streaming-demo/nine-tickers/commercial-180.mp3',

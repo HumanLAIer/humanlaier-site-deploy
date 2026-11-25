@@ -29,6 +29,10 @@ jobs:
         run: node scripts/verify-nov22-nine.cjs
       - name: Verify all ten real dialogue/raw lanes and audio receipts
         run: node scripts/verify-dialogue-ten.cjs
+      - name: Verify manual evaluation source and transcript span contract
+        run: |
+          node --check streaming-demo/manual-review/review.js
+          node scripts/verify-manual-review.cjs
       - name: Verify immutable paired Coats decoder results
         run: node scripts/verify-coats-guard.cjs
       - name: Verify speaker role evidence and exact gate replay coverage
@@ -150,6 +154,7 @@ jobs:
           node scripts/verify-persistent-speaker-roles-browser.cjs
           node scripts/verify-architecture-decision-browser.cjs
           node scripts/verify-packed-dsp-browser.cjs
+          node scripts/verify-manual-review-browser.cjs
       - name: Check independent nine-ticker research screen layout
         run: |
           mkdir -p .private/nine-layout-qa
@@ -274,3 +279,4 @@ jobs:
           node scripts/verify-persistent-speaker-roles-browser.cjs
           node scripts/verify-architecture-decision-browser.cjs
           node scripts/verify-packed-dsp-browser.cjs
+          node scripts/verify-manual-review-browser.cjs

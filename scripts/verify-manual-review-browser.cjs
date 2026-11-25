@@ -1,0 +1,24 @@
+#!/usr/bin/env node
+'use strict';
+const assert=require('node:assert/strict'),{chromium}=require('playwright'),fs=require('node:fs');
+const root=(process.env.HL_SITE_PUBLIC_BASE||'http://127.0.0.1:18764').replace(/\/+$/,'');
+(async()=>{const b=await chromium.launch({headless:true,channel:'chrome',args:['--no-sandbox','--disable-dev-shm-usage','--autoplay-policy=no-user-gesture-required']});
+try{for(const viewport of [{width:1280,height:720},{width:390,height:844}]){const p=await b.newPage({viewport,acceptDownloads:true}),errors=[];p.on('pageerror',e=>errors.push(e.message));try{
+await p.goto(root+'/streaming-demo/manual-review/',{waitUntil:'domcontentloaded'});
+await p.waitForFunction(()=>document.querySelectorAll('#lanes .ticker-row').length===12&&document.querySelector('#video').readyState>=1,{},{timeout:60000});
+assert.equal(await p.locator('#lanes .ticker-row.advanced').count(),2);assert.equal(await p.locator('#lanes .ticker-row:not(.advanced)').count(),10);
+assert.match(await p.locator('#progress').textContent(),/0\/172/);assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2));assert(await p.evaluate(()=>document.querySelector('#video').getBoundingClientRect().height>=280));
+await p.locator('#nextFlag').click();await p.waitForFunction(()=>!document.querySelector('#inspector').hidden&&document.querySelector('#video').paused);
+assert.match(await p.locator('#inspectSource').textContent(),/PACKED/);
+const opts=p.locator('#alternatives .species-option');assert(await opts.count()>0);const chosen=await opts.first().locator('strong').textContent();await opts.first().click();assert.match(await p.locator('#decisionStatus').textContent(),/Recorded: candidate/);assert.equal(await p.locator('#manual').inputValue(),chosen);
+await p.locator('#manual').fill('Synthetic manual evaluation');assert.match(await p.locator('#decisionStatus').textContent(),/Draft saved/);await p.locator('#confirm').click();await p.locator('#note').fill('Synthetic QA only');assert.match(await p.locator('#decisionStatus').textContent(),/Recorded: manual/);
+const [download]=await Promise.all([p.waitForEvent('download'),p.locator('#export').click()]);const file=await download.path();const data=JSON.parse(fs.readFileSync(file,'utf8'));assert.equal(data.schema,'hl-manual-recognition-findings-v1');assert.equal(data.coverage.advancedFlagCount,172);assert.equal(data.annotations.length,1);assert.equal(data.annotations[0].replacement,'Synthetic manual evaluation');assert.equal(data.annotations[0].note,'Synthetic QA only');assert(data.annotations[0].receiptSha256&&data.annotations[0].sourceText&&data.annotations[0].candidateEvidence);assert.equal(data.coverage.unreviewedAreUnannotated,true);
+await p.reload({waitUntil:'domcontentloaded'});await p.waitForFunction(()=>document.querySelectorAll('#lanes .ticker-row').length===12&&document.querySelector('#progress').textContent.startsWith('1/172'),{},{timeout:60000});
+await p.locator('#mode').selectOption('target');await p.waitForFunction(()=>document.querySelectorAll('#lanes .ticker-row.target').length===8&&document.querySelector('#video').getAttribute('src').endsWith('part-2.mp4')&&document.querySelector('#video').readyState>=1,{},{timeout:60000});
+await p.waitForFunction(()=>Math.abs(document.querySelector('#video').currentTime-(370-301.7386875))<1.1,{},{timeout:30000});
+await p.locator('#whole').click();assert.match(await p.locator('#inspectTitle').textContent(),/whole passage/);
+await p.locator('#uncertain').click();assert.match(await p.locator('#decisionStatus').textContent(),/Recorded: uncertain/);await p.locator('#undo').click();assert.match(await p.locator('#decisionStatus').textContent(),/Not yet reviewed/);
+await p.locator('#close').click();await p.locator('#mode').selectOption('packed');assert.equal(await p.locator('#lanes .ticker-row').count(),2);
+await p.locator('#mode').selectOption('standard');assert.equal(await p.locator('#lanes .ticker-row').count(),10);
+assert.deepEqual(errors,[]);console.log('MANUAL_REVIEW_BROWSER_PASS '+JSON.stringify(viewport));
+}finally{await p.close()}}}finally{await b.close()}})().catch(e=>{console.error(e);process.exit(1)});

@@ -15,6 +15,7 @@ const required=[
   'streaming-demo/participation-source-asr.js',
   'streaming-demo/assets/nov17-participation-asr.json',
   'streaming-demo/nine-tickers/comparison.json',
+  'streaming-demo/manual-review/index.html','streaming-demo/manual-review/review.js','streaming-demo/manual-review/review.css','streaming-demo/manual-review/review-data.json',
   'streaming-lab/index.html','streaming-lab/lab.js','streaming-lab/lab.css','streaming-lab/catalogue-review.json',
   'streaming-lab/nine-tickers-nov22/index.html','streaming-lab/nine-tickers-nov22/app.js','streaming-lab/nine-tickers-nov22/styles.css','streaming-lab/nine-tickers-nov22/comparison.json',
   'streaming-lab/nine-tickers-nov22/part-1.flac','streaming-lab/nine-tickers-nov22/part-2.flac','streaming-lab/nine-tickers-nov22/part-3.flac',
@@ -69,7 +70,7 @@ assert.equal(fs.readFileSync(path.join(dest,'CNAME'),'utf8').trim(),'humanlaier.
 // A new release always gets a new JavaScript/CSS URL, even when the source
 // HTML or its fixed historical query strings are unchanged.
 for(const page of ['index.html','thanks.html','streaming-demo/index.html',
-                   'streaming-demo/nine-tickers/index.html','streaming-lab/index.html','streaming-lab/nine-tickers-nov22/index.html','streaming-lab/ten-tickers-nov22/index.html','streaming-lab/coats-guarded-nov22/index.html','streaming-lab/speaker-roles-nov22/index.html','streaming-lab/speaker-roles-persistent-nov22/index.html','streaming-lab/architecture-decision-nov22/index.html','streaming-lab/dsp-analysis-nov22/index.html',
+                   'streaming-demo/nine-tickers/index.html','streaming-demo/manual-review/index.html','streaming-lab/index.html','streaming-lab/nine-tickers-nov22/index.html','streaming-lab/ten-tickers-nov22/index.html','streaming-lab/coats-guarded-nov22/index.html','streaming-lab/speaker-roles-nov22/index.html','streaming-lab/speaker-roles-persistent-nov22/index.html','streaming-lab/architecture-decision-nov22/index.html','streaming-lab/dsp-analysis-nov22/index.html',
                    'singlish-compare/index.html']){
   const filepath=path.join(dest,page);
   const html=fs.readFileSync(filepath,'utf8').replace(

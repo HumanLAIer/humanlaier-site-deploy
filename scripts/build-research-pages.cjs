@@ -9,7 +9,7 @@ const assert=require('node:assert/strict');
 const root=path.resolve(__dirname,'..');
 const destination=path.join(root,'.research-build');
 if(fs.existsSync(destination))fs.rmSync(destination,{recursive:true,force:true});
-const directories=['streaming-demo/nine-tickers','streaming-lab'];
+const directories=['streaming-demo/nine-tickers','streaming-demo/manual-review','streaming-lab'];
 for(const rel of directories){
   const source=path.join(root,rel),target=path.join(destination,rel);
   assert(fs.existsSync(source),'Research source missing: '+rel);
@@ -39,6 +39,7 @@ for(const rel of [
   'streaming-demo/nine-tickers/app.js',
   'streaming-demo/nine-tickers/styles.css',
   'streaming-demo/nine-tickers/comparison.json',
+  'streaming-demo/manual-review/index.html','streaming-demo/manual-review/review.js','streaming-demo/manual-review/review.css','streaming-demo/manual-review/review-data.json',
   'streaming-demo/nine-tickers/video-manifest.json',
   'streaming-demo/nine-tickers/commercial-180.mp4',
   'streaming-demo/nine-tickers/commercial-180.mp3',

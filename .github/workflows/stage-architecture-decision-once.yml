@@ -1,0 +1,47 @@
+name: Stage verified architecture decision public export once
+on:
+  push:
+    branches: [research/nov22-architecture-lab]
+    paths: [.github/workflows/stage-architecture-decision-once.yml]
+permissions:
+  contents: write
+concurrency:
+  group: nov22-architecture-stage
+  cancel-in-progress: false
+jobs:
+  stage:
+    if: github.repository == 'HumanLAIer/humanlaier-site-deploy'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify and stage only the authorized public projection
+        shell: bash
+        run: |
+          set +x
+          URL='https://sdmntprcentralus.oaiusercontent.com/files/00000000-4fe0-81f5-8433-66ffd8020db1/raw?se=2026-11-25T00%3A25%3A52Z&sp=r&sv=2026-06-06&sr=b&scid=bf340444-0633-5190-abf8-1b47e093afb7&skoid=add8ee7d-5fc7-451e-b06e-a82b2276cf62&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-11-24T14%3A32%3A32Z&ske=2026-11-25T14%3A32%3A32Z&sks=b&skv=2026-06-06&sig=kfMqCBw65zqhs0tbcB5u3gqiu7GaTKRVAm8K4xB9FDQ%3D'
+          echo "::add-mask::$URL"
+          curl --silent --show-error --fail --location --retry 2 --max-time 180 "$URL" -o /tmp/hl-arch.zip
+          echo 'a01c1ce1189271134a0b8d68c6f8effa207f2ffaf3484172010093cc770e0ba3  /tmp/hl-arch.zip' | sha256sum -c -
+          python - <<'PY'
+          import zipfile, pathlib
+          root=pathlib.Path('/tmp/hl-arch')
+          root.mkdir()
+          allowed={'comparison.json','export-manifest.json'} | {f'listen-{k}-{i}.flac' for k in ('B','C','D','E','F','G','H','gate') for i in (1,2,3)}
+          with zipfile.ZipFile('/tmp/hl-arch.zip') as z:
+              assert len(z.namelist())==26 and set(z.namelist())==allowed
+              for info in z.infolist():
+                  assert 0 < info.file_size < 8000000
+                  (root/info.filename).write_bytes(z.read(info))
+          PY
+          node scripts/verify-architecture-decision.cjs /tmp/hl-arch
+          cp /tmp/hl-arch/* streaming-lab/architecture-decision-nov22/
+          node --check streaming-lab/architecture-decision-nov22/app.js
+          node scripts/verify-architecture-decision.cjs
+      - name: Commit only verified public assets
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add streaming-lab/architecture-decision-nov22/comparison.json streaming-lab/architecture-decision-nov22/export-manifest.json streaming-lab/architecture-decision-nov22/listen-*.flac
+          git commit -m 'Stage independently verified architecture decision evidence and 24 FLAC listener tracks'
+          git push origin HEAD:research/nov22-architecture-lab

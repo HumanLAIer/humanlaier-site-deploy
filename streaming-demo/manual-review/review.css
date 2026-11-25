@@ -77,3 +77,5 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .alignment-row{padding:4px 0;border-top:1px solid var(--line);overflow-wrap:anywhere}.alignment-row small{display:block;color:var(--muted);margin:2px 0}
 .alignment-caution{font-size:10px;color:var(--muted)}
 @media(max-width:860px){.config-overview{grid-template-columns:repeat(2,minmax(0,1fr))}.recognition-view .review-tickers{min-height:260px}.config-compare .config-row{grid-template-columns:75px minmax(0,1fr)}.config-row small{grid-column:2}}
+
+.absence-options{min-width:0;border:1px solid #587582;margin:8px 0 0;padding:6px 8px;background:#142630}.absence-options legend{color:var(--gold);font:700 11px var(--sans)}.absence-buttons{display:flex;flex-wrap:wrap;gap:4px}.absence-options small{display:block;margin-top:5px;color:var(--muted);font:10px var(--sans);line-height:1.3}.absence-options button[aria-pressed=true]{color:#12212a;background:#ffcf87;border-color:#ffcf87;font-weight:700}

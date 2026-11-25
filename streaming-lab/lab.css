@@ -116,3 +116,17 @@ button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible,su
   .hl-track-id strong{font-size:10px}
   .hl-track-body p{font-size:11px}
 }
+
+/* Independent research destinations can grow without overflowing the viewport. */
+.lab-nav{display:flex;align-items:center;gap:14px;min-width:0;flex:1 1 auto;overflow-x:auto;white-space:nowrap;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+.lab-nav a{flex:none}
+.topbar .grow{flex:0 0 0}
+#openReview{flex:none}
+@media(max-width:650px){
+  .topbar{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:37px 26px;gap:0 7px;height:64px}
+  .wordmark{grid-column:1;grid-row:1;min-width:0}
+  #openReview{grid-column:2;grid-row:1;margin-left:0}
+  .lab-nav{grid-column:1/-1;grid-row:2;min-width:0;width:100%;height:100%;gap:12px;font-size:11px}
+  .topbar .grow{display:none}
+  .workspace{height:calc(100dvh - 64px)}
+}

@@ -1,0 +1,704 @@
+{
+  "schema": "hl-research-cockpit-v1",
+  "sourceArtifact": 15084916798,
+  "sourceArchiveSha256": "3ad0f69cd5ba5e4eac2958e599b11b3cce4f6fe67b775639b0ce790b3ceeff75",
+  "rows": [
+    {
+      "id": "l4:coats:tensor:pre-clip000",
+      "clipId": "clip000",
+      "family": "coats",
+      "device": "l4",
+      "mode": "tensor",
+      "stage": "pre",
+      "text": " Our challenge K like congrats Ivan happy for you different Gengar thank you thank you Ivan happy this one",
+      "ranges": [
+        [
+          0,
+          240000
+        ]
+      ],
+      "sourceStart": 0,
+      "sourceEnd": 240000,
+      "seconds": 15,
+      "role": "specialist",
+      "archivedFlags": []
+    },
+    {
+      "id": "t4:coats:tensor:pre-clip000",
+      "clipId": "clip000",
+      "family": "coats",
+      "device": "t4",
+      "mode": "tensor",
+      "stage": "pre",
+      "text": " Our challenge K like congrats Ivan happy for you different Gengar thank you thank you Ivan happy this one",
+      "ranges": [
+        [
+          0,
+          240000
+        ]
+      ],
+      "sourceStart": 0,
+      "sourceEnd": 240000,
+      "seconds": 15,
+      "role": "specialist",
+      "archivedFlags": []
+    },
+    {
+      "id": "t4:singlish:neutral:clip000",
+      "clipId": "clip000",
+      "family": "singlish",
+      "device": "t4",
+      "mode": "neutral",
+      "stage": "pre",
+      "text": "our challenge k like congrats ivan happy for you different gang ah thank you thank you ivan happy this one",
+      "ranges": [
+        [
+          0,
+          240000
+        ]
+      ],
+      "sourceStart": 0,
+      "sourceEnd": 240000,
+      "seconds": 15,
+      "role": "specialist",
+      "archivedFlags": []
+    },
+    {
+      "id": "t4:singlish:contextual:clip000",
+      "clipId": "clip000",
+      "family": "singlish",
+      "device": "t4",
+      "mode": "contextual",
+      "stage": "pre",
+      "text": "our challenge k lah like congratsivan happy for you different gang ah thank you thank you ivor happy this one",
+      "ranges": [
+        [
+          0,
+          240000
+        ]
+      ],
+      "sourceStart": 0,
+      "sourceEnd": 240000,
+      "seconds": 15,
+      "role": "specialist",
+      "archivedFlags": []
+    },
+    {
+      "id": "l4:base:tensor:clip000",
+      "clipId": "clip000",
+      "family": "base",
+      "device": "l4",
+      "mode": "tensor",
+      "stage": "raw",
+      "text": " I will challenge. Okay, like, congrats, Ivan, happy for you, different genga. Thank you, thank you, I'm happy. This one.",
+      "ranges": [
+        [
+          0,
+          240000
+        ]
+      ],
+      "sourceStart": 0,
+      "sourceEnd": 240000,
+      "seconds": 15,
+      "role": "comparison-only",
+      "archivedFlags": []
+    },
+    {
+      "id": "l4:coats:tensor:pre-clip008",
+      "clipId": "clip008",
+      "family": "coats",
+      "device": "l4",
+      "mode": "tensor",
+      "stage": "pre",
+      "text": " nice Kenga haven't seen this Kenga for a while sheesh wah that is disgusting",
+      "ranges": [
+        [
+          1920000,
+          1936000
+        ],
+        [
+          1965280,
+          2083360
+        ],
+        [
+          2096320,
+          2160000
+        ]
+      ],
+      "sourceStart": 1920000,
+      "sourceEnd": 2160000,
+      "seconds": 12.36,
+      "role": "specialist",
+      "archivedFlags": []
+    },
+    {
+      "id": "t4:coats:tensor:pre-clip008",
+      "clipId": "clip008",
+      "family": "coats",
+      "device": "t4",
+      "mode": "tensor",
+      "stage": "pre",
+      "text": " nice Kenga haven't seen this Kenga for a while sheesh wah that is disgusting",
+      "ranges": [
+        [
+          1920000,
+          1936000
+        ],
+        [
+          1965280,
+          2083360
+        ],
+        [
+          2096320,
+          2160000
+        ]
+      ],
+      "sourceStart": 1920000,
+      "sourceEnd": 2160000,
+      "seconds": 12.36,
+      "role": "specialist",
+      "archivedFlags": []
+    },
+    {
+      "id": "t4:singlish:neutral:clip008",
+      "clipId": "clip008",
+      "family": "singlish",
+      "device": "t4",
+      "mode": "neutral",
+      "stage": "pre",
+      "text": "nice gang ah haven't seen this gang for a while shh wah that is disgusting",
+      "ranges": [
+        [
+          1920000,
+          1936000
+        ],
+        [
+          1965280,
+          2083360
+        ],
+        [
+          2096320,
+          2160000
+        ]
+      ],
+      "sourceStart": 1920000,
+      "sourceEnd": 2160000,
+      "seconds": 12.36,
+      "role": "specialist",
+      "archivedFlags": []
+    },
+    {
+      "id": "t4:singlish:contextual:clip008",
+      "clipId": "clip008",
+      "family": "singlish",
+      "device": "t4",
+      "mode": "contextual",
+      "stage": "pre",
+      "text": "nice gang ah i haven't seen this gang for a while sheesh wah that is disgusting",
+      "ranges": [
+        [
+          1920000,
+          1936000
+        ],
+        [
+          1965280,
+          2083360
+        ],
+        [
+          2096320,
+          2160000
+        ]
+      ],
+      "sourceStart": 1920000,
+      "sourceEnd": 2160000,
+      "seconds": 12.36,
+      "role": "specialist",
+      "archivedFlags": []
+    },
+    {
+      "id": "l4:base:tensor:clip008",
+      "clipId": "clip008",
+      "family": "base",
+      "device": "l4",
+      "mode": "tensor",
+      "stage": "raw",
+      "text": " Nice ginga, I haven't seen his giggle for a while. Sheesh!",
+      "ranges": [
+        [
+          1920000,
+          2160000
+        ]
+      ],
+      "sourceStart": 1920000,
+      "sourceEnd": 2160000,
+      "seconds": 15,
+      "role": "comparison-only",
+      "archivedFlags": []
+    },
+    {
+      "id": "l4:coats:tensor:pre-clip009",
+      "clipId": "clip009",
+      "family": "coats",
+      "device": "l4",
+      "mode": "tensor",
+      "stage": "pre",
+      "text": " bro like but if you want to auction this you let me know ah you want to auction this also you let me know",
+      "ranges": [
+        [
+          2160000,
+          2181760
+        ],
+        [
+          2226880,
+          2289280
+        ],
+        [
+          2357440,
+          2400000
+        ]
+      ],
+      "sourceStart": 2160000,
+      "sourceEnd": 2400000,
+      "seconds": 7.92,
+      "role": "specialist",
+      "archivedFlags": []
+    },
+    {
+      "id": "t4:coats:tensor:pre-clip009",
+      "clipId": "clip009",
+      "family": "coats",
+      "device": "t4",
+      "mode": "tensor",
+      "stage": "pre",
+      "text": " bro like but if you want to auction this you let me know ah you want to auction this also you let me know",
+      "ranges": [
+        [
+          2160000,
+          2181760
+        ],
+        [
+          2226880,
+          2289280
+        ],
+        [
+          2357440,
+          2400000
+        ]
+      ],
+      "sourceStart": 2160000,
+      "sourceEnd": 2400000,
+      "seconds": 7.92,
+      "role": "specialist",
+      "archivedFlags": []
+    },
+    {
+      "id": "t4:singlish:neutral:clip009",
+      "clipId": "clip009",
+      "family": "singlish",
+      "device": "t4",
+      "mode": "neutral",
+      "stage": "pre",
+      "text": "i bet if you want to auction this you let me know ah you want to auction this also you let me know",
+      "ranges": [
+        [
+          2160000,
+          2181760
+        ],
+        [
+          2226880,
+          2289280
+        ],
+        [
+          2357440,
+          2400000
+        ]
+      ],
+      "sourceStart": 2160000,
+      "sourceEnd": 2400000,
+      "seconds": 7.92,
+      "role": "specialist",
+      "archivedFlags": []
+    },
+    {
+      "id": "t4:singlish:contextual:clip009",
+      "clipId": "clip009",
+      "family": "singlish",
+      "device": "t4",
+      "mode": "contextual",
+      "stage": "pre",
+      "text": "i bet if you want to auction this you let me know ah you want to auction this also you let me know",
+      "ranges": [
+        [
+          2160000,
+          2181760
+        ],
+        [
+          2226880,
+          2289280
+        ],
+        [
+          2357440,
+          2400000
+        ]
+      ],
+      "sourceStart": 2160000,
+      "sourceEnd": 2400000,
+      "seconds": 7.92,
+      "role": "specialist",
+      "archivedFlags": []
+    },
+    {
+      "id": "l4:base:tensor:clip009",
+      "clipId": "clip009",
+      "family": "base",
+      "device": "l4",
+      "mode": "tensor",
+      "stage": "raw",
+      "text": " I bet if you want to auction this, you let me know what You want to auction this also, let me know",
+      "ranges": [
+        [
+          2160000,
+          2400000
+        ]
+      ],
+      "sourceStart": 2160000,
+      "sourceEnd": 2400000,
+      "seconds": 15,
+      "role": "comparison-only",
+      "archivedFlags": []
+    },
+    {
+      "id": "l4:coats:tensor:pre-clip015",
+      "clipId": "clip015",
+      "family": "coats",
+      "device": "l4",
+      "mode": "tensor",
+      "stage": "pre",
+      "text": "seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty twenty one twenty two",
+      "ranges": [
+        [
+          3600000,
+          3840000
+        ]
+      ],
+      "sourceStart": 3600000,
+      "sourceEnd": 3840000,
+      "seconds": 15,
+      "role": "specialist",
+      "archivedFlags": []
+    },
+    {
+      "id": "t4:coats:tensor:pre-clip015",
+      "clipId": "clip015",
+      "family": "coats",
+      "device": "t4",
+      "mode": "tensor",
+      "stage": "pre",
+      "text": "seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty twenty one twenty two",
+      "ranges": [
+        [
+          3600000,
+          3840000
+        ]
+      ],
+      "sourceStart": 3600000,
+      "sourceEnd": 3840000,
+      "seconds": 15,
+      "role": "specialist",
+      "archivedFlags": []
+    },
+    {
+      "id": "t4:singlish:neutral:clip015",
+      "clipId": "clip015",
+      "family": "singlish",
+      "device": "t4",
+      "mode": "neutral",
+      "stage": "pre",
+      "text": "eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty one twenty two",
+      "ranges": [
+        [
+          3600000,
+          3840000
+        ]
+      ],
+      "sourceStart": 3600000,
+      "sourceEnd": 3840000,
+      "seconds": 15,
+      "role": "specialist",
+      "archivedFlags": []
+    },
+    {
+      "id": "t4:singlish:contextual:clip015",
+      "clipId": "clip015",
+      "family": "singlish",
+      "device": "t4",
+      "mode": "contextual",
+      "stage": "pre",
+      "text": "eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty one twenty two",
+      "ranges": [
+        [
+          3600000,
+          3840000
+        ]
+      ],
+      "sourceStart": 3600000,
+      "sourceEnd": 3840000,
+      "seconds": 15,
+      "role": "specialist",
+      "archivedFlags": []
+    },
+    {
+      "id": "l4:base:tensor:clip015",
+      "clipId": "clip015",
+      "family": "base",
+      "device": "l4",
+      "mode": "tensor",
+      "stage": "raw",
+      "text": " 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22.",
+      "ranges": [
+        [
+          3600000,
+          3840000
+        ]
+      ],
+      "sourceStart": 3600000,
+      "sourceEnd": 3840000,
+      "seconds": 15,
+      "role": "comparison-only",
+      "archivedFlags": []
+    },
+    {
+      "id": "l4:coats:tensor:pre-clip017",
+      "clipId": "clip017",
+      "family": "coats",
+      "device": "l4",
+      "mode": "tensor",
+      "stage": "pre",
+      "text": " your support let's get it brother",
+      "ranges": [
+        [
+          4080000,
+          4320000
+        ]
+      ],
+      "sourceStart": 4080000,
+      "sourceEnd": 4320000,
+      "seconds": 15,
+      "role": "specialist",
+      "archivedFlags": []
+    },
+    {
+      "id": "t4:coats:tensor:pre-clip017",
+      "clipId": "clip017",
+      "family": "coats",
+      "device": "t4",
+      "mode": "tensor",
+      "stage": "pre",
+      "text": " your support let's get it brother",
+      "ranges": [
+        [
+          4080000,
+          4320000
+        ]
+      ],
+      "sourceStart": 4080000,
+      "sourceEnd": 4320000,
+      "seconds": 15,
+      "role": "specialist",
+      "archivedFlags": []
+    },
+    {
+      "id": "t4:singlish:neutral:clip017",
+      "clipId": "clip017",
+      "family": "singlish",
+      "device": "t4",
+      "mode": "neutral",
+      "stage": "pre",
+      "text": "let's get it brother season here we go",
+      "ranges": [
+        [
+          4080000,
+          4320000
+        ]
+      ],
+      "sourceStart": 4080000,
+      "sourceEnd": 4320000,
+      "seconds": 15,
+      "role": "specialist",
+      "archivedFlags": []
+    },
+    {
+      "id": "t4:singlish:contextual:clip017",
+      "clipId": "clip017",
+      "family": "singlish",
+      "device": "t4",
+      "mode": "contextual",
+      "stage": "pre",
+      "text": "let's get it brother season here we go",
+      "ranges": [
+        [
+          4080000,
+          4320000
+        ]
+      ],
+      "sourceStart": 4080000,
+      "sourceEnd": 4320000,
+      "seconds": 15,
+      "role": "specialist",
+      "archivedFlags": []
+    },
+    {
+      "id": "l4:base:tensor:clip017",
+      "clipId": "clip017",
+      "family": "base",
+      "device": "l4",
+      "mode": "tensor",
+      "stage": "raw",
+      "text": " your support. Let's get it better. Season. Here we go!",
+      "ranges": [
+        [
+          4080000,
+          4320000
+        ]
+      ],
+      "sourceStart": 4080000,
+      "sourceEnd": 4320000,
+      "seconds": 15,
+      "role": "comparison-only",
+      "archivedFlags": []
+    },
+    {
+      "id": "l4:coats:tensor:pre-clip025",
+      "clipId": "clip025",
+      "family": "coats",
+      "device": "l4",
+      "mode": "tensor",
+      "stage": "pre",
+      "text": " the fifth th fifth th fifth",
+      "ranges": [
+        [
+          5787819,
+          6011200
+        ],
+        [
+          6022240,
+          6027819
+        ]
+      ],
+      "sourceStart": 5787819,
+      "sourceEnd": 6027819,
+      "seconds": 14.31,
+      "role": "specialist",
+      "archivedFlags": []
+    },
+    {
+      "id": "t4:coats:tensor:pre-clip025",
+      "clipId": "clip025",
+      "family": "coats",
+      "device": "t4",
+      "mode": "tensor",
+      "stage": "pre",
+      "text": " the fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth th fifth",
+      "ranges": [
+        [
+          5787819,
+          6011200
+        ],
+        [
+          6022240,
+          6027819
+        ]
+      ],
+      "sourceStart": 5787819,
+      "sourceEnd": 6027819,
+      "seconds": 14.31,
+      "role": "specialist",
+      "archivedFlags": [
+        "repetition-collapse",
+        "excessive-word-density",
+        "clustered-native-timing"
+      ]
+    },
+    {
+      "id": "t4:singlish:neutral:clip025",
+      "clipId": "clip025",
+      "family": "singlish",
+      "device": "t4",
+      "mode": "neutral",
+      "stage": "pre",
+      "text": "thomas wampo and a x q toy",
+      "ranges": [
+        [
+          5787819,
+          6011200
+        ],
+        [
+          6022240,
+          6027819
+        ]
+      ],
+      "sourceStart": 5787819,
+      "sourceEnd": 6027819,
+      "seconds": 14.31,
+      "role": "specialist",
+      "archivedFlags": []
+    },
+    {
+      "id": "t4:singlish:contextual:clip025",
+      "clipId": "clip025",
+      "family": "singlish",
+      "device": "t4",
+      "mode": "contextual",
+      "stage": "pre",
+      "text": "thomas wampo and a x q toy",
+      "ranges": [
+        [
+          5787819,
+          6011200
+        ],
+        [
+          6022240,
+          6027819
+        ]
+      ],
+      "sourceStart": 5787819,
+      "sourceEnd": 6027819,
+      "seconds": 14.31,
+      "role": "specialist",
+      "archivedFlags": []
+    },
+    {
+      "id": "l4:base:tensor:clip025",
+      "clipId": "clip025",
+      "family": "base",
+      "device": "l4",
+      "mode": "tensor",
+      "stage": "raw",
+      "text": " Thomas Whoa any",
+      "ranges": [
+        [
+          5787819,
+          6027819
+        ]
+      ],
+      "sourceStart": 5787819,
+      "sourceEnd": 6027819,
+      "seconds": 15,
+      "role": "comparison-only",
+      "archivedFlags": []
+    }
+  ],
+  "summary": {
+    "recognitionRows": 108,
+    "sourceClips": 6,
+    "pairwiseComparisons": 918,
+    "adjudicatedSpans": 80,
+    "corroboratedSpans": 41,
+    "automaticEdits": 0,
+    "confirmedEntities": 0,
+    "newModelCalls": 0
+  },
+  "limitations": [
+    "Selected 30 archived transcript rows. Full native timing, evidence and telemetry are available in the private research report. No ground truth labels. Display metrics are recomputed from text; archived diagnostic flags are retained."
+  ]
+}

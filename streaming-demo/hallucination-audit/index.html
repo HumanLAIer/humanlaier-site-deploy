@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>ASR failure listening lab | Human LAIer</title>
+<style>
+:root{color-scheme:light dark;font-family:system-ui,sans-serif}body{max-width:1040px;margin:32px auto;padding:0 18px;line-height:1.5}h1{line-height:1.12}h2{margin-top:0}a{color:inherit}small,.muted{opacity:.72}section{border:1px solid #8887;border-radius:12px;padding:18px;margin:22px 0}button,select,textarea{font:inherit}button{padding:8px 12px;cursor:pointer;border:1px solid #8887;border-radius:6px}audio{width:100%;margin:6px 0}textarea{box-sizing:border-box;width:100%;min-height:100px;padding:9px}details{margin:12px 0}summary{cursor:pointer;font-weight:600}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit;max-height:240px;overflow:auto;margin:6px 0 14px;padding:12px;background:#8881;border-radius:6px}label{display:block;margin:8px 0}fieldset{border:0;padding:0;margin:12px 0}fieldset label{display:inline-block;margin-right:18px}.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}.transcript{border:1px solid #8885;border-radius:6px;padding:10px}.transcript h4{margin:0}.warn{color:#b56a30}.status{min-height:1.5em}footer{margin:24px 0}
+</style></head><body><a href="/streaming-demo/">← Streaming demo</a><h1>Listen for yourself: COATS failure audit</h1><p>Two suspicious windows from the November 22 stream. Listen before revealing the model outputs; note what you actually hear and what might be confusing the recognizer. No human reference or cause has been established.</p><p class="muted">The source players use the existing original lossless source-part audio. Exact optimized / BSRNN inputs are not yet available on this page; the transcript arms are labeled accordingly. Audio excerpts are restricted to the original 15-second source windows by the play controls.</p><main id="cases"></main><footer><button id="copy">Copy listening notes as JSON</button> <span id="copy-status" role="status"></span><p><small>Notes stay in this browser until copied. No inference, recording changes, or automatic entity confirmation. <a href="https://github.com/HumanLAIer/hl-livestream-pilot/actions/runs/45728502494">Source experiment</a>.</small></p></footer>
+<script>
+"use strict";
+const rep=(s,n)=>Array(n).fill(s).join(" ");
+const cases=[
+{id:"clip025",title:"Case 1 · Repetition / hallucination",part:2,start:60,end:75,packedSeconds:14.31,cut:"Packed input drops 0.69 s near the end; the original source control retains it.",arms:[
+["Raw Base.en L4/T4 tensor","Thomas Whoa any"],
+["Pre-BSRNN · COATS L4 serial",rep("you know what I'm saying",3)+" I'm a "+rep("ya",139)+" you"],
+["Pre-BSRNN · COATS L4 tensor","the fifth th fifth th fifth"],
+["Pre-BSRNN · COATS T4 serial",rep("you're the boss that I want bitch",3)+" I'm a guy like you ya lor "+rep("oh",151)],
+["Pre-BSRNN · COATS T4 tensor","the fifth "+rep("th fifth",79)],
+["Post-BSRNN · COATS L4 serial","Thomas wah bow N A X Q tall okay you."],
+["Post-BSRNN · COATS L4 tensor","Thomas wah poh N A X Kew thor"],
+["Post-BSRNN · COATS T4 serial","Thomas wah bao N A X K tall ."],
+["Post-BSRNN · COATS T4 tensor","Thomas wah bao N A X K tall"]]},
+{id:"clip017",title:"Case 2 · Potential information loss",part:1,start:255,end:270,packedSeconds:15,cut:"The packed input retains the full 15-second source extent.",arms:[
+["Raw Base.en L4/T4 serial","your support let's get it better season"],
+["Raw Base.en L4/T4 tensor","your support. Let's get it better. Season. Here we go!"],
+["Pre-BSRNN · COATS L4/T4 serial","your support let's get it brother season here we go"],
+["Pre-BSRNN · COATS L4/T4 tensor","your support let's get it brother"],
+["Post-BSRNN · COATS L4/T4 serial","your support let's get it brother season here we go"],
+["Post-BSRNN · COATS L4/T4 tensor","that's"]]}];
+const key="hl-hallucination-audit-v1";
+let notes={};try{notes=JSON.parse(localStorage.getItem(key)||"{}")}catch{}
+function save(){try{localStorage.setItem(key,JSON.stringify(notes))}catch{}}
+function el(tag,txt,cls){const n=document.createElement(tag);if(txt!==undefined)n.textContent=txt;if(cls)n.className=cls;return n}
+const players=[];
+for(const c of cases){
+const sec=el("section");sec.append(el("h2",c.title),el("p",c.id+" · source part "+c.part+" · "+c.start+"–"+c.end+" seconds · "+c.packedSeconds+" s model input","muted"));
+const a=el("audio");a.controls=true;a.preload="metadata";a.src="/streaming-lab/nine-tickers-nov22/part-"+c.part+".flac";players.push(a);
+const status=el("p","Source audio ready when loaded.","status muted");let loop=false;
+function play(){for(const p of players)if(p!==a)p.pause();a.currentTime=c.start;a.play().catch(e=>status.textContent="Playback unavailable: "+e.message)}
+a.addEventListener("loadedmetadata",()=>{a.currentTime=c.start});
+a.addEventListener("timeupdate",()=>{if(a.currentTime>=c.end){if(loop&&!a.paused)a.currentTime=c.start;else if(!a.paused)a.pause()}status.textContent="Source position "+a.currentTime.toFixed(2)+" s · target "+c.start+"–"+c.end+" s"});
+a.addEventListener("play",()=>{for(const p of players)if(p!==a)p.pause();if(a.currentTime<c.start||a.currentTime>=c.end)a.currentTime=c.start});
+a.addEventListener("error",()=>status.textContent="Source player failed; open the original nine-lane study to listen.");
+const controls=el("div",undefined,"row");const playBtn=el("button","▶ Play exact source window");playBtn.onclick=play;const pause=el("button","Pause");pause.onclick=()=>a.pause();const loopBtn=el("button","Loop: off");loopBtn.onclick=()=>{loop=!loop;loopBtn.textContent="Loop: "+(loop?"on":"off");loopBtn.setAttribute("aria-pressed",String(loop))};const speed=el("select");speed.setAttribute("aria-label","Playback speed");for(const v of [.75,1,1.25]){const o=el("option",v+"×");o.value=v;speed.append(o)}speed.value=1;speed.onchange=()=>a.playbackRate=Number(speed.value);controls.append(playBtn,pause,loopBtn,speed);
+const vid=el("a","Open original video at this region");vid.href="/streaming-lab/nine-tickers-nov22/part-"+c.part+".mp4#t="+(c.start+(c.part===1?.023:0))+","+(c.end+(c.part===1?.023:0));vid.target="_blank";vid.rel="noopener";
+sec.append(controls,a,status,vid,el("p",c.cut,"muted"));
+const note=notes[c.id]||(notes[c.id]={heard:"",causes:[],comment:""});
+const lab=el("label","What do you hear? (before opening transcripts)");const ta=el("textarea");ta.value=note.heard;ta.oninput=()=>{note.heard=ta.value;save()};lab.append(ta);sec.append(lab);
+const d=el("details");d.append(el("summary","Reveal all model transcripts"));const grid=el("div",undefined,"grid");for(const [name,transcript] of c.arms){const item=el("div",undefined,"transcript");item.append(el("h4",name),el("small",transcript.trim().split(/\s+/).length+" whitespace-separated words"),el("pre",transcript));grid.append(item)}d.append(grid);sec.append(d);
+const fs=el("fieldset");fs.append(el("legend","Possible cause(s)"));for(const val of ["Music / lyrics","Background chatter","Accent / code-switching","Username / product name","Silence or no speech","Audio cut / transition","Decoder repetition","Enhancement distortion","Other / unsure"]){const label=el("label");const cb=el("input");cb.type="checkbox";cb.checked=note.causes.includes(val);cb.onchange=()=>{note.causes=cb.checked?[...new Set([...note.causes,val])]:note.causes.filter(x=>x!==val);save()};label.append(cb,document.createTextNode(" "+val));fs.append(label)}sec.append(fs);
+const comment=el("label","Notes / suspected cause");const box=el("textarea");box.value=note.comment;box.oninput=()=>{note.comment=box.value;save()};comment.append(box);sec.append(comment);document.getElementById("cases").append(sec)
+}
+document.getElementById("copy").onclick=async()=>{const text=JSON.stringify({schema:key,notes},null,2);try{await navigator.clipboard.writeText(text);document.getElementById("copy-status").textContent="Copied."}catch{const t=el("textarea");t.value=text;document.body.append(t);t.select();document.getElementById("copy-status").textContent="Select and copy the JSON below."}};
+</script></body></html>
